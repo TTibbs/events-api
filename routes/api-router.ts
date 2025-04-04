@@ -1,6 +1,7 @@
 import { Router } from "express";
 const apiRouter = Router();
 import usersRouter from "./users-router";
+import authRouter from "./auth-router";
 import endpoints from "../endpoints.json";
 
 apiRouter.get("/", (req, res) => {
@@ -8,5 +9,6 @@ apiRouter.get("/", (req, res) => {
 });
 
 apiRouter.use("/users", usersRouter);
+apiRouter.use("/auth", authRouter);
 
 export default apiRouter;

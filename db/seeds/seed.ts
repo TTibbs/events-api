@@ -3,19 +3,27 @@ import db from "../connection";
 import { SeedData } from "../../types";
 
 const seed = async ({
-  userData,
-  eventData,
-  eventRegistrationData,
-  staffMemberData,
-  userSessionData,
+  users,
+  events,
+  eventRegistrations,
+  staffMembers,
+  userSessions,
 }: SeedData) => {
   try {
-    await db.query("DROP TABLE IF EXISTS events_registrations");
-    await db.query("DROP TABLE IF EXISTS events");
-    await db.query("DROP TABLE IF EXISTS staff_members");
-    await db.query("DROP TABLE IF EXISTS user_sessions");
-    await db.query("DROP TABLE IF EXISTS users");
+    // Drop tables in the correct order with CASCADE to handle dependencies
+    await db.query("DROP TABLE IF EXISTS event_registrations CASCADE");
+    await db.query("DROP TABLE IF EXISTS events CASCADE");
+    await db.query("DROP TABLE IF EXISTS staff_members CASCADE");
+    await db.query("DROP TABLE IF EXISTS user_sessions CASCADE");
+    await db.query("DROP TABLE IF EXISTS users CASCADE");
 
+    // Drop functions and types
+    await db.query("DROP FUNCTION IF EXISTS update_timestamp CASCADE");
+    await db.query("DROP TYPE IF EXISTS event_registration_status CASCADE");
+    await db.query("DROP TYPE IF EXISTS staff_role CASCADE");
+    await db.query("DROP TYPE IF EXISTS event_status CASCADE");
+
+    // Create types
     await db.query(`
       CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
     `);
@@ -26,6 +34,7 @@ const seed = async ({
       CREATE TYPE event_registration_status AS ENUM ('registered', 'cancelled', 'waitlisted', 'attended');
     `);
 
+    // Create tables
     await db.query(`
         CREATE TABLE users (
         id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -88,6 +97,7 @@ const seed = async ({
       );
     `);
 
+    // Create indexes
     await db.query(`
       CREATE INDEX idx_events_start_time ON events (start_time);
     `);
@@ -104,6 +114,7 @@ const seed = async ({
       CREATE INDEX idx_user_sessions_expires_at ON user_sessions (expires_at);
     `);
 
+    // Create update_timestamp function
     await db.query(`
         CREATE FUNCTION update_timestamp ()
         RETURNS TRIGGER AS $$
@@ -120,47 +131,24 @@ const seed = async ({
         FOR EACH ROW EXECUTE FUNCTION update_timestamp();
     `);
 
+    // 1. Insert users first as they have no dependencies
     const insertUsersQueryString = format(
-      `INSERT INTO users (username, email, password_hash) VALUES %L`,
-      userData.map((user) => [user.username, user.email, user.password_hash])
+      `INSERT INTO users (username, email, password_hash) VALUES %L RETURNING id`,
+      users.map((user) => [user.username, user.email, user.password_hash])
     );
     await db.query(insertUsersQueryString);
 
+    // 2. Insert staff members second as they depend on users
     const insertStaffMembersQueryString = format(
-      `INSERT INTO staff_members (user_id, role) VALUES %L`,
-      staffMemberData.map((staffMember) => [
-        staffMember.user_id,
-        staffMember.role,
-      ])
+      `INSERT INTO staff_members (user_id, role) VALUES %L RETURNING id`,
+      staffMembers.map((staffMember) => [staffMember.user_id, staffMember.role])
     );
     await db.query(insertStaffMembersQueryString);
 
-    const insertUserSessionsQueryString = format(
-      `INSERT INTO user_sessions (user_id, session_token, refresh_token, created_at, expires_at) VALUES %L`,
-      userSessionData.map((userSession) => [
-        userSession.user_id,
-        userSession.session_token,
-        userSession.refresh_token,
-        userSession.created_at,
-        userSession.expires_at,
-      ])
-    );
-    await db.query(insertUserSessionsQueryString);
-
-    const insertEventRegistrationsQueryString = format(
-      `INSERT INTO event_registrations (event_id, user_id, registration_time, status) VALUES %L`,
-      eventRegistrationData.map((eventRegistration) => [
-        eventRegistration.event_id,
-        eventRegistration.user_id,
-        eventRegistration.registration_time,
-        eventRegistration.status,
-      ])
-    );
-    await db.query(insertEventRegistrationsQueryString);
-
+    // 3. Insert events third as they depend on staff_members
     const insertEventsQueryString = format(
-      `INSERT INTO events (status, title, description, location, start_time, end_time, max_attendees, price, event_type, is_public, created_by, created_at, updated_at) VALUES %L`,
-      eventData.map((event) => [
+      `INSERT INTO events (status, title, description, location, start_time, end_time, max_attendees, price, event_type, is_public, created_by, created_at, updated_at) VALUES %L RETURNING id`,
+      events.map((event) => [
         event.status,
         event.title,
         event.description,
@@ -177,6 +165,33 @@ const seed = async ({
       ])
     );
     await db.query(insertEventsQueryString);
+
+    // 4. Insert user sessions (depends on users only)
+    const insertUserSessionsQueryString = format(
+      `INSERT INTO user_sessions (user_id, session_token, refresh_token, created_at, expires_at) VALUES %L`,
+      userSessions.map((userSession) => [
+        userSession.user_id,
+        userSession.session_token,
+        userSession.refresh_token,
+        userSession.created_at,
+        userSession.expires_at,
+      ])
+    );
+    await db.query(insertUserSessionsQueryString);
+
+    // 5. Insert event registrations last as they depend on both users and events
+    if (eventRegistrations.length > 0) {
+      const insertEventRegistrationsQueryString = format(
+        `INSERT INTO event_registrations (event_id, user_id, registration_time, status) VALUES %L`,
+        eventRegistrations.map((eventRegistration) => [
+          eventRegistration.event_id,
+          eventRegistration.user_id,
+          eventRegistration.registration_time,
+          eventRegistration.status,
+        ])
+      );
+      await db.query(insertEventRegistrationsQueryString);
+    }
   } catch (err) {
     console.error("Error seeding database:", err);
   }

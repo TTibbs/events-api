@@ -44,9 +44,9 @@ export type EventRegistration = {
 };
 
 export interface SeedData {
-  userData: User[];
-  eventData: Event[];
-  eventRegistrationData: EventRegistration[];
-  staffMemberData: StaffMember[];
-  userSessionData: UserSession[];
+  users: User[];
+  events: Event[];
+  eventRegistrations: EventRegistration[];
+  staffMembers: StaffMember[];
+  userSessions: UserSession[];
 }
