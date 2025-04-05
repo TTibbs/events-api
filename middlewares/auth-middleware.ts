@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { checkUserRole } from "../models/users-models";
+import { selectTeamMemberByUserId } from "../models/teams-models";
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -31,7 +31,7 @@ export const authenticate = (
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         status: "error",
-        message: "Unauthorized - No token provided",
+        msg: "Unauthorized - No token provided",
       });
     }
 
@@ -52,13 +52,13 @@ export const authenticate = (
     if (error instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         status: "error",
-        message: "Unauthorized - Token expired",
+        msg: "Unauthorized - Token expired",
       });
     }
 
     return res.status(401).json({
       status: "error",
-      message: "Unauthorized - Invalid token",
+      msg: "Unauthorized - Invalid token",
     });
   }
 };
@@ -70,7 +70,7 @@ export const authorize = (requiredRole: string) => {
       if (!req.user) {
         return res.status(401).json({
           status: "error",
-          message: "Unauthorized - Authentication required",
+          msg: "Unauthorized - Authentication required",
         });
       }
 
@@ -83,17 +83,17 @@ export const authorize = (requiredRole: string) => {
       if (!req.user.role) {
         return res.status(403).json({
           status: "error",
-          message: "Forbidden - Insufficient permissions",
+          msg: "Forbidden - Insufficient permissions",
         });
       }
 
       // Check if user has the required role
-      const hasRequiredRole = await checkUserRole(req.user.id, requiredRole);
+      const teamMember = await selectTeamMemberByUserId(req.user.id);
 
-      if (!hasRequiredRole) {
+      if (!teamMember || teamMember.role !== requiredRole) {
         return res.status(403).json({
           status: "error",
-          message: "Forbidden - Insufficient permissions",
+          msg: "Forbidden - Insufficient permissions",
         });
       }
 

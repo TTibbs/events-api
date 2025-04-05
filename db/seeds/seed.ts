@@ -4,39 +4,47 @@ import { SeedData } from "../../types";
 
 const seed = async ({
   users,
+  teams,
   events,
   eventRegistrations,
-  staffMembers,
+  teamMembers,
   userSessions,
+  tickets,
 }: SeedData) => {
   try {
     // Drop tables in the correct order with CASCADE to handle dependencies
+    await db.query("DROP TABLE IF EXISTS tickets CASCADE");
     await db.query("DROP TABLE IF EXISTS event_registrations CASCADE");
     await db.query("DROP TABLE IF EXISTS events CASCADE");
-    await db.query("DROP TABLE IF EXISTS staff_members CASCADE");
+    await db.query("DROP TABLE IF EXISTS team_members CASCADE");
+    await db.query("DROP TABLE IF EXISTS teams CASCADE");
     await db.query("DROP TABLE IF EXISTS user_sessions CASCADE");
     await db.query("DROP TABLE IF EXISTS users CASCADE");
 
     // Drop functions and types
     await db.query("DROP FUNCTION IF EXISTS update_timestamp CASCADE");
     await db.query("DROP TYPE IF EXISTS event_registration_status CASCADE");
-    await db.query("DROP TYPE IF EXISTS staff_role CASCADE");
+    await db.query("DROP TYPE IF EXISTS team_role CASCADE");
     await db.query("DROP TYPE IF EXISTS event_status CASCADE");
+    await db.query("DROP TYPE IF EXISTS ticket_status CASCADE");
 
     // Create types
+    await db.query(`
+      CREATE TYPE team_role AS ENUM ('admin', 'event_manager', 'team_member');
+    `);
     await db.query(`
       CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
     `);
     await db.query(`
-      CREATE TYPE staff_role AS ENUM ('admin', 'event_manager');
+      CREATE TYPE event_registration_status AS ENUM ('registered', 'cancelled', 'waitlisted', 'attended');
     `);
     await db.query(`
-      CREATE TYPE event_registration_status AS ENUM ('registered', 'cancelled', 'waitlisted', 'attended');
+      CREATE TYPE ticket_status AS ENUM ('valid', 'used', 'cancelled', 'expired');
     `);
 
     // Create tables
     await db.query(`
-        CREATE TABLE users (
+      CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
@@ -58,11 +66,23 @@ const seed = async ({
     `);
 
     await db.query(`
-      CREATE TABLE staff_members (
+      CREATE TABLE teams (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE team_members (
         id SERIAL PRIMARY KEY,
         user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
-        role staff_role NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        team_id BIGINT REFERENCES teams (id) ON DELETE CASCADE,
+        role team_role NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(team_id, user_id)
       );
     `);
 
@@ -79,7 +99,8 @@ const seed = async ({
         price DECIMAL(10, 2) CHECK (price IS NULL OR price >= 0),
         event_type TEXT,
         is_public BOOLEAN NOT NULL DEFAULT true,
-        created_by BIGINT REFERENCES staff_members (id) ON DELETE SET NULL,
+        team_id BIGINT REFERENCES teams (id) ON DELETE SET NULL,
+        created_by BIGINT REFERENCES team_members (id) ON DELETE SET NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         CONSTRAINT check_event_times CHECK (end_time > start_time)
@@ -97,6 +118,21 @@ const seed = async ({
       );
     `);
 
+    await db.query(`
+      CREATE TABLE tickets (
+        id SERIAL PRIMARY KEY,
+        event_id BIGINT REFERENCES events(id) ON DELETE CASCADE,
+        user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        registration_id BIGINT REFERENCES event_registrations(id) ON DELETE CASCADE,
+        ticket_code TEXT NOT NULL UNIQUE,
+        issued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        used_at TIMESTAMP WITH TIME ZONE,
+        status ticket_status NOT NULL DEFAULT 'valid',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+
     // Create indexes
     await db.query(`
       CREATE INDEX idx_events_start_time ON events (start_time);
@@ -108,10 +144,37 @@ const seed = async ({
       CREATE INDEX idx_events_created_by ON events (created_by);
     `);
     await db.query(`
+      CREATE INDEX idx_events_team_id ON events (team_id);
+    `);
+    await db.query(`
       CREATE INDEX idx_events_status_start_time ON events (status, start_time);
     `);
     await db.query(`
       CREATE INDEX idx_user_sessions_expires_at ON user_sessions (expires_at);
+    `);
+    await db.query(`
+      CREATE INDEX idx_team_members_user_id ON team_members (user_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_team_members_team_id ON team_members (team_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_team_members_role ON team_members (role);
+    `);
+    await db.query(`
+      CREATE INDEX idx_tickets_event_id ON tickets (event_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_tickets_user_id ON tickets (user_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_tickets_registration_id ON tickets (registration_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_tickets_status ON tickets (status);
+    `);
+    await db.query(`
+      CREATE INDEX idx_tickets_ticket_code ON tickets (ticket_code);
     `);
 
     // Create update_timestamp function
@@ -125,9 +188,22 @@ const seed = async ({
         $$ LANGUAGE plpgsql;
     `);
 
+    // Create triggers for updated_at timestamps
     await db.query(`
         CREATE TRIGGER update_event_timestamp
         BEFORE UPDATE ON events
+        FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+    `);
+
+    await db.query(`
+        CREATE TRIGGER update_team_timestamp
+        BEFORE UPDATE ON teams
+        FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+    `);
+
+    await db.query(`
+        CREATE TRIGGER update_ticket_timestamp
+        BEFORE UPDATE ON tickets
         FOR EACH ROW EXECUTE FUNCTION update_timestamp();
     `);
 
@@ -138,16 +214,28 @@ const seed = async ({
     );
     await db.query(insertUsersQueryString);
 
-    // 2. Insert staff members second as they depend on users
-    const insertStaffMembersQueryString = format(
-      `INSERT INTO staff_members (user_id, role) VALUES %L RETURNING id`,
-      staffMembers.map((staffMember) => [staffMember.user_id, staffMember.role])
+    // 2. Insert teams second as they have no dependencies beyond being created
+    const insertTeamsQueryString = format(
+      `INSERT INTO teams (name, description) VALUES %L RETURNING id`,
+      teams.map((team) => [team.name, team.description])
     );
-    await db.query(insertStaffMembersQueryString);
+    await db.query(insertTeamsQueryString);
 
-    // 3. Insert events third as they depend on staff_members
+    // 3. Insert team members third as they depend on users and teams
+    const insertTeamMembersQueryString = format(
+      `INSERT INTO team_members (user_id, team_id, role, created_at) VALUES %L RETURNING id`,
+      teamMembers.map((teamMember) => [
+        teamMember.user_id,
+        teamMember.team_id,
+        teamMember.role,
+        teamMember.created_at,
+      ])
+    );
+    await db.query(insertTeamMembersQueryString);
+
+    // 4. Insert events fourth as they depend on teams and team_members
     const insertEventsQueryString = format(
-      `INSERT INTO events (status, title, description, location, start_time, end_time, max_attendees, price, event_type, is_public, created_by, created_at, updated_at) VALUES %L RETURNING id`,
+      `INSERT INTO events (status, title, description, location, start_time, end_time, max_attendees, price, event_type, is_public, team_id, created_by, created_at, updated_at) VALUES %L RETURNING id`,
       events.map((event) => [
         event.status,
         event.title,
@@ -159,6 +247,7 @@ const seed = async ({
         event.price,
         event.event_type,
         event.is_public,
+        event.team_id,
         event.created_by,
         event.created_at,
         event.updated_at,
@@ -166,7 +255,7 @@ const seed = async ({
     );
     await db.query(insertEventsQueryString);
 
-    // 4. Insert user sessions (depends on users only)
+    // 5. Insert user sessions (depends on users only)
     const insertUserSessionsQueryString = format(
       `INSERT INTO user_sessions (user_id, session_token, refresh_token, created_at, expires_at) VALUES %L`,
       userSessions.map((userSession) => [
@@ -179,7 +268,7 @@ const seed = async ({
     );
     await db.query(insertUserSessionsQueryString);
 
-    // 5. Insert event registrations last as they depend on both users and events
+    // 6. Insert event registrations last as they depend on both users and events
     if (eventRegistrations.length > 0) {
       const insertEventRegistrationsQueryString = format(
         `INSERT INTO event_registrations (event_id, user_id, registration_time, status) VALUES %L`,
@@ -191,6 +280,31 @@ const seed = async ({
         ])
       );
       await db.query(insertEventRegistrationsQueryString);
+    }
+
+    // 7. Create tickets for each event registration if we have test data
+    if (tickets && tickets.length > 0) {
+      const insertTicketsQueryString = format(
+        `INSERT INTO tickets (event_id, user_id, registration_id, ticket_code, issued_at, used_at, status) VALUES %L`,
+        tickets.map((ticket) => [
+          ticket.event_id,
+          ticket.user_id,
+          ticket.registration_id,
+          ticket.ticket_code,
+          ticket.issued_at,
+          ticket.used_at,
+          ticket.status,
+        ])
+      );
+      await db.query(insertTicketsQueryString);
+    } else {
+      // Generate tickets for registered event attendees if no test tickets provided
+      await db.query(`
+        INSERT INTO tickets (event_id, user_id, registration_id, ticket_code)
+        SELECT er.event_id, er.user_id, er.id, md5(random()::text)
+        FROM event_registrations er
+        WHERE er.status = 'registered';
+      `);
     }
   } catch (err) {
     console.error("Error seeding database:", err);

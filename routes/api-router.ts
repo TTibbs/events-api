@@ -2,6 +2,8 @@ import { Router } from "express";
 const apiRouter = Router();
 import usersRouter from "./users-router";
 import authRouter from "./auth-router";
+import teamsRouter from "./teams-router";
+import ticketsRouter from "./tickets-router";
 import endpoints from "../endpoints.json";
 
 apiRouter.get("/", (req, res) => {
@@ -10,5 +12,7 @@ apiRouter.get("/", (req, res) => {
 
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/auth", authRouter);
+apiRouter.use("/teams", teamsRouter);
+apiRouter.use("/tickets", ticketsRouter);
 
 export default apiRouter;

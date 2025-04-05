@@ -10,5 +10,308 @@
         "name": "Theo"
       }
     ]
+  },
+  "GET /api/users/:id": {
+    "description": "Returns a user by ID",
+    "exampleResponse": {
+      "id": 1,
+      "username": "alice123",
+      "email": "alice@example.com"
+    }
+  },
+  "GET /api/users/username/:username": {
+    "description": "Returns a user by username",
+    "exampleResponse": {
+      "id": 1,
+      "username": "alice123",
+      "email": "alice@example.com"
+    }
+  },
+  "GET /api/users/email/:email": {
+    "description": "Returns a user by email",
+    "exampleResponse": {
+      "id": 1,
+      "username": "alice123",
+      "email": "alice@example.com"
+    }
+  },
+  "POST /api/users": {
+    "description": "Creates a new user",
+    "exampleRequest": {
+      "username": "newuser123",
+      "email": "newuser@example.com",
+      "password_hash": "password123"
+    },
+    "exampleResponse": {
+      "newUser": {
+        "id": 5,
+        "username": "newuser123",
+        "email": "newuser@example.com"
+      }
+    }
+  },
+  "GET /api/teams": {
+    "description": "Returns an array of teams",
+    "exampleResponse": {
+      "teams": [
+        {
+          "id": 1,
+          "name": "Tech Events Team",
+          "description": "Team responsible for organizing technology conferences and workshops"
+        }
+      ]
+    }
+  },
+  "GET /api/teams/:id": {
+    "description": "Returns a team by ID",
+    "exampleResponse": {
+      "team": {
+        "id": 1,
+        "name": "Tech Events Team",
+        "description": "Team responsible for organizing technology conferences and workshops"
+      }
+    }
+  },
+  "POST /api/teams": {
+    "description": "Creates a new team",
+    "exampleRequest": {
+      "name": "Marketing Team",
+      "description": "Team for marketing events and promotions"
+    },
+    "exampleResponse": {
+      "newTeam": {
+        "id": 3,
+        "name": "Marketing Team",
+        "description": "Team for marketing events and promotions"
+      }
+    }
+  },
+  "PUT /api/teams/:id": {
+    "description": "Updates a team by ID",
+    "exampleRequest": {
+      "name": "Updated Team Name",
+      "description": "Updated team description"
+    },
+    "exampleResponse": {
+      "updatedTeam": {
+        "id": 1,
+        "name": "Updated Team Name",
+        "description": "Updated team description"
+      }
+    }
+  },
+  "DELETE /api/teams/:id": {
+    "description": "Deletes a team by ID",
+    "exampleResponse": {}
+  },
+  "GET /api/teams/members": {
+    "description": "Returns an array of team members",
+    "exampleResponse": {
+      "teamMembers": [
+        {
+          "id": 1,
+          "user_id": 1,
+          "team_id": 1,
+          "role": "admin"
+        }
+      ]
+    }
+  },
+  "GET /api/teams/members/:id": {
+    "description": "Returns a team member by ID",
+    "exampleResponse": {
+      "teamMember": {
+        "id": 1,
+        "user_id": 1,
+        "team_id": 1,
+        "role": "admin"
+      }
+    }
+  },
+  "GET /api/teams/members/user/:userId": {
+    "description": "Returns a team member by user ID",
+    "exampleResponse": {
+      "teamMember": {
+        "id": 1,
+        "user_id": 1,
+        "team_id": 1,
+        "role": "admin"
+      }
+    }
+  },
+  "POST /api/teams/members": {
+    "description": "Creates a new team member for an existing user or creates both a user and team member",
+    "exampleRequest": {
+      "user_id": 1,
+      "team_id": 1,
+      "role": "admin"
+    },
+    "exampleResponse": {
+      "newTeamMember": {
+        "id": 5,
+        "user_id": 1,
+        "team_id": 1,
+        "role": "admin"
+      },
+      "msg": "Team member created successfully"
+    }
+  },
+  "GET /api/tickets": {
+    "description": "Returns an array of all tickets",
+    "exampleResponse": {
+      "tickets": [
+        {
+          "id": 1,
+          "event_id": 1,
+          "user_id": 3,
+          "registration_id": 1,
+          "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+          "issued_at": "2023-01-15T10:00:00Z",
+          "used_at": null,
+          "status": "valid"
+        }
+      ]
+    }
+  },
+  "GET /api/tickets/:id": {
+    "description": "Returns a ticket by ID",
+    "exampleResponse": {
+      "ticket": {
+        "id": 1,
+        "event_id": 1,
+        "user_id": 3,
+        "registration_id": 1,
+        "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+        "issued_at": "2023-01-15T10:00:00Z",
+        "used_at": null,
+        "status": "valid"
+      }
+    }
+  },
+  "GET /api/tickets/user/:userId": {
+    "description": "Returns tickets belonging to a specific user",
+    "exampleResponse": {
+      "tickets": [
+        {
+          "id": 1,
+          "event_id": 1,
+          "user_id": 3,
+          "registration_id": 1,
+          "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+          "issued_at": "2023-01-15T10:00:00Z",
+          "used_at": null,
+          "status": "valid",
+          "event_title": "Tech Conference 2023",
+          "start_time": "2023-02-15T09:00:00Z",
+          "end_time": "2023-02-15T17:00:00Z",
+          "location": "Convention Center"
+        }
+      ]
+    }
+  },
+  "GET /api/tickets/event/:eventId": {
+    "description": "Returns tickets for a specific event",
+    "exampleResponse": {
+      "tickets": [
+        {
+          "id": 1,
+          "event_id": 1,
+          "user_id": 3,
+          "registration_id": 1,
+          "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+          "issued_at": "2023-01-15T10:00:00Z",
+          "used_at": null,
+          "status": "valid",
+          "username": "charlie789",
+          "email": "charlie@example.com"
+        }
+      ]
+    }
+  },
+  "GET /api/tickets/verify/:ticketCode": {
+    "description": "Verifies a ticket by its unique code",
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Ticket is valid",
+      "ticket": {
+        "id": 1,
+        "event_id": 1,
+        "user_id": 3,
+        "registration_id": 1,
+        "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+        "issued_at": "2023-01-15T10:00:00Z",
+        "used_at": null,
+        "status": "valid",
+        "event_title": "Tech Conference 2023",
+        "start_time": "2023-02-15T09:00:00Z",
+        "end_time": "2023-02-15T17:00:00Z",
+        "location": "Convention Center",
+        "username": "charlie789",
+        "email": "charlie@example.com"
+      }
+    }
+  },
+  "POST /api/tickets": {
+    "description": "Creates a new ticket",
+    "exampleRequest": {
+      "event_id": 1,
+      "user_id": 3,
+      "registration_id": 1
+    },
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Ticket created successfully",
+      "ticket": {
+        "id": 4,
+        "event_id": 1,
+        "user_id": 3,
+        "registration_id": 1,
+        "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+        "issued_at": "2023-01-15T10:00:00Z",
+        "used_at": null,
+        "status": "valid"
+      }
+    }
+  },
+  "POST /api/tickets/use/:ticketCode": {
+    "description": "Marks a ticket as used",
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Ticket marked as used",
+      "ticket": {
+        "id": 1,
+        "event_id": 1,
+        "user_id": 3,
+        "registration_id": 1,
+        "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+        "issued_at": "2023-01-15T10:00:00Z",
+        "used_at": "2023-02-15T10:30:00Z",
+        "status": "used"
+      }
+    }
+  },
+  "PATCH /api/tickets/:id": {
+    "description": "Updates a ticket's status",
+    "exampleRequest": {
+      "status": "cancelled"
+    },
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Ticket updated successfully",
+      "ticket": {
+        "id": 1,
+        "event_id": 1,
+        "user_id": 3,
+        "registration_id": 1,
+        "ticket_code": "a1b2c3d4e5f6g7h8i9j0",
+        "issued_at": "2023-01-15T10:00:00Z",
+        "used_at": null,
+        "status": "cancelled"
+      }
+    }
+  },
+  "DELETE /api/tickets/:id": {
+    "description": "Deletes a ticket",
+    "exampleResponse": {}
   }
 }

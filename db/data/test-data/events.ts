@@ -12,7 +12,8 @@ export const events: Event[] = [
     price: 49.99,
     event_type: "conference",
     is_public: true,
-    created_by: 1, // Reference to a staff member
+    team_id: 1, // Added team_id reference
+    created_by: 1, // Reference to a team member
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -27,6 +28,7 @@ export const events: Event[] = [
     price: 29.99,
     event_type: "workshop",
     is_public: false,
+    team_id: 2, // Added team_id reference
     created_by: 2,
     created_at: new Date(),
     updated_at: new Date(),

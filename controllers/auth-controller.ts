@@ -11,7 +11,7 @@ import {
   selectUserByUsername,
   selectUserByEmail,
 } from "../models/users-models";
-import { selectStaffMemberByUserId } from "../models/users-models";
+import { selectTeamMemberByUserId } from "../models/teams-models";
 import { User } from "../types";
 
 // Define a DatabaseUser type that extends User with an ID
@@ -30,14 +30,14 @@ const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 // Helper function to generate tokens
 const generateTokens = async (user: DatabaseUser) => {
   // Get staff role if exists
-  const staffMember = await selectStaffMemberByUserId(user.id);
+  const teamMember = await selectTeamMemberByUserId(user.id);
 
   // Create payload with user data and role
   const payload = {
     id: user.id,
     username: user.username,
     email: user.email,
-    role: staffMember ? staffMember.role : null,
+    role: teamMember ? teamMember.role : null,
     // Add a timestamp to make tokens unique
     timestamp: Date.now(),
   };
@@ -112,7 +112,7 @@ export const register = async (
       // If we get here, the username exists
       return res.status(400).json({
         status: "error",
-        message: "Username already exists",
+        msg: "Username already exists",
       });
     } catch (usernameError: any) {
       // If the error is a 404, it means the username doesn't exist - this is what we want
@@ -126,7 +126,7 @@ export const register = async (
       // If we get here, the email exists
       return res.status(400).json({
         status: "error",
-        message: "Email already exists",
+        msg: "Email already exists",
       });
     } catch (emailError: any) {
       // If the error is a 404, it means the email doesn't exist - this is what we want
@@ -183,7 +183,7 @@ export const login = async (
       if (!user) {
         return res.status(401).json({
           status: "error",
-          message: "Invalid credentials",
+          msg: "Invalid credentials",
         });
       }
 
@@ -195,7 +195,7 @@ export const login = async (
       if (!isPasswordValid) {
         return res.status(401).json({
           status: "error",
-          message: "Invalid credentials",
+          msg: "Invalid credentials",
         });
       }
 
@@ -222,7 +222,7 @@ export const login = async (
       if (error.status === 404) {
         return res.status(401).json({
           status: "error",
-          message: "Invalid credentials",
+          msg: "Invalid credentials",
         });
       }
       next(error);
@@ -244,7 +244,7 @@ export const refreshToken = async (
     if (!refreshToken) {
       return res.status(401).json({
         status: "error",
-        message: "Refresh token is required",
+        msg: "Refresh token is required",
       });
     }
 
@@ -253,7 +253,7 @@ export const refreshToken = async (
     if (!session) {
       return res.status(401).json({
         status: "error",
-        message: "Invalid refresh token",
+        msg: "Invalid refresh token",
       });
     }
 
@@ -292,7 +292,7 @@ export const refreshToken = async (
 
       return res.status(401).json({
         status: "error",
-        message: "Invalid refresh token",
+        msg: "Invalid refresh token",
       });
     }
   } catch (error) {
@@ -312,7 +312,7 @@ export const logout = async (
     if (!refreshToken) {
       return res.status(400).json({
         status: "error",
-        message: "Refresh token is required",
+        msg: "Refresh token is required",
       });
     }
 
@@ -321,7 +321,7 @@ export const logout = async (
 
     res.status(200).json({
       status: "success",
-      message: "Logged out successfully",
+      msg: "Logged out successfully",
     });
   } catch (error) {
     next(error);
