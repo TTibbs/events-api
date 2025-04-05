@@ -35,7 +35,7 @@ export const customErrorHandler = (
   next: NextFunction
 ) => {
   if (err.status && err.msg) {
-    res.status(err.status).send({ msg: err.msg });
+    res.status(err.status).send({ status: "error", msg: err.msg });
   } else next(err);
 };
 

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { hasRole } from "../models/staff-member-model";
+import { checkUserRole } from "../models/users-models";
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -88,7 +88,7 @@ export const authorize = (requiredRole: string) => {
       }
 
       // Check if user has the required role
-      const hasRequiredRole = await hasRole(req.user.id, requiredRole);
+      const hasRequiredRole = await checkUserRole(req.user.id, requiredRole);
 
       if (!hasRequiredRole) {
         return res.status(403).json({

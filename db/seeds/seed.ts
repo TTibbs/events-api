@@ -37,7 +37,7 @@ const seed = async ({
     // Create tables
     await db.query(`
         CREATE TABLE users (
-        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        id SERIAL PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
@@ -48,7 +48,7 @@ const seed = async ({
 
     await db.query(`
       CREATE TABLE user_sessions (
-        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        id SERIAL PRIMARY KEY,
         user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
         session_token TEXT NOT NULL UNIQUE,
         refresh_token TEXT UNIQUE,
@@ -59,7 +59,7 @@ const seed = async ({
 
     await db.query(`
       CREATE TABLE staff_members (
-        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        id SERIAL PRIMARY KEY,
         user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
         role staff_role NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -68,7 +68,7 @@ const seed = async ({
 
     await db.query(`
       CREATE TABLE events (
-        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        id SERIAL PRIMARY KEY,
         status event_status NOT NULL DEFAULT 'draft',
         title TEXT NOT NULL,
         description TEXT,
@@ -88,7 +88,7 @@ const seed = async ({
 
     await db.query(`
       CREATE TABLE event_registrations (
-        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        id SERIAL PRIMARY KEY,
         event_id BIGINT REFERENCES events (id) ON DELETE CASCADE,
         user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
         registration_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

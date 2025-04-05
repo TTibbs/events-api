@@ -1,14 +1,19 @@
-import express, { RequestHandler } from "express";
+import {
+  Router,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
 import { body, validationResult } from "express-validator";
 import * as authController from "../controllers/auth-controller";
-
-const router = express.Router();
+const authRouter = Router();
 
 // Validation middleware
 const validateRequest: RequestHandler = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ): void => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -87,17 +92,14 @@ const refreshTokenHandler = authController.refreshToken as RequestHandler;
 const logout = authController.logout as RequestHandler;
 
 // Auth routes
-router.post("/register", registerValidation, validateRequest, register);
-
-router.post("/login", loginValidation, validateRequest, login);
-
-router.post(
+authRouter.post("/register", registerValidation, validateRequest, register);
+authRouter.post("/login", loginValidation, validateRequest, login);
+authRouter.post(
   "/refresh-token",
   refreshTokenValidation,
   validateRequest,
   refreshTokenHandler
 );
+authRouter.post("/logout", logoutValidation, validateRequest, logout);
 
-router.post("/logout", logoutValidation, validateRequest, logout);
-
-export default router;
+export default authRouter;

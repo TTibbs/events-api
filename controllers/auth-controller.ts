@@ -7,15 +7,16 @@ import {
   deleteSessionByRefreshToken,
 } from "../models/user-session-model";
 import {
-  createUser,
-  getUserByUsername,
-  getUserByEmail,
+  insertUser,
+  selectUserByUsername,
+  selectUserByEmail,
 } from "../models/users-models";
-import { getStaffMemberByUserId } from "../models/staff-member-model";
+import { selectStaffMemberByUserId } from "../models/users-models";
 import { User } from "../types";
 
-// Extended User type with id
-interface UserWithId extends User {
+// Define a DatabaseUser type that extends User with an ID
+// This represents what comes back from the database
+interface DatabaseUser extends User {
   id: number;
 }
 
@@ -27,9 +28,9 @@ const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "15m";
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 // Helper function to generate tokens
-const generateTokens = async (user: UserWithId) => {
+const generateTokens = async (user: DatabaseUser) => {
   // Get staff role if exists
-  const staffMember = await getStaffMemberByUserId(user.id);
+  const staffMember = await selectStaffMemberByUserId(user.id);
 
   // Create payload with user data and role
   const payload = {
@@ -37,10 +38,11 @@ const generateTokens = async (user: UserWithId) => {
     username: user.username,
     email: user.email,
     role: staffMember ? staffMember.role : null,
+    // Add a timestamp to make tokens unique
+    timestamp: Date.now(),
   };
 
-  // Generate access token - Use as unknown assertion to avoid TypeScript errors
-  // This is a workaround for the type issues with jsonwebtoken
+  // Generate access token
   const accessToken = jwt.sign(
     payload,
     JWT_SECRET as jwt.Secret,
@@ -52,7 +54,12 @@ const generateTokens = async (user: UserWithId) => {
 
   // Generate refresh token
   const refreshToken = jwt.sign(
-    { id: user.id },
+    {
+      id: user.id,
+      // Add randomness to make refresh tokens unique
+      timestamp: Date.now(),
+      nonce: Math.random().toString(36).substring(2),
+    },
     JWT_REFRESH_SECRET as jwt.Secret,
     {
       expiresIn: REFRESH_TOKEN_EXPIRY,
@@ -100,20 +107,32 @@ export const register = async (
     const { username, email, password } = req.body;
 
     // Check if username or email already exists
-    const existingUsername = await getUserByUsername(username);
-    if (existingUsername) {
+    try {
+      const existingUsername = await selectUserByUsername(username);
+      // If we get here, the username exists
       return res.status(400).json({
         status: "error",
         message: "Username already exists",
       });
+    } catch (usernameError: any) {
+      // If the error is a 404, it means the username doesn't exist - this is what we want
+      if (usernameError.status !== 404) {
+        return next(usernameError);
+      }
     }
 
-    const existingEmail = await getUserByEmail(email);
-    if (existingEmail) {
+    try {
+      const existingEmail = await selectUserByEmail(email);
+      // If we get here, the email exists
       return res.status(400).json({
         status: "error",
         message: "Email already exists",
       });
+    } catch (emailError: any) {
+      // If the error is a 404, it means the email doesn't exist - this is what we want
+      if (emailError.status !== 404) {
+        return next(emailError);
+      }
     }
 
     // Hash password
@@ -121,20 +140,22 @@ export const register = async (
     const passwordHash = await bcryptjs.hash(password, saltRounds);
 
     // Create user
-    const newUser = await createUser(username, email, passwordHash);
+    const newUser = await insertUser(username, email, passwordHash);
+
+    // Since newUser comes from the database after creation,
+    // it will have an ID assigned by PostgreSQL's SERIAL
+    const dbUser = newUser as DatabaseUser;
 
     // Generate tokens
-    const { accessToken, refreshToken } = await generateTokens(
-      newUser as UserWithId
-    );
+    const { accessToken, refreshToken } = await generateTokens(dbUser);
 
     res.status(201).json({
       status: "success",
       data: {
         user: {
-          id: (newUser as UserWithId).id,
-          username: newUser.username,
-          email: newUser.email,
+          id: dbUser.id,
+          username: dbUser.username,
+          email: dbUser.email,
         },
         accessToken,
         refreshToken,
@@ -155,43 +176,57 @@ export const login = async (
     const { username, password } = req.body;
 
     // Find user by username
-    const user = await getUserByUsername(username);
-    if (!user) {
-      return res.status(401).json({
-        status: "error",
-        message: "Invalid credentials",
-      });
-    }
+    try {
+      const user = await selectUserByUsername(username);
 
-    // Verify password
-    const isPasswordValid = await bcryptjs.compare(
-      password,
-      user.password_hash
-    );
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        status: "error",
-        message: "Invalid credentials",
-      });
-    }
+      // Ensure user is not null before proceeding
+      if (!user) {
+        return res.status(401).json({
+          status: "error",
+          message: "Invalid credentials",
+        });
+      }
 
-    // Generate tokens
-    const { accessToken, refreshToken } = await generateTokens(
-      user as UserWithId
-    );
+      // Verify password
+      const isPasswordValid = await bcryptjs.compare(
+        password,
+        user.password_hash
+      );
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          status: "error",
+          message: "Invalid credentials",
+        });
+      }
 
-    res.status(200).json({
-      status: "success",
-      data: {
-        user: {
-          id: (user as UserWithId).id,
-          username: user.username,
-          email: user.email,
+      // The user object from database will have an ID
+      const dbUser = user as DatabaseUser;
+
+      // Generate tokens
+      const { accessToken, refreshToken } = await generateTokens(dbUser);
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          user: {
+            id: dbUser.id,
+            username: dbUser.username,
+            email: dbUser.email,
+          },
+          accessToken,
+          refreshToken,
         },
-        accessToken,
-        refreshToken,
-      },
-    });
+      });
+    } catch (error: any) {
+      // Handle the 404 user not found error
+      if (error.status === 404) {
+        return res.status(401).json({
+          status: "error",
+          message: "Invalid credentials",
+        });
+      }
+      next(error);
+    }
   } catch (error) {
     next(error);
   }
@@ -231,9 +266,18 @@ export const refreshToken = async (
         id: number;
       };
 
-      // Generate new tokens
-      const user = { id: decoded.id } as UserWithId;
-      const tokens = await generateTokens(user);
+      // We need to create a proper DatabaseUser object
+      // In this case we only need the ID since that's all we use
+      const dbUser: DatabaseUser = {
+        id: decoded.id,
+        username: "", // These are required by DatabaseUser type
+        email: "", // but not used in token generation
+        password_hash: "",
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+
+      const tokens = await generateTokens(dbUser);
 
       // Delete old refresh token
       await deleteSessionByRefreshToken(refreshToken);
