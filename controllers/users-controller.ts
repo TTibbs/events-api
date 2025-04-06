@@ -1,10 +1,13 @@
 import { Request, Response, NextFunction } from "express";
+import bcryptjs from "bcryptjs";
 import {
   selectUsers,
   selectUserById,
   selectUserByUsername,
   selectUserByEmail,
   insertUser,
+  updateUser,
+  deleteUser,
 } from "../models/users-models";
 
 export const getUsers = async (
@@ -67,7 +70,7 @@ export const createUser = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { username, email, password_hash } = req.body;
+  const { username, email, plainPassword } = req.body;
 
   // Check for missing fields and collect all error messages
   const errors = [];
@@ -80,7 +83,7 @@ export const createUser = async (
     errors.push("Email is required");
   }
 
-  if (!password_hash) {
+  if (!plainPassword) {
     errors.push("Password is required");
   }
 
@@ -94,8 +97,108 @@ export const createUser = async (
   }
 
   try {
+    // Hash the password before storing it
+    const saltRounds = 10;
+    const password_hash = await bcryptjs.hash(plainPassword, saltRounds);
+
     const newUser = await insertUser(username, email, password_hash);
     res.status(201).send({ newUser });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateUserById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const { username, email, plainPassword } = req.body;
+
+  // Don't allow empty update
+  if (!username && !email && !plainPassword) {
+    return res.status(400).send({
+      status: "error",
+      msg: "No valid fields to update",
+    });
+  }
+
+  try {
+    // First check if the user exists
+    const existingUser = await selectUserById(Number(id));
+
+    // We know existingUser is not null at this point because selectUserById
+    // would have thrown an error if the user didn't exist
+
+    // Check if username already exists (if username is being updated)
+    if (username && username !== existingUser!.username) {
+      try {
+        const userWithUsername = await selectUserByUsername(username);
+        // If we get here, a user with this username exists
+        return res.status(409).send({
+          status: "error",
+          msg: "Username already exists",
+        });
+      } catch (error: any) {
+        // If error is 404, username doesn't exist - that's good
+        if (error.status !== 404) {
+          return next(error);
+        }
+      }
+    }
+
+    // Check if email already exists (if email is being updated)
+    if (email && email !== existingUser!.email) {
+      try {
+        const userWithEmail = await selectUserByEmail(email);
+        // If we get here, a user with this email exists
+        return res.status(409).send({
+          status: "error",
+          msg: "Email already exists",
+        });
+      } catch (error: any) {
+        // If error is 404, email doesn't exist - that's good
+        if (error.status !== 404) {
+          return next(error);
+        }
+      }
+    }
+
+    // Prepare updates object
+    const updates: any = {};
+    if (username) updates.username = username;
+    if (email) updates.email = email;
+
+    // Hash password if provided
+    if (plainPassword) {
+      const saltRounds = 10;
+      updates.password_hash = await bcryptjs.hash(plainPassword, saltRounds);
+    }
+
+    // Proceed with the update
+    const updatedUser = await updateUser(Number(id), updates);
+
+    res.status(200).send({
+      status: "success",
+      msg: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteUserById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+
+  try {
+    await deleteUser(Number(id));
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

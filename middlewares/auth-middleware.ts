@@ -49,7 +49,7 @@ export const authenticate = (
 
     next();
   } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
+    if (error instanceof Error && error.name === "TokenExpiredError") {
       return res.status(401).json({
         status: "error",
         msg: "Unauthorized - Token expired",

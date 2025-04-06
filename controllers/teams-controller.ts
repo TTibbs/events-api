@@ -12,6 +12,8 @@ import {
 } from "../models/teams-models";
 
 import { selectUserById, insertUser } from "../models/users-models";
+import bcryptjs from "bcryptjs";
+import { Team, TeamMember, User } from "../types";
 
 export const getTeams = async (
   req: Request,
@@ -174,80 +176,94 @@ export const createTeamMember = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { user_id, team_id, role, username, email, password_hash } = req.body;
+  const { user_id, team_id, role, username, email, plainPassword } = req.body;
 
-  // Two possible flows:
-  // 1. Using an existing user (user_id provided)
-  // 2. Creating a new user (username, email, password_hash provided)
+  // There are two main scenarios for creating a team member:
+  // 1. Adding an existing user to a team (user_id provided)
+  // 2. Creating a new user (username, email, plainPassword provided)
+
+  // Validate based on which scenario we're in
+  const errors = [];
+
+  if (user_id) {
+    // Scenario 1: Adding existing user to a team
+    if (!team_id) {
+      return res.status(400).send({
+        status: "error",
+        msg: "Team ID is required",
+      });
+    }
+
+    if (!role) {
+      return res.status(400).send({
+        status: "error",
+        msg: "Role is required",
+      });
+    }
+  } else if (username || email || plainPassword) {
+    // Scenario 2: Creating a new user and adding them to team
+    // Ensure all required fields are present
+    if (!username) {
+      errors.push("Username is required when creating a new user");
+    }
+    if (!email) {
+      errors.push("Email is required when creating a new user");
+    }
+    if (!plainPassword) {
+      errors.push("Password is required when creating a new user");
+    }
+    if (!team_id) {
+      errors.push("Team ID is required");
+    }
+    if (!role) {
+      errors.push("Role is required");
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).send({
+        status: "error",
+        msg: "Missing required fields",
+        errors,
+      });
+    }
+  } else {
+    // Neither scenario's requirements are met
+    return res.status(400).send({
+      status: "error",
+      msg: "Missing required fields",
+      errors: [
+        "Either user_id or new user details (username, email, password) must be provided",
+        "Team ID is required",
+        "Role is required",
+      ],
+    });
+  }
 
   try {
     let userId = user_id;
-    let newUser = null;
+    let newUser: User | null = null;
 
-    // Check if we're creating a new user or using an existing one
-    if (!user_id) {
-      // Creating a new user - check for required fields
-      const errors = [];
+    // If user_id is not provided, create a new user
+    if (!userId) {
+      // Hash the password
+      const saltRounds = 10;
+      const password_hash = await bcryptjs.hash(plainPassword, saltRounds);
 
-      if (!username) {
-        errors.push("Username is required when creating a new user");
-      }
-
-      if (!email) {
-        errors.push("Email is required when creating a new user");
-      }
-
-      if (!password_hash) {
-        errors.push("Password is required when creating a new user");
-      }
-
-      if (!role) {
-        errors.push("Role is required");
-      }
-
-      if (!team_id) {
-        errors.push("Team ID is required");
-      }
-
-      if (errors.length > 0) {
-        return res.status(400).send({
-          status: "error",
-          msg: errors.length === 1 ? errors[0] : "Missing required fields",
-          errors,
-        });
-      }
-
-      // Create the new user
+      // Create the user
       try {
         newUser = await insertUser(username, email, password_hash);
-        // Access the ID from the database row (may not be defined in the User type)
-        userId = (newUser as any).id;
-      } catch (userCreationError) {
+        userId = (newUser as any).id; // Cast to any to access the ID property
+      } catch (error) {
         return res.status(400).send({
           status: "error",
           msg: "Failed to create new user. Username or email may already be in use.",
         });
       }
     } else {
-      // Using an existing user - validate role and team_id
-      if (!role) {
-        return res.status(400).send({
-          status: "error",
-          msg: "Role is required",
-        });
-      }
-
-      if (!team_id) {
-        return res.status(400).send({
-          status: "error",
-          msg: "Team ID is required",
-        });
-      }
-
-      // Check if the user exists
+      // Verify the user exists
       try {
-        await selectUserById(Number(userId));
-      } catch (userError) {
+        await selectUserById(userId);
+      } catch (error) {
         return res.status(404).send({
           status: "error",
           msg: "User not found. Cannot create team member for non-existent user.",
@@ -255,25 +271,22 @@ export const createTeamMember = async (
       }
     }
 
-    // If we get here, either the user existed or we created a new one
-    const newTeamMember = await insertTeamMember(
-      Number(userId),
-      Number(team_id),
-      role
-    );
+    // Create the team member
+    const teamMember = await insertTeamMember(userId, team_id, role);
 
+    // Return appropriate response based on whether we created a new user
     if (newUser) {
-      // If we created a new user, return both the user and team member
       res.status(201).send({
-        newUser,
-        newTeamMember,
+        status: "success",
         msg: "User and team member created successfully",
+        newUser,
+        newTeamMember: teamMember,
       });
     } else {
-      // If we used an existing user, just return the team member
       res.status(201).send({
-        newTeamMember,
+        status: "success",
         msg: "Team member created successfully",
+        newTeamMember: teamMember,
       });
     }
   } catch (err) {

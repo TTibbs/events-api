@@ -81,6 +81,25 @@ export interface TicketWithUserInfo extends TicketResponse {
   email: string;
 }
 
+// Add Event API response interfaces
+export interface EventResponse extends Event {
+  id: number;
+}
+
+export interface EventRegistrationResponse extends EventRegistration {
+  id: number;
+  // Optional relation fields that might be included in responses
+  username?: string;
+  email?: string;
+  event_title?: string;
+  reactivated?: boolean;
+}
+
+export interface EventAvailabilityResponse {
+  available: boolean;
+  reason?: string;
+}
+
 export interface SeedData {
   users: User[];
   events: Event[];

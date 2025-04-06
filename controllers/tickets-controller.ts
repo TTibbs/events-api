@@ -3,6 +3,9 @@ import * as ticketModels from "../models/tickets-models";
 import * as userModels from "../models/users-models";
 import { Ticket } from "../types";
 import crypto from "crypto";
+import { validateId } from "../utils/validators";
+import { validateRequiredFields } from "../utils/error-handlers";
+import { toNumber } from "../utils/converters";
 
 // Get all tickets
 export const getAllTickets = async (
@@ -25,16 +28,8 @@ export const getTicketById = async (
   next: NextFunction
 ) => {
   try {
-    const ticketId = parseInt(req.params.id);
+    const ticketId = validateId(req.params.id, "Ticket");
     const ticket = await ticketModels.fetchTicketById(ticketId);
-
-    if (!ticket) {
-      return res.status(404).json({
-        status: "error",
-        msg: "Ticket not found",
-      });
-    }
-
     res.status(200).json({ ticket });
   } catch (err) {
     next(err);
@@ -48,15 +43,19 @@ export const getTicketsByUserId = async (
   next: NextFunction
 ) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = validateId(req.params.userId, "User");
 
     // Check if user exists
-    const userExists = await userModels.selectUserById(userId);
-    if (!userExists) {
-      return res.status(404).json({
-        status: "error",
-        msg: "User not found",
-      });
+    try {
+      await userModels.selectUserById(userId);
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).json({
+          status: "error",
+          msg: "User not found",
+        });
+      }
+      throw error;
     }
 
     const tickets = await ticketModels.fetchTicketsByUserId(userId);
@@ -73,7 +72,7 @@ export const getTicketsByEventId = async (
   next: NextFunction
 ) => {
   try {
-    const eventId = parseInt(req.params.eventId);
+    const eventId = validateId(req.params.eventId, "Event");
     const tickets = await ticketModels.fetchTicketsByEventId(eventId);
     res.status(200).json({ tickets });
   } catch (err) {
@@ -89,14 +88,15 @@ export const verifyTicket = async (
 ) => {
   try {
     const { ticketCode } = req.params;
-    const ticket = await ticketModels.fetchTicketByCode(ticketCode);
 
-    if (!ticket) {
-      return res.status(404).json({
+    if (!ticketCode || ticketCode.trim() === "") {
+      return res.status(400).json({
         status: "error",
-        msg: "Ticket not found",
+        msg: "Ticket code is required",
       });
     }
+
+    const ticket = await ticketModels.fetchTicketByCode(ticketCode);
 
     // Check ticket validity
     if (ticket.status !== "valid") {
@@ -136,29 +136,45 @@ export const createNewTicket = async (
   try {
     const { event_id, user_id, registration_id } = req.body;
 
-    // Basic validation
-    if (!event_id || !user_id || !registration_id) {
+    // Validate required fields
+    const validationError = validateRequiredFields({
+      "Event ID": event_id,
+      "User ID": user_id,
+      "Registration ID": registration_id,
+    });
+
+    if (validationError) {
+      return res.status(validationError.status).json({
+        status: "error",
+        msg: validationError.msg,
+        errors: validationError.errors,
+      });
+    }
+
+    // Ensure all IDs are valid numbers
+    try {
+      validateId(event_id, "Event");
+      validateId(user_id, "User");
+      validateId(registration_id, "Registration");
+    } catch (error: any) {
       return res.status(400).json({
         status: "error",
-        msg: "Missing required fields",
-        errors: [
-          !event_id && "Event ID is required",
-          !user_id && "User ID is required",
-          !registration_id && "Registration ID is required",
-        ].filter(Boolean),
+        msg: error.msg,
       });
     }
 
     // Generate a unique ticket code
     const ticket_code = crypto
       .createHash("md5")
-      .update(Math.random().toString())
+      .update(
+        `${event_id}-${user_id}-${registration_id}-${Date.now()}-${Math.random()}`
+      )
       .digest("hex");
 
     const newTicket: Ticket = {
-      event_id,
-      user_id,
-      registration_id,
+      event_id: toNumber(event_id) as number,
+      user_id: toNumber(user_id) as number,
+      registration_id: toNumber(registration_id) as number,
       ticket_code,
       issued_at: new Date(),
       used_at: null,
@@ -184,7 +200,7 @@ export const updateTicket = async (
   next: NextFunction
 ) => {
   try {
-    const ticketId = parseInt(req.params.id);
+    const ticketId = validateId(req.params.id, "Ticket");
     const { status } = req.body;
 
     // Validate status
@@ -202,13 +218,6 @@ export const updateTicket = async (
       ticketId,
       status
     );
-
-    if (!updatedTicket) {
-      return res.status(404).json({
-        status: "error",
-        msg: "Ticket not found",
-      });
-    }
 
     res.status(200).json({
       status: "success",

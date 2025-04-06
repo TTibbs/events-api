@@ -1,5 +1,11 @@
 import db from "../db/connection";
 import { Ticket } from "../types";
+import { convertIdsInArray, convertIds } from "../utils/converters";
+import { createNotFoundError } from "../utils/error-handlers";
+import { executeTransaction } from "../utils/db-transaction";
+
+// Common ID fields that need to be converted
+const idFields = ["id", "event_id", "user_id", "registration_id"];
 
 // Get all tickets
 export const fetchAllTickets = async () => {
@@ -8,16 +14,7 @@ export const fetchAllTickets = async () => {
     ORDER BY issued_at DESC;
   `);
 
-  // Convert string IDs to numbers
-  const tickets = result.rows.map((ticket) => ({
-    ...ticket,
-    id: Number(ticket.id),
-    event_id: Number(ticket.event_id),
-    user_id: Number(ticket.user_id),
-    registration_id: Number(ticket.registration_id),
-  }));
-
-  return tickets;
+  return convertIdsInArray(result.rows, idFields);
 };
 
 // Get ticket by ID
@@ -29,19 +26,10 @@ export const fetchTicketById = async (id: number) => {
     [id]
   );
   if (result.rowCount === 0) {
-    return null;
+    throw createNotFoundError("Ticket", id);
   }
 
-  // Convert string IDs to numbers
-  const ticket = {
-    ...result.rows[0],
-    id: Number(result.rows[0].id),
-    event_id: Number(result.rows[0].event_id),
-    user_id: Number(result.rows[0].user_id),
-    registration_id: Number(result.rows[0].registration_id),
-  };
-
-  return ticket;
+  return convertIds(result.rows[0], idFields);
 };
 
 // Get tickets by user ID
@@ -57,16 +45,7 @@ export const fetchTicketsByUserId = async (userId: number) => {
     [userId]
   );
 
-  // Convert string IDs to numbers
-  const tickets = result.rows.map((ticket) => ({
-    ...ticket,
-    id: Number(ticket.id),
-    event_id: Number(ticket.event_id),
-    user_id: Number(ticket.user_id),
-    registration_id: Number(ticket.registration_id),
-  }));
-
-  return tickets;
+  return convertIdsInArray(result.rows, idFields);
 };
 
 // Get tickets by event ID
@@ -82,16 +61,7 @@ export const fetchTicketsByEventId = async (eventId: number) => {
     [eventId]
   );
 
-  // Convert string IDs to numbers
-  const tickets = result.rows.map((ticket) => ({
-    ...ticket,
-    id: Number(ticket.id),
-    event_id: Number(ticket.event_id),
-    user_id: Number(ticket.user_id),
-    registration_id: Number(ticket.registration_id),
-  }));
-
-  return tickets;
+  return convertIdsInArray(result.rows, idFields);
 };
 
 // Get ticket by ticket code
@@ -107,19 +77,10 @@ export const fetchTicketByCode = async (ticketCode: string) => {
     [ticketCode]
   );
   if (result.rowCount === 0) {
-    return null;
+    throw createNotFoundError("Ticket", `with code ${ticketCode}`);
   }
 
-  // Convert string IDs to numbers
-  const ticket = {
-    ...result.rows[0],
-    id: Number(result.rows[0].id),
-    event_id: Number(result.rows[0].event_id),
-    user_id: Number(result.rows[0].user_id),
-    registration_id: Number(result.rows[0].registration_id),
-  };
-
-  return ticket;
+  return convertIds(result.rows[0], idFields);
 };
 
 // Create a new ticket
@@ -138,20 +99,36 @@ export const createTicket = async (ticketData: Ticket) => {
     [event_id, user_id, registration_id, ticket_code, status || "valid"]
   );
 
-  // Convert string IDs to numbers
-  const ticket = {
-    ...result.rows[0],
-    id: Number(result.rows[0].id),
-    event_id: Number(result.rows[0].event_id),
-    user_id: Number(result.rows[0].user_id),
-    registration_id: Number(result.rows[0].registration_id),
-  };
+  return convertIds(result.rows[0], idFields);
+};
 
-  return ticket;
+// Create a ticket within a transaction
+export const createTicketInTransaction = async (
+  client: any,
+  ticketData: Ticket
+) => {
+  const { event_id, user_id, registration_id, ticket_code, status } =
+    ticketData;
+
+  const result = await client.query(
+    `
+    INSERT INTO tickets
+      (event_id, user_id, registration_id, ticket_code, status)
+    VALUES
+      ($1, $2, $3, $4, $5)
+    RETURNING *;
+  `,
+    [event_id, user_id, registration_id, ticket_code, status || "valid"]
+  );
+
+  return convertIds(result.rows[0], idFields);
 };
 
 // Update a ticket's status
 export const updateTicketStatus = async (id: number, status: string) => {
+  // First check if ticket exists
+  await fetchTicketById(id);
+
   // If marking as used, update the used_at timestamp
   if (status === "used") {
     const result = await db.query(
@@ -164,20 +141,7 @@ export const updateTicketStatus = async (id: number, status: string) => {
       [status, id]
     );
 
-    if (result.rowCount === 0) {
-      return null;
-    }
-
-    // Convert string IDs to numbers
-    const ticket = {
-      ...result.rows[0],
-      id: Number(result.rows[0].id),
-      event_id: Number(result.rows[0].event_id),
-      user_id: Number(result.rows[0].user_id),
-      registration_id: Number(result.rows[0].registration_id),
-    };
-
-    return ticket;
+    return convertIds(result.rows[0], idFields);
   }
 
   // For other status updates
@@ -191,24 +155,14 @@ export const updateTicketStatus = async (id: number, status: string) => {
     [status, id]
   );
 
-  if (result.rowCount === 0) {
-    return null;
-  }
-
-  // Convert string IDs to numbers
-  const ticket = {
-    ...result.rows[0],
-    id: Number(result.rows[0].id),
-    event_id: Number(result.rows[0].event_id),
-    user_id: Number(result.rows[0].user_id),
-    registration_id: Number(result.rows[0].registration_id),
-  };
-
-  return ticket;
+  return convertIds(result.rows[0], idFields);
 };
 
 // Delete a ticket
 export const deleteTicket = async (id: number) => {
+  // First check if ticket exists
+  await fetchTicketById(id);
+
   const result = await db.query(
     `
     DELETE FROM tickets
@@ -218,18 +172,5 @@ export const deleteTicket = async (id: number) => {
     [id]
   );
 
-  if (result.rowCount === 0) {
-    return null;
-  }
-
-  // Convert string IDs to numbers
-  const ticket = {
-    ...result.rows[0],
-    id: Number(result.rows[0].id),
-    event_id: Number(result.rows[0].event_id),
-    user_id: Number(result.rows[0].user_id),
-    registration_id: Number(result.rows[0].registration_id),
-  };
-
-  return ticket;
+  return convertIds(result.rows[0], idFields);
 };
