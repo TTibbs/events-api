@@ -9,10 +9,12 @@
     "setup-dbs": "psql -f ./db/setup.sql",
     "seed": "ts-node ./db/seeds/run-seed.ts",
     "seed-prod": "NODE_ENV=production npm run seed",
-    "test": "jest --verbose",
+    "test": "jest --verbose --runInBand",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:openHandles": "jest --detectOpenHandles"
+    "test:coverage": "jest --coverage --runInBand",
+    "test:openHandles": "jest --detectOpenHandles",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:e2e:jest": "jest __tests__/e2e.jest.test.ts --runInBand"
   },
   "keywords": [],
   "author": "",
@@ -44,7 +46,8 @@
     "supertest": "^7.1.0",
     "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.1.1"
   },
   "jest": {
     "preset": "ts-jest",
@@ -52,6 +55,11 @@
     "setupFilesAfterEnv": [
       "jest-extended/all",
       "jest-sorted"
-    ]
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "__tests__/e2e.test.ts"
+    ],
+    "testTimeout": 30000
   }
 }

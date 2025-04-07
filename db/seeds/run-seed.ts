@@ -1,19 +1,23 @@
 import {
   users,
+  teams,
   events,
   eventRegistrations,
-  staffMembers,
+  teamMembers,
   userSessions,
+  tickets,
 } from "../data/test-data/index";
 import seed from "../seeds/seed";
 import db from "../connection";
 
 const devData = {
-  userData: users,
-  eventData: events,
-  eventRegistrationData: eventRegistrations,
-  staffMemberData: staffMembers,
-  userSessionData: userSessions,
+  users,
+  teams,
+  events,
+  eventRegistrations,
+  teamMembers,
+  userSessions,
+  tickets,
 };
 
 const runSeed = async (): Promise<void> => {

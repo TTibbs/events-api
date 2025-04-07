@@ -1,27 +1,31 @@
 import { User } from "../../../types";
+import bcrypt from "bcryptjs";
+
+// Hash the password "password123" for test users
+const password = "password123";
+const saltRounds = 10;
+// Generate a hash synchronously since this is just for test data
+const passwordHash = bcrypt.hashSync(password, saltRounds);
 
 export const users: User[] = [
   {
     username: "alice123",
     email: "alice@example.com",
-    password_hash:
-      "$2y$10$GbHyOU8IrLmfI/zxNLk2NeSyvAEI5xSr9KUM5h9MCVxJwkdEEu6R2",
+    password_hash: passwordHash,
     created_at: new Date(),
     updated_at: new Date(),
   },
   {
     username: "bob123",
     email: "bob@example.com",
-    password_hash:
-      "$2y$10$GbHyOU8IrLmfI/zxNLk2NeSyvAEI5xSr9KUM5h9MCVxJwkdEEu6R2",
+    password_hash: passwordHash,
     created_at: new Date(),
     updated_at: new Date(),
   },
   {
     username: "charlie123",
     email: "charlie@example.com",
-    password_hash:
-      "$2y$10$GbHyOU8IrLmfI/zxNLk2NeSyvAEI5xSr9KUM5h9MCVxJwkdEEu6R2",
+    password_hash: passwordHash,
     created_at: new Date(),
     updated_at: new Date(),
   },
