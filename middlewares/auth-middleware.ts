@@ -115,3 +115,6 @@ export const authMiddleware = {
   // Middleware to ensure user is an admin
   isAdmin: [authenticate, authorize("admin")],
 };
+
+// Export authenticate as requireAuth for clarity in routes
+export const requireAuth = authenticate;

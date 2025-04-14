@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.6% </span>
+                <span class="strong">86.48% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>97/112</span>
+                <span class='fraction'>96/111</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">85.43% </span>
+                <span class="strong">85.29% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>88/103</span>
+                <span class='fraction'>87/102</span>
             </div>
         
             
@@ -367,12 +367,10 @@
 <a name='L302'></a><a href='#L302'>302</a>
 <a name='L303'></a><a href='#L303'>303</a>
 <a name='L304'></a><a href='#L304'>304</a>
-<a name='L305'></a><a href='#L305'>305</a>
-<a name='L306'></a><a href='#L306'>306</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L305'></a><a href='#L305'>305</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -502,18 +500,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -522,10 +520,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -534,14 +532,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -551,9 +549,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -678,9 +676,8 @@ import * as ticketModels from "../models/tickets-models";
 import * as userModels from "../models/users-models";
 import { Ticket } from "../types";
 import crypto from "crypto";
-import { validateId } from "../utils/validators";
-import { validateRequiredFields } from "../utils/error-handlers";
 import { toNumber } from "../utils/converters";
+import { validateRequiredFields, validateId } from "../utils/error-handlers";
 &nbsp;
 // Get all tickets
 export const getAllTickets = async (
@@ -703,7 +700,7 @@ export const getTicketById = async (
   next: NextFunction
 ) =&gt; {
   try {
-    const ticketId = validateId(req.params.id, "Ticket");
+    const ticketId = Number(req.params.id);
     const ticket = await ticketModels.fetchTicketById(ticketId);
     res.status(200).json({ ticket });
   } catch (err) {
@@ -718,7 +715,7 @@ export const getTicketsByUserId = async (
   next: NextFunction
 ) =&gt; {
   try {
-    const userId = validateId(req.params.userId, "User");
+    const userId = Number(req.params.userId);
 &nbsp;
     // Check if user exists
     try {
@@ -747,7 +744,7 @@ export const getTicketsByEventId = <span class="fstat-no" title="function not co
   next: NextFunction
 ) =&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" > {</span></span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
-    const eventId = <span class="cstat-no" title="statement not covered" >validateId(req.params.eventId, "Event");</span>
+    const eventId = <span class="cstat-no" title="statement not covered" >Number(req.params.eventId);</span>
     const tickets = <span class="cstat-no" title="statement not covered" >await ticketModels.fetchTicketsByEventId(eventId);</span>
 <span class="cstat-no" title="statement not covered" >    res.status(200).json({ tickets });</span>
   } catch (err) {
@@ -963,7 +960,7 @@ export const deleteTicketById = async (
   next: NextFunction
 ) =&gt; {
   try {
-    const ticketId = parseInt(req.params.id);
+    const ticketId = validateId(req.params.id, "Ticket");
     const deletedTicket = await ticketModels.deleteTicket(ticketId);
 &nbsp;
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!deletedTicket) {
@@ -985,7 +982,7 @@ export const deleteTicketById = async (
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-06T21:16:40.443Z
+                at 2025-04-13T22:59:08.175Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

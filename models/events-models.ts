@@ -4,8 +4,6 @@ import {
   executeTransaction,
   executeWithRowLock,
 } from "../utils/db-transaction";
-import { convertIdsInArray, convertIds } from "../utils/converters";
-import { createNotFoundError } from "../utils/error-handlers";
 import crypto from "crypto";
 
 // Get all events
@@ -351,26 +349,29 @@ export const registerUserForEvent = async (
     );
 
     if (eventAvailabilityQuery.rows.length === 0) {
-      throw createNotFoundError("Event", eventId);
+      return Promise.reject({
+        status: 404,
+        msg: "Event not found",
+      });
     }
 
     const event = eventAvailabilityQuery.rows[0];
 
     // Check event status
     if (event.status !== "published") {
-      throw {
+      return Promise.reject({
         status: 400,
         msg: "Event is draft, not published",
-      };
+      });
     }
 
     // Check event dates
     const now = new Date();
     if (new Date(event.start_time) <= now) {
-      throw {
+      return Promise.reject({
         status: 400,
         msg: "Event has already started",
-      };
+      });
     }
 
     // Check capacity if max_attendees is set
@@ -389,10 +390,10 @@ export const registerUserForEvent = async (
       );
 
       if (registrationCount >= event.max_attendees) {
-        throw {
+        return Promise.reject({
           status: 400,
           msg: "Event has reached maximum attendee capacity",
-        };
+        });
       }
     }
 
@@ -431,10 +432,10 @@ export const registerUserForEvent = async (
       }
 
       // Otherwise, user is already registered
-      throw {
+      return Promise.reject({
         status: 400,
         msg: "User is already registered for this event",
-      };
+      });
     }
 
     // Create new registration within transaction
@@ -490,17 +491,20 @@ export const cancelRegistration = async (
     );
 
     if (registrationResult.rows.length === 0) {
-      throw createNotFoundError("Registration", registrationId);
+      return Promise.reject({
+        status: 404,
+        msg: "Registration not found",
+      });
     }
 
     const registration = registrationResult.rows[0];
 
     // Check if registration is already cancelled
     if (registration.status === "cancelled") {
-      throw {
+      return Promise.reject({
         status: 400,
         msg: "Registration is already cancelled",
-      };
+      });
     }
 
     // Update registration status
@@ -532,4 +536,27 @@ export const cancelRegistration = async (
       user_id: Number(updatedRegistration.user_id),
     };
   });
+};
+
+// Get registration by ID
+export const getRegistrationById = async (registrationId: number) => {
+  const result = await db.query(
+    `
+    SELECT * FROM event_registrations
+    WHERE id = $1
+    `,
+    [registrationId]
+  );
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const registration = result.rows[0];
+  return {
+    ...registration,
+    id: Number(registration.id),
+    event_id: Number(registration.event_id),
+    user_id: Number(registration.user_id),
+  };
 };

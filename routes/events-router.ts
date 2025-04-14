@@ -12,6 +12,7 @@ import {
   cancelEventRegistration,
   checkEventRegistrationAvailability,
 } from "../controllers/events-controller";
+import { authenticate, authMiddleware } from "../middlewares/auth-middleware";
 
 const eventsRouter = Router();
 
@@ -29,6 +30,7 @@ const cancelEventRegistrationHandler =
   cancelEventRegistration as RequestHandler;
 const checkEventRegistrationAvailabilityHandler =
   checkEventRegistrationAvailability as RequestHandler;
+const authenticateHandler = authMiddleware.isAuthenticated as RequestHandler;
 
 // GET /api/events - Get all events
 eventsRouter.get("/", getEventsHandler);
@@ -43,7 +45,11 @@ eventsRouter.get("/team/:teamId", getEventsByTeamIdHandler);
 eventsRouter.get("/:id", getEventByIdHandler);
 
 // GET /api/events/:id/registrations - Get registrations for an event
-eventsRouter.get("/:id/registrations", getEventRegistrationsHandler);
+eventsRouter.get(
+  "/:id/registrations",
+  authenticateHandler,
+  getEventRegistrationsHandler
+);
 
 // GET /api/events/:eventId/availability - Check event availability for registration
 eventsRouter.get(
@@ -61,11 +67,18 @@ eventsRouter.patch("/:id", updateEventHandler);
 eventsRouter.delete("/:id", deleteEventHandler);
 
 // POST /api/events/:eventId/register - Register for an event
-eventsRouter.post("/:eventId/register", registerForEventHandler);
+// Requires authentication
+eventsRouter.post(
+  "/:eventId/register",
+  authenticateHandler,
+  registerForEventHandler
+);
 
 // PATCH /api/registrations/:registrationId/cancel - Cancel registration
+// Requires authentication
 eventsRouter.patch(
   "/registrations/:registrationId/cancel",
+  authenticateHandler,
   cancelEventRegistrationHandler
 );
 

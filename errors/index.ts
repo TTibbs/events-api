@@ -1,9 +1,23 @@
 import { Request, Response, NextFunction } from "express";
 
-interface CustomError extends Error {
+interface CustomErrorInterface extends Error {
   status?: number;
   msg?: string;
   code?: string;
+}
+
+// Custom error class for application-specific errors
+export class CustomError extends Error implements CustomErrorInterface {
+  status: number;
+  msg: string;
+
+  constructor(message: string, statusCode: number = 500) {
+    super(message);
+    this.status = statusCode;
+    this.msg = message;
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
 }
 
 export const inputErrorHandler = (
@@ -12,13 +26,15 @@ export const inputErrorHandler = (
   next: NextFunction
 ) => {
   res.status(404).send({ msg: "Invalid input" });
-  const err: CustomError = new Error("Invalid input") as CustomError;
+  const err: CustomErrorInterface = new Error(
+    "Invalid input"
+  ) as CustomErrorInterface;
   err.status = 404;
   next(err);
 };
 
 export const psqlErrorHandler = (
-  err: CustomError,
+  err: CustomErrorInterface,
   req: Request,
   res: Response,
   next: NextFunction
@@ -29,7 +45,7 @@ export const psqlErrorHandler = (
 };
 
 export const customErrorHandler = (
-  err: CustomError,
+  err: CustomErrorInterface,
   req: Request,
   res: Response,
   next: NextFunction
@@ -40,7 +56,7 @@ export const customErrorHandler = (
 };
 
 export const serverErrorHandler = (
-  err: CustomError,
+  err: CustomErrorInterface,
   req: Request,
   res: Response,
   next: NextFunction

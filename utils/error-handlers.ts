@@ -1,85 +1,11 @@
 /**
- * Utility functions for standardized error handling
- */
-
-/**
- * Standard error structure for API responses
+ * Interface for API errors with status code, message, and optional errors array
  */
 export interface ApiError {
   status: number;
   msg: string;
-  detail?: string;
   errors?: string[];
 }
-
-/**
- * Creates a standardized 404 Not Found error
- * @param entity - The entity type that was not found (e.g., "User", "Event")
- * @param id - The ID that was searched for
- * @returns A standard API error object
- */
-export const createNotFoundError = (
-  entity: string,
-  id?: string | number
-): ApiError => {
-  return {
-    status: 404,
-    msg: `${entity} not found`,
-  };
-};
-
-/**
- * Creates a standardized 400 Bad Request error
- * @param message - The error message
- * @param errors - Optional array of specific validation errors
- * @returns A standard API error object
- */
-export const createBadRequestError = (
-  message: string,
-  errors?: string[]
-): ApiError => {
-  return {
-    status: 400,
-    msg: message,
-    errors: errors,
-  };
-};
-
-/**
- * Creates a standardized 401 Unauthorized error
- * @param message - The error message
- * @returns A standard API error object
- */
-export const createUnauthorizedError = (message = "Unauthorized"): ApiError => {
-  return {
-    status: 401,
-    msg: message,
-  };
-};
-
-/**
- * Creates a standardized 403 Forbidden error
- * @param message - The error message
- * @returns A standard API error object
- */
-export const createForbiddenError = (message = "Forbidden"): ApiError => {
-  return {
-    status: 403,
-    msg: message,
-  };
-};
-
-/**
- * Creates a standardized 409 Conflict error
- * @param message - The error message
- * @returns A standard API error object
- */
-export const createConflictError = (message: string): ApiError => {
-  return {
-    status: 409,
-    msg: message,
-  };
-};
 
 /**
  * Helper function to handle missing required fields
@@ -107,4 +33,22 @@ export const validateRequiredFields = (
   }
 
   return undefined;
+};
+
+/**
+ * Helper function to validate and convert ID parameters
+ * @param id - ID to validate
+ * @param entityName - Name of the entity for error messages
+ * @returns Validated number ID
+ * @throws ApiError if ID is invalid
+ */
+export const validateId = (id: any, entityName: string): number => {
+  const numId = Number(id);
+  if (isNaN(numId) || numId <= 0) {
+    throw {
+      status: 400,
+      msg: `Invalid ${entityName} ID`,
+    };
+  }
+  return numId;
 };

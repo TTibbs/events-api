@@ -14,12 +14,6 @@ import {
 import { selectTeamMemberByUserId } from "../models/teams-models";
 import { User } from "../types";
 
-// Define a DatabaseUser type that extends User with an ID
-// This represents what comes back from the database
-interface DatabaseUser extends User {
-  id: number;
-}
-
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const JWT_REFRESH_SECRET =
@@ -28,9 +22,9 @@ const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "15m";
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 // Helper function to generate tokens
-const generateTokens = async (user: DatabaseUser) => {
+const generateTokens = async (user: User) => {
   // Get staff role if exists
-  const teamMember = await selectTeamMemberByUserId(user.id);
+  const teamMember = await selectTeamMemberByUserId(user.id as number);
 
   // Create payload with user data and role
   const payload = {
@@ -92,7 +86,7 @@ const generateTokens = async (user: DatabaseUser) => {
   expiresAt.setSeconds(expiresAt.getSeconds() + refreshExpirySeconds);
 
   // Store refresh token in database
-  await createSession(user.id, accessToken, refreshToken, expiresAt);
+  await createSession(user.id as number, accessToken, refreshToken, expiresAt);
 
   return { accessToken, refreshToken };
 };
@@ -144,7 +138,7 @@ export const register = async (
 
     // Since newUser comes from the database after creation,
     // it will have an ID assigned by PostgreSQL's SERIAL
-    const dbUser = newUser as DatabaseUser;
+    const dbUser = newUser as User;
 
     // Generate tokens
     const { accessToken, refreshToken } = await generateTokens(dbUser);
@@ -200,7 +194,7 @@ export const login = async (
       }
 
       // The user object from database will have an ID
-      const dbUser = user as DatabaseUser;
+      const dbUser = user as User;
 
       // Generate tokens
       const { accessToken, refreshToken } = await generateTokens(dbUser);
@@ -268,7 +262,7 @@ export const refreshToken = async (
 
       // We need to create a proper DatabaseUser object
       // In this case we only need the ID since that's all we use
-      const dbUser: DatabaseUser = {
+      const dbUser: User = {
         id: decoded.id,
         username: "", // These are required by DatabaseUser type
         email: "", // but not used in token generation

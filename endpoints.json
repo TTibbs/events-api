@@ -6,8 +6,8 @@
     "description": "Returns an array of users with the username, name and avatar url",
     "exampleResponse": [
       {
-        "username": "10x engineer",
-        "name": "Theo"
+        "username": "bob123",
+        "name": "Bob"
       }
     ]
   },

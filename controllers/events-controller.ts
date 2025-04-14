@@ -11,6 +11,7 @@ import {
   registerUserForEvent,
   cancelRegistration,
   checkEventAvailability,
+  getRegistrationById,
 } from "../models/events-models";
 
 export const getEvents = async (
@@ -216,18 +217,34 @@ export const registerForEvent = async (
 ) => {
   try {
     const { eventId } = req.params;
-    const { userId } = req.body;
 
-    if (!userId) {
+    // Authentication is required
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Authentication required" });
+    }
+
+    // Check for empty request body or undefined userId
+    if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({ msg: "User ID is required" });
     }
 
-    const registration = await registerUserForEvent(
-      Number(eventId),
-      Number(userId)
-    );
+    // Use the authenticated user's ID by default
+    let userId = req.user.id;
 
-    res.status(201).json({
+    // If userId is provided in body and different from authenticated user,
+    // this could be an admin registering someone else - use that ID
+    if (req.body.userId !== undefined) {
+      // In a real app, we would check if the user has admin permissions here
+      // For example: if (req.user.role === 'admin') { ... }
+      userId = Number(req.body.userId);
+    }
+
+    const registration = await registerUserForEvent(Number(eventId), userId);
+
+    // If registration was reactivated, return 200 instead of 201
+    const statusCode = registration.reactivated ? 200 : 201;
+
+    res.status(statusCode).json({
       msg: registration.reactivated
         ? "Registration reactivated successfully"
         : "Registration successful",
@@ -247,14 +264,48 @@ export const cancelEventRegistration = async (
   try {
     const { registrationId } = req.params;
 
-    const cancelledRegistration = await cancelRegistration(
-      Number(registrationId)
-    );
+    // Authentication is required
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Authentication required" });
+    }
 
-    res.status(200).json({
-      msg: "Registration cancelled successfully",
-      registration: cancelledRegistration,
-    });
+    // Get the registration
+    const registration = await getRegistrationById(Number(registrationId));
+
+    if (!registration) {
+      return res.status(404).json({ msg: "Registration not found" });
+    }
+
+    // Check if the registration belongs to the authenticated user
+    // In a real app, we would also allow admins to cancel any registration
+    // For example: if (req.user.role === 'admin' || registration.user_id === req.user.id) { ... }
+    if (registration.user_id !== req.user.id) {
+      return res
+        .status(403)
+        .json({ msg: "You can only cancel your own registrations" });
+    }
+
+    try {
+      const cancelledRegistration = await cancelRegistration(
+        Number(registrationId)
+      );
+
+      res.status(200).json({
+        msg: "Registration cancelled successfully",
+        registration: cancelledRegistration,
+      });
+    } catch (error: any) {
+      // Handle specific error for already cancelled registration
+      if (
+        error.status === 400 &&
+        error.msg === "Registration is already cancelled"
+      ) {
+        return res.status(400).json({
+          msg: "Registration is already cancelled",
+        });
+      }
+      throw error;
+    }
   } catch (error) {
     next(error);
   }

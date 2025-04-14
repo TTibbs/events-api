@@ -6,15 +6,14 @@ require("dotenv").config({
 });
 
 if (!process.env.PGDATABASE && !process.env.DATABASE_URL) {
-  throw new Error("PG databse or database URL not set");
+  throw new Error("PG database or database URL not set");
 }
 
 const config: PoolConfig = {
   connectionString: process.env.DATABASE_URL as string,
+  max: ENV === "production" ? 2 : 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 };
-
-if (ENV === "production") {
-  config.max = 2;
-}
 
 export default new Pool(config);

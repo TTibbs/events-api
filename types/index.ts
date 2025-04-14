@@ -1,9 +1,11 @@
 export type User = {
+  id?: number;
   username: string;
   email: string;
   password_hash: string;
   created_at: Date;
   updated_at: Date;
+  teams?: TeamInfo[];
 };
 
 export type UserSession = {
@@ -56,12 +58,20 @@ export type Ticket = {
   event_id: number;
   user_id: number;
   registration_id: number;
+  paid?: boolean;
   ticket_code: string;
   issued_at: Date;
   used_at: Date | null;
   status: string;
   created_at?: Date;
   updated_at?: Date;
+};
+
+export type TeamInfo = {
+  team_id: number;
+  team_name: string;
+  team_description: string;
+  role: string;
 };
 
 // Extended API response interfaces

@@ -53,3 +53,30 @@ export const executeWithRowLock = async <T>(
     return await callback(client);
   });
 };
+
+/**
+ * Executes a callback function within a database transaction.
+ * Automatically commits on success and rolls back on error.
+ *
+ * @param callback The function to execute within the transaction
+ * @returns The result of the callback function
+ */
+export const withTransaction = async <T>(
+  callback: (client: any) => Promise<T>
+): Promise<T> => {
+  const client = await db.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const result = await callback(client);
+
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};

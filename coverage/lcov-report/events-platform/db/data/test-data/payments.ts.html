@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for events-platform/db/data/test-data/events.ts</title>
+    <title>Code coverage report for events-platform/db/data/test-data/payments.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../../prettify.css" />
     <link rel="stylesheet" href="../../../../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">events-platform/db/data/test-data</a> events.ts</h1>
+        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">events-platform/db/data/test-data</a> payments.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -99,7 +99,8 @@
 <a name='L34'></a><a href='#L34'>34</a>
 <a name='L35'></a><a href='#L35'>35</a>
 <a name='L36'></a><a href='#L36'>36</a>
-<a name='L37'></a><a href='#L37'>37</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -135,40 +136,42 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Event } from "../../../types";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Payment } from "../../../types";
 &nbsp;
-export const events: Event[] = [
+export const payments: Payment[] = [
   {
-    status: "published",
-    title: "Tech Conference 2025",
-    description: "A conference for tech enthusiasts.",
-    location: "New York",
-    start_time: new Date("2025-06-01T10:00:00Z"),
-    end_time: new Date("2025-06-01T18:00:00Z"),
-    max_attendees: 200,
-    price: 49.99,
-    event_type: "conference",
-    is_public: true,
-    team_id: 1, // Added team_id reference
-    created_by: 1, // Reference to a team member
-    created_at: new Date(),
-    updated_at: new Date(),
+    id: "f47ac10b-58cc-4372-a567-0e02b2c3d479", // Fixed UUID for testing
+    user_id: 3,
+    event_id: 1,
+    stripe_payment_intent_id: "pi_1MvfEeGswQjWEQyxFGmL0abC",
+    amount: 2000,
+    currency: "usd",
+    status: "succeeded",
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+    updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
   },
   {
-    status: "draft",
-    title: "JavaScript Workshop",
-    description: "An intensive workshop on modern JavaScript.",
-    location: "San Francisco",
-    start_time: new Date("2025-07-15T09:00:00Z"),
-    end_time: new Date("2025-07-15T17:00:00Z"),
-    max_attendees: 50,
-    price: 29.99,
-    event_type: "workshop",
-    is_public: false,
-    team_id: 2, // Added team_id reference
-    created_by: 2,
-    created_at: new Date(),
-    updated_at: new Date(),
+    id: "f47ac10b-58cc-4372-a567-0e02b2c3d480", // Fixed UUID for testing
+    user_id: 1,
+    event_id: 1,
+    stripe_payment_intent_id: "pi_1MvfEeGswQjWEQyxFGmL0abD",
+    amount: 1500,
+    currency: "usd",
+    status: "pending",
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: "f47ac10b-58cc-4372-a567-0e02b2c3d481", // Fixed UUID for testing
+    user_id: 2,
+    event_id: 2,
+    stripe_payment_intent_id: "pi_1MvfEeGswQjWEQyxFGmL0abE",
+    amount: 5000,
+    currency: "usd",
+    status: "failed",
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
   },
 ];
 &nbsp;</pre></td></tr></table></pre>

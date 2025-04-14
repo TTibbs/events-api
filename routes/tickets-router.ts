@@ -1,5 +1,6 @@
 import { Router, RequestHandler } from "express";
 import * as ticketsController from "../controllers/tickets-controller";
+import { authenticate, authMiddleware } from "../middlewares/auth-middleware";
 
 const ticketsRouter = Router();
 
@@ -17,22 +18,32 @@ const useTicketHandler = ticketsController.useTicket as RequestHandler;
 const updateTicketHandler = ticketsController.updateTicket as RequestHandler;
 const deleteTicketByIdHandler =
   ticketsController.deleteTicketById as RequestHandler;
+const authenticateHandler = authMiddleware.isAuthenticated as RequestHandler;
 
 // GET routes - specific routes first
-ticketsRouter.get("/user/:userId", getTicketsByUserIdHandler);
+// Get tickets by user ID - requires authentication
+ticketsRouter.get(
+  "/user/:userId",
+  authenticateHandler,
+  getTicketsByUserIdHandler
+);
 ticketsRouter.get("/event/:eventId", getTicketsByEventIdHandler);
 ticketsRouter.get("/verify/:ticketCode", verifyTicketHandler);
 ticketsRouter.get("/:id", getTicketByIdHandler);
 ticketsRouter.get("/", getAllTicketsHandler);
 
 // POST routes
-ticketsRouter.post("/use/:ticketCode", useTicketHandler);
-ticketsRouter.post("/", createNewTicketHandler);
+// Use ticket - requires authentication
+ticketsRouter.post("/use/:ticketCode", authenticateHandler, useTicketHandler);
+// Create new ticket - requires authentication
+ticketsRouter.post("/", authenticateHandler, createNewTicketHandler);
 
 // PATCH routes
-ticketsRouter.patch("/:id", updateTicketHandler);
+// Update ticket - requires authentication
+ticketsRouter.patch("/:id", authenticateHandler, updateTicketHandler);
 
 // DELETE routes
-ticketsRouter.delete("/:id", deleteTicketByIdHandler);
+// Delete ticket - requires authentication
+ticketsRouter.delete("/:id", authenticateHandler, deleteTicketByIdHandler);
 
 export default ticketsRouter;

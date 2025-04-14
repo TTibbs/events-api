@@ -1,8 +1,6 @@
 import db from "../db/connection";
-import { Ticket } from "../types";
+import { Ticket, TicketResponse } from "../types";
 import { convertIdsInArray, convertIds } from "../utils/converters";
-import { createNotFoundError } from "../utils/error-handlers";
-import { executeTransaction } from "../utils/db-transaction";
 
 // Common ID fields that need to be converted
 const idFields = ["id", "event_id", "user_id", "registration_id"];
@@ -25,8 +23,11 @@ export const fetchTicketById = async (id: number) => {
   `,
     [id]
   );
-  if (result.rowCount === 0) {
-    throw createNotFoundError("Ticket", id);
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Ticket not found",
+    });
   }
 
   return convertIds(result.rows[0], idFields);
@@ -76,8 +77,11 @@ export const fetchTicketByCode = async (ticketCode: string) => {
   `,
     [ticketCode]
   );
-  if (result.rowCount === 0) {
-    throw createNotFoundError("Ticket", `with code ${ticketCode}`);
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Ticket not found",
+    });
   }
 
   return convertIds(result.rows[0], idFields);
@@ -171,6 +175,33 @@ export const deleteTicket = async (id: number) => {
     `,
     [id]
   );
-
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Ticket not found",
+    });
+  }
   return convertIds(result.rows[0], idFields);
+};
+
+/**
+ * Marks a ticket as paid
+ * @param ticketId ID of the ticket to update
+ * @param paid Paid status (default: true)
+ * @returns Promise resolving to the updated ticket
+ */
+export const markTicketAsPaid = async (
+  ticketId: number,
+  paid: boolean = true
+): Promise<TicketResponse | undefined> => {
+  const queryString = `
+    UPDATE tickets
+    SET paid = $1, status = $2
+    WHERE id = $3
+    RETURNING *
+  `;
+
+  const status = paid ? "valid" : "pending_payment";
+  const result = await db.query(queryString, [paid, status, ticketId]);
+  return result.rows[0];
 };

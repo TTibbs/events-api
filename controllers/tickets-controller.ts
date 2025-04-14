@@ -3,9 +3,8 @@ import * as ticketModels from "../models/tickets-models";
 import * as userModels from "../models/users-models";
 import { Ticket } from "../types";
 import crypto from "crypto";
-import { validateId } from "../utils/validators";
-import { validateRequiredFields } from "../utils/error-handlers";
 import { toNumber } from "../utils/converters";
+import { validateRequiredFields, validateId } from "../utils/error-handlers";
 
 // Get all tickets
 export const getAllTickets = async (
@@ -28,7 +27,7 @@ export const getTicketById = async (
   next: NextFunction
 ) => {
   try {
-    const ticketId = validateId(req.params.id, "Ticket");
+    const ticketId = Number(req.params.id);
     const ticket = await ticketModels.fetchTicketById(ticketId);
     res.status(200).json({ ticket });
   } catch (err) {
@@ -43,19 +42,28 @@ export const getTicketsByUserId = async (
   next: NextFunction
 ) => {
   try {
-    const userId = validateId(req.params.userId, "User");
+    const userId = Number(req.params.userId);
 
-    // Check if user exists
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Authentication required" });
+    }
+
+    // Check if the user exists
     try {
       await userModels.selectUserById(userId);
     } catch (error: any) {
       if (error.status === 404) {
-        return res.status(404).json({
-          status: "error",
-          msg: "User not found",
-        });
+        return res.status(404).json({ msg: "User not found" });
       }
       throw error;
+    }
+
+    // Only allow users to view their own tickets
+    if (req.user.id !== userId) {
+      return res
+        .status(403)
+        .json({ msg: "You can only view your own tickets" });
     }
 
     const tickets = await ticketModels.fetchTicketsByUserId(userId);
@@ -72,7 +80,7 @@ export const getTicketsByEventId = async (
   next: NextFunction
 ) => {
   try {
-    const eventId = validateId(req.params.eventId, "Event");
+    const eventId = Number(req.params.eventId);
     const tickets = await ticketModels.fetchTicketsByEventId(eventId);
     res.status(200).json({ tickets });
   } catch (err) {
@@ -238,6 +246,13 @@ export const useTicket = async (
   try {
     const { ticketCode } = req.params;
 
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Authentication required" });
+    }
+
+    const userId = req.user.id;
+
     // Find the ticket
     const ticket = await ticketModels.fetchTicketByCode(ticketCode);
 
@@ -245,6 +260,14 @@ export const useTicket = async (
       return res.status(404).json({
         status: "error",
         msg: "Ticket not found",
+      });
+    }
+
+    // Verify that the ticket belongs to the authenticated user
+    if (ticket.user_id !== userId) {
+      return res.status(403).json({
+        status: "error",
+        msg: "You can only use your own tickets",
       });
     }
 
@@ -288,7 +311,33 @@ export const deleteTicketById = async (
   next: NextFunction
 ) => {
   try {
-    const ticketId = parseInt(req.params.id);
+    const ticketId = validateId(req.params.id, "Ticket");
+
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Authentication required" });
+    }
+
+    const userId = req.user.id;
+
+    // Get the ticket to check ownership
+    const ticket = await ticketModels.fetchTicketById(ticketId);
+
+    if (!ticket) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Ticket not found",
+      });
+    }
+
+    // Verify that the ticket belongs to the authenticated user
+    if (ticket.user_id !== userId) {
+      return res.status(403).json({
+        status: "error",
+        msg: "You can only delete your own tickets",
+      });
+    }
+
     const deletedTicket = await ticketModels.deleteTicket(ticketId);
 
     if (!deletedTicket) {

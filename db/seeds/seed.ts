@@ -39,7 +39,7 @@ const seed = async ({
       CREATE TYPE event_registration_status AS ENUM ('registered', 'cancelled', 'waitlisted', 'attended');
     `);
     await db.query(`
-      CREATE TYPE ticket_status AS ENUM ('valid', 'used', 'cancelled', 'expired');
+      CREATE TYPE ticket_status AS ENUM ('valid', 'used', 'cancelled', 'expired', 'pending_payment');
     `);
 
     // Create tables
@@ -124,6 +124,7 @@ const seed = async ({
         event_id BIGINT REFERENCES events(id) ON DELETE CASCADE,
         user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
         registration_id BIGINT REFERENCES event_registrations(id) ON DELETE CASCADE,
+        paid BOOLEAN DEFAULT FALSE,
         ticket_code TEXT NOT NULL UNIQUE,
         issued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         used_at TIMESTAMP WITH TIME ZONE,
@@ -284,19 +285,25 @@ const seed = async ({
 
     // 7. Create tickets for each event registration if we have test data
     if (tickets && tickets.length > 0) {
-      const insertTicketsQueryString = format(
-        `INSERT INTO tickets (event_id, user_id, registration_id, ticket_code, issued_at, used_at, status) VALUES %L`,
-        tickets.map((ticket) => [
-          ticket.event_id,
-          ticket.user_id,
-          ticket.registration_id,
-          ticket.ticket_code,
-          ticket.issued_at,
-          ticket.used_at,
-          ticket.status,
-        ])
+      // Insert the ticket
+      const insertTicketQueryString = format(
+        `INSERT INTO tickets 
+          (event_id, user_id, registration_id, paid, ticket_code, issued_at, used_at, status)
+        VALUES %L`,
+        [
+          [
+            tickets[0].event_id,
+            tickets[0].user_id,
+            tickets[0].registration_id,
+            tickets[0].paid || false,
+            tickets[0].ticket_code,
+            tickets[0].issued_at,
+            tickets[0].used_at,
+            tickets[0].status,
+          ],
+        ]
       );
-      await db.query(insertTicketsQueryString);
+      await db.query(insertTicketQueryString);
     } else {
       // Generate tickets for registered event attendees if no test tickets provided
       await db.query(`
