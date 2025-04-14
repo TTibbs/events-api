@@ -9,6 +9,7 @@ import {
   selectTeamMemberById,
   selectTeamMemberByUserId,
   insertTeamMember,
+  selectTeamMembersByTeamId,
 } from "../models/teams-models";
 
 import { selectUserById, insertUser } from "../models/users-models";
@@ -48,16 +49,41 @@ export const createTeam = async (
   next: NextFunction
 ) => {
   const { name, description } = req.body;
+
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  // Check if the user has admin role in any team
+  try {
+    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    if (!teamMember || teamMember.role !== "admin") {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - Admin privileges required",
+      });
+    }
+  } catch (error) {
+    return res.status(403).json({
+      status: "error",
+      msg: "Forbidden - Admin privileges required",
+    });
+  }
+
   if (Object.keys(req.body).length === 0) {
-    return Promise.reject({
-      status: 400,
+    return res.status(400).json({
+      status: "error",
       msg: "Missing required fields",
     });
   }
 
   if (!name) {
-    return Promise.reject({
-      status: 400,
+    return res.status(400).json({
+      status: "error",
       msg: "Team name is required",
     });
   }
@@ -77,6 +103,34 @@ export const updateTeam = async (
 ) => {
   const { id } = req.params;
   const { name, description } = req.body;
+
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  // Check if user is admin of this specific team or admin of any team
+  try {
+    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    if (
+      !teamMember ||
+      (teamMember.team_id !== parseInt(id) && teamMember.role !== "admin") ||
+      (teamMember.team_id === parseInt(id) && teamMember.role !== "admin")
+    ) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - Admin privileges required",
+      });
+    }
+  } catch (error) {
+    return res.status(403).json({
+      status: "error",
+      msg: "Forbidden - Admin privileges required",
+    });
+  }
 
   // Check for missing fields
   const errors = [];
@@ -108,6 +162,34 @@ export const deleteTeam = async (
 ) => {
   const { id } = req.params;
 
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  // Check if user is admin of this specific team or admin of any team
+  try {
+    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    if (
+      !teamMember ||
+      (teamMember.team_id !== parseInt(id) && teamMember.role !== "admin") ||
+      (teamMember.team_id === parseInt(id) && teamMember.role !== "admin")
+    ) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - Admin privileges required",
+      });
+    }
+  } catch (error) {
+    return res.status(403).json({
+      status: "error",
+      msg: "Forbidden - Admin privileges required",
+    });
+  }
+
   try {
     await deleteTeamById(Number(id));
     res.status(204).send();
@@ -126,6 +208,24 @@ export const getTeamMembers = async (
   try {
     const teamMembers = await selectTeamMembers();
     res.status(200).send({ teamMembers });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get team members by team ID
+export const getTeamMembersByTeamId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  try {
+    // First check if the team exists
+    await selectTeamById(Number(id));
+
+    const members = await selectTeamMembersByTeamId(Number(id));
+    res.status(200).send({ members });
   } catch (err) {
     next(err);
   }
@@ -177,6 +277,35 @@ export const createTeamMember = async (
   next: NextFunction
 ) => {
   const { user_id, team_id, role, username, email, plainPassword } = req.body;
+
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  // Check if user is admin of the target team or admin of any team
+  try {
+    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    if (
+      !teamMember ||
+      (teamMember.team_id !== parseInt(team_id) &&
+        teamMember.role !== "admin") ||
+      (teamMember.team_id === parseInt(team_id) && teamMember.role !== "admin")
+    ) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - Admin privileges required to add team members",
+      });
+    }
+  } catch (error) {
+    return res.status(403).json({
+      status: "error",
+      msg: "Forbidden - Admin privileges required to add team members",
+    });
+  }
 
   // There are two main scenarios for creating a team member:
   // 1. Adding an existing user to a team (user_id provided)

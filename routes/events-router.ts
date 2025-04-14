@@ -58,13 +58,16 @@ eventsRouter.get(
 );
 
 // POST /api/events - Create a new event
-eventsRouter.post("/", createEventHandler);
+// Requires team admin or event_manager role
+eventsRouter.post("/", authenticateHandler, createEventHandler);
 
 // PATCH /api/events/:id - Update an event
-eventsRouter.patch("/:id", updateEventHandler);
+// Requires team admin or event_manager role for the specific event
+eventsRouter.patch("/:id", authenticateHandler, updateEventHandler);
 
 // DELETE /api/events/:id - Delete an event
-eventsRouter.delete("/:id", deleteEventHandler);
+// Requires team admin or event_manager role for the specific event
+eventsRouter.delete("/:id", authenticateHandler, deleteEventHandler);
 
 // POST /api/events/:eventId/register - Register for an event
 // Requires authentication

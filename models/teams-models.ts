@@ -198,5 +198,34 @@ export const checkUserRole = async (
     return ["admin", "event_manager"].includes(teamMember.role);
   }
 
-  return false;
+  // Return true for any other role matching exactly
+  return teamMember.role === requiredRole;
+};
+
+// Get team members by team ID
+export const selectTeamMembersByTeamId = async (
+  teamId: number
+): Promise<(User & TeamMember)[]> => {
+  const { rows } = await db.query(
+    `SELECT users.*, 
+            team_members.id, 
+            team_members.user_id, 
+            team_members.team_id,
+            team_members.role, 
+            team_members.created_at as team_created_at
+     FROM team_members
+     JOIN users ON users.id = team_members.user_id
+     WHERE team_members.team_id = $1`,
+    [teamId]
+  );
+
+  // Parse numeric fields as numbers to ensure consistency
+  const teamMembers = rows.map((row) => ({
+    ...row,
+    id: Number(row.id),
+    user_id: Number(row.user_id),
+    team_id: Number(row.team_id),
+  }));
+
+  return teamMembers as (User & TeamMember)[];
 };

@@ -13,6 +13,7 @@ import {
   checkEventAvailability,
   getRegistrationById,
 } from "../models/events-models";
+import { selectTeamMemberByUserId } from "../models/teams-models";
 
 export const getEvents = async (
   req: Request,
@@ -61,6 +62,43 @@ export const createEvent = async (
     created_by,
   } = req.body;
 
+  // Check user authorization
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  // Check if team_id is provided
+  if (!team_id) {
+    return res.status(400).json({
+      status: "error",
+      msg: "Team ID is required",
+    });
+  }
+
+  // Check if the user is authorized to create events for this team
+  try {
+    const teamMember = await selectTeamMemberByUserId(req.user.id);
+
+    if (
+      !teamMember ||
+      teamMember.team_id !== parseInt(team_id) ||
+      (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+    ) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - You don't have permission to create events for this team",
+      });
+    }
+  } catch (error) {
+    return res.status(403).json({
+      status: "error",
+      msg: "Forbidden - You don't have permission to create events for this team",
+    });
+  }
+
   // Validate required fields
   const errors = [];
   if (!title) {
@@ -92,6 +130,15 @@ export const createEvent = async (
     const eventStatus = status || "draft"; // Default to draft if not provided
     const eventIsPublic = is_public !== undefined ? is_public : true; // Default to public if not provided
 
+    // Use the authenticated user's team member ID as created_by if not provided
+    let createdBy = created_by;
+    if (!createdBy) {
+      const teamMember = await selectTeamMemberByUserId(req.user.id);
+      if (teamMember) {
+        createdBy = teamMember.id;
+      }
+    }
+
     const newEvent = await insertEvent(
       eventStatus,
       title,
@@ -104,7 +151,7 @@ export const createEvent = async (
       event_type || null,
       eventIsPublic,
       team_id ? Number(team_id) : null,
-      created_by ? Number(created_by) : null
+      createdBy ? Number(createdBy) : null
     );
 
     res.status(201).send({ event: newEvent });
@@ -121,19 +168,51 @@ export const updateEvent = async (
   const { id } = req.params;
   const updateData = req.body;
 
-  // Validate data
-  if (
-    updateData.start_time &&
-    updateData.end_time &&
-    new Date(updateData.end_time) <= new Date(updateData.start_time)
-  ) {
-    return res.status(400).send({
+  // Check user authorization
+  if (!req.user) {
+    return res.status(401).json({
       status: "error",
-      msg: "End time must be after start time",
+      msg: "Unauthorized - Authentication required",
     });
   }
 
   try {
+    // Get the event to check which team it belongs to
+    const event = await selectEventById(Number(id));
+
+    if (!event) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Event not found",
+      });
+    }
+
+    // Check if the user is authorized to update this event
+    const teamMember = await selectTeamMemberByUserId(req.user.id);
+
+    if (
+      !teamMember ||
+      teamMember.team_id !== event.team_id ||
+      (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+    ) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - You don't have permission to update this event",
+      });
+    }
+
+    // Validate data
+    if (
+      updateData.start_time &&
+      updateData.end_time &&
+      new Date(updateData.end_time) <= new Date(updateData.start_time)
+    ) {
+      return res.status(400).send({
+        status: "error",
+        msg: "End time must be after start time",
+      });
+    }
+
     // Convert numeric values
     if (updateData.team_id) updateData.team_id = Number(updateData.team_id);
     if (updateData.created_by)
@@ -147,7 +226,7 @@ export const updateEvent = async (
       updateData.end_time = new Date(updateData.end_time);
 
     const updatedEvent = await updateEventById(Number(id), updateData);
-    res.status(200).send({ event: updatedEvent });
+    res.status(200).send({ updatedEvent });
   } catch (err) {
     next(err);
   }
@@ -159,7 +238,40 @@ export const deleteEvent = async (
   next: NextFunction
 ) => {
   const { id } = req.params;
+
+  // Check user authorization
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
   try {
+    // Get the event to check which team it belongs to
+    const event = await selectEventById(Number(id));
+
+    if (!event) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Event not found",
+      });
+    }
+
+    // Check if the user is authorized to delete this event
+    const teamMember = await selectTeamMemberByUserId(req.user.id);
+
+    if (
+      !teamMember ||
+      teamMember.team_id !== event.team_id ||
+      (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+    ) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - You don't have permission to delete this event",
+      });
+    }
+
     await deleteEventById(Number(id));
     res.status(204).send();
   } catch (err) {

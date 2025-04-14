@@ -110,6 +110,10 @@ export interface EventAvailabilityResponse {
   reason?: string;
 }
 
+export interface TeamResponse extends Team {
+  id: number;
+}
+
 export interface SeedData {
   users: User[];
   events: Event[];

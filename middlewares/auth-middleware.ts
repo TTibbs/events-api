@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { selectTeamMemberByUserId } from "../models/teams-models";
+import db from "../db/connection";
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -104,6 +105,101 @@ export const authorize = (requiredRole: string) => {
   };
 };
 
+// Middleware to check if user is authorized for a specific team
+export const authorizeTeamAction = (requiredRoles: string[]) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          status: "error",
+          msg: "Unauthorized - Authentication required",
+        });
+      }
+
+      const { teamId } = req.params;
+      if (!teamId) {
+        return res.status(400).json({
+          status: "error",
+          msg: "Team ID is required",
+        });
+      }
+
+      // Get the user's role in the specified team
+      const teamMember = await selectTeamMemberByUserId(req.user.id);
+
+      // If user is not a member of the team or doesn't have required role
+      if (
+        !teamMember ||
+        teamMember.team_id !== parseInt(teamId) ||
+        !requiredRoles.includes(teamMember.role)
+      ) {
+        return res.status(403).json({
+          status: "error",
+          msg: "Forbidden - You don't have permission to manage this team's events",
+        });
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+// Middleware to check if user can manage a specific event
+export const authorizeEventAction = () => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          status: "error",
+          msg: "Unauthorized - Authentication required",
+        });
+      }
+
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({
+          status: "error",
+          msg: "Event ID is required",
+        });
+      }
+
+      // Get the event to check which team it belongs to
+      const event = await db.query("SELECT team_id FROM events WHERE id = $1", [
+        id,
+      ]);
+      if (event.rows.length === 0) {
+        return res.status(404).json({
+          status: "error",
+          msg: "Event not found",
+        });
+      }
+
+      const eventTeamId = event.rows[0].team_id;
+
+      // Get the user's role in the event's team
+      const teamMember = await selectTeamMemberByUserId(req.user.id);
+
+      // Check if user has admin or event_manager role in the event's team
+      if (
+        !teamMember ||
+        teamMember.team_id !== eventTeamId ||
+        (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+      ) {
+        return res.status(403).json({
+          status: "error",
+          msg: "Forbidden - You don't have permission to manage this event",
+        });
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
 // Shorthand middleware for common authorization patterns
 export const authMiddleware = {
   // Middleware to ensure user is authenticated
@@ -114,6 +210,18 @@ export const authMiddleware = {
 
   // Middleware to ensure user is an admin
   isAdmin: [authenticate, authorize("admin")],
+
+  // Middleware to ensure user is authorized for team actions
+  isTeamAdmin: [authenticate, authorize("admin")],
+
+  // Middleware to ensure user can manage team events
+  canManageTeamEvents: [
+    authenticate,
+    authorizeTeamAction(["admin", "event_manager"]),
+  ],
+
+  // Middleware to ensure user can manage a specific event
+  canManageEvent: [authenticate, authorizeEventAction()],
 };
 
 // Export authenticate as requireAuth for clarity in routes
