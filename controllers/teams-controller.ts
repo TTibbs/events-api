@@ -10,6 +10,7 @@ import {
   selectTeamMemberByUserId,
   insertTeamMember,
   selectTeamMembersByTeamId,
+  selectTeamByName,
 } from "../models/teams-models";
 
 import { selectUserById, insertUser } from "../models/users-models";
@@ -38,6 +39,32 @@ export const getTeamById = async (
   try {
     const team = await selectTeamById(Number(id));
     res.status(200).send({ team });
+  } catch (err: any) {
+    if (err.status === 404) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Team not found",
+      });
+    }
+    next(err);
+  }
+};
+
+export const getTeamByName = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { name } = req.params;
+  try {
+    const team = await selectTeamByName(name);
+    if (!team) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Team not found",
+      });
+    }
+    res.status(200).send({ team });
   } catch (err) {
     next(err);
   }
@@ -58,29 +85,7 @@ export const createTeam = async (
     });
   }
 
-  // Check if the user has admin role in any team
-  try {
-    const teamMember = await selectTeamMemberByUserId(req.user.id);
-    if (!teamMember || teamMember.role !== "admin") {
-      return res.status(403).json({
-        status: "error",
-        msg: "Forbidden - Admin privileges required",
-      });
-    }
-  } catch (error) {
-    return res.status(403).json({
-      status: "error",
-      msg: "Forbidden - Admin privileges required",
-    });
-  }
-
-  if (Object.keys(req.body).length === 0) {
-    return res.status(400).json({
-      status: "error",
-      msg: "Missing required fields",
-    });
-  }
-
+  // Validate required fields
   if (!name) {
     return res.status(400).json({
       status: "error",
@@ -89,8 +94,20 @@ export const createTeam = async (
   }
 
   try {
+    // Check if team name already exists
+    const existingTeam = await selectTeamByName(name);
+    if (existingTeam) {
+      return res.status(400).json({
+        status: "error",
+        msg: "Team name already exists",
+      });
+    }
+
     const newTeam = await insertTeam(name, description);
-    res.status(201).send({ newTeam });
+    res.status(201).json({
+      status: "success",
+      newTeam,
+    });
   } catch (err) {
     next(err);
   }
@@ -109,26 +126,6 @@ export const updateTeam = async (
     return res.status(401).json({
       status: "error",
       msg: "Unauthorized - Authentication required",
-    });
-  }
-
-  // Check if user is admin of this specific team or admin of any team
-  try {
-    const teamMember = await selectTeamMemberByUserId(req.user.id);
-    if (
-      !teamMember ||
-      (teamMember.team_id !== parseInt(id) && teamMember.role !== "admin") ||
-      (teamMember.team_id === parseInt(id) && teamMember.role !== "admin")
-    ) {
-      return res.status(403).json({
-        status: "error",
-        msg: "Forbidden - Admin privileges required",
-      });
-    }
-  } catch (error) {
-    return res.status(403).json({
-      status: "error",
-      msg: "Forbidden - Admin privileges required",
     });
   }
 
@@ -193,7 +190,13 @@ export const deleteTeam = async (
   try {
     await deleteTeamById(Number(id));
     res.status(204).send();
-  } catch (err) {
+  } catch (err: any) {
+    if (err.status === 404) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Team not found",
+      });
+    }
     next(err);
   }
 };

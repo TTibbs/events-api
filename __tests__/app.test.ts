@@ -13,7 +13,6 @@ import {
 } from "../db/data/test-data/index";
 import endpointsTest from "../endpoints.json";
 import {
-  Team,
   TeamMember,
   User,
   TicketResponse,
@@ -824,7 +823,6 @@ describe("Teams API Endpoints", () => {
       }
     });
   });
-
   describe("GET /api/teams/:id - Team Lookup by ID", () => {
     test("Should successfully retrieve a team when provided a valid ID", async () => {
       const token = await getAuthToken();
@@ -839,7 +837,6 @@ describe("Teams API Endpoints", () => {
       expect(team).toHaveProperty("id", 1);
       expect(team).toHaveProperty("name", expect.any(String));
     });
-
     test("Should return appropriate error when team ID does not exist", async () => {
       const token = await getAuthToken();
 
@@ -853,7 +850,6 @@ describe("Teams API Endpoints", () => {
       expect(msg).toBe("Team not found");
     });
   });
-
   describe("GET /api/teams/:id/members - Team Members", () => {
     test("Should successfully retrieve team members", async () => {
       const token = await getAuthToken();
@@ -867,7 +863,6 @@ describe("Teams API Endpoints", () => {
 
       expect(members).toBeInstanceOf(Array);
     });
-
     test("Should return appropriate error when team ID does not exist", async () => {
       const token = await getAuthToken();
 
@@ -881,7 +876,6 @@ describe("Teams API Endpoints", () => {
       expect(msg).toBe("Team not found");
     });
   });
-
   describe("GET /api/teams/members - Team Members Listing", () => {
     test("Should successfully retrieve a list of all team members", async () => {
       const token = await getAuthToken();
@@ -932,7 +926,6 @@ describe("Teams API Endpoints", () => {
         expect(teamMember).toHaveProperty("team_id", expect.any(Number));
         expect(teamMember).toHaveProperty("role", expect.any(String));
       });
-
       test("Should return appropriate error when user has no team member record", async () => {
         const token = await getAuthToken();
         // Using a user ID that doesn't have a team member record (use a high number to avoid conflicts)
@@ -966,7 +959,6 @@ describe("Teams API Endpoints", () => {
       expect(team).toHaveProperty("name", newTeam.name);
       expect(team).toHaveProperty("description", newTeam.description);
     });
-
     test("Should return appropriate error when required fields are missing", async () => {
       const adminToken = await getTokenForRole("admin");
       const invalidTeam = {
@@ -984,8 +976,22 @@ describe("Teams API Endpoints", () => {
 
       expect(msg).toBe("Team name is required");
     });
+    test("Should reject team creation when name is already in use", async () => {
+      const adminToken = await getTokenForRole("admin");
+      const duplicateTeam = {
+        name: "Tech Events Team",
+        description: "Team for tech events and promotions",
+      };
+      const {
+        body: { msg },
+      } = await request(app)
+        .post("/api/teams")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send(duplicateTeam)
+        .expect(400);
+      expect(msg).toBe("Team name already exists");
+    });
   });
-
   describe("POST /api/teams/members - Team Member Creation", () => {
     test("Should successfully create a new team member with valid details", async () => {
       const token = await getAuthToken();
@@ -1056,8 +1062,6 @@ describe("Teams API Endpoints", () => {
         newUserTeamMember.team_id
       );
     });
-
-    // New tests to improve branch coverage
     test("Should reject team member creation when role is missing with existing user", async () => {
       const token = await getAuthToken();
       const missingRoleTeamMember = {
@@ -1075,7 +1079,6 @@ describe("Teams API Endpoints", () => {
       expect(response.body.status).toBe("error");
       expect(response.body.msg).toBe("Role is required");
     });
-
     test("Should reject team member creation when team_id is missing with existing user", async () => {
       const token = await getAuthToken();
       const missingTeamIdTeamMember = {
@@ -1093,7 +1096,6 @@ describe("Teams API Endpoints", () => {
       expect(response.body.status).toBe("error");
       expect(response.body.msg).toBe("Team ID is required");
     });
-
     test("Should reject new user team member creation when required fields are missing", async () => {
       const token = await getAuthToken();
       // Missing username
@@ -1156,7 +1158,6 @@ describe("Teams API Endpoints", () => {
         "Password is required when creating a new user"
       );
     });
-
     test("Should reject new user team member creation when username is already in use", async () => {
       const token = await getAuthToken();
       // Use an existing username from the seed data instead of creating one
@@ -1214,8 +1215,6 @@ describe("Teams API Endpoints", () => {
         .expect(404);
       expect(msg).toBe("Team not found");
     });
-
-    // Additional tests for validation logic
     test("Should reject update when name is missing", async () => {
       const token = await getAuthToken();
       const missingNameData = {
@@ -1231,7 +1230,6 @@ describe("Teams API Endpoints", () => {
       expect(response.body.status).toBe("error");
       expect(response.body.msg).toBe("Team name is required");
     });
-
     test("Should reject update with empty request body", async () => {
       const token = await getAuthToken();
       const response = await request(app)
@@ -1244,7 +1242,6 @@ describe("Teams API Endpoints", () => {
       expect(response.body.msg).toBe("Team name is required");
     });
   });
-
   describe("DELETE /api/teams/:id - Team Deletion", () => {
     test("Should successfully delete a team with valid ID", async () => {
       const token = await getAuthToken();
@@ -1844,7 +1841,6 @@ describe("Event Registration API", () => {
       );
     }
   });
-
   describe("Event Availability", () => {
     test("Check event availability returns available for a published future event", async () => {
       const { body }: { body: EventAvailabilityResponse } = await request(
@@ -1853,7 +1849,6 @@ describe("Event Registration API", () => {
 
       expect(body.available).toBe(true);
     });
-
     test("Event should be unavailable when it has already started", async () => {
       const { body }: { body: EventAvailabilityResponse } = await request(
         app
@@ -1862,7 +1857,6 @@ describe("Event Registration API", () => {
       expect(body.available).toBe(false);
       expect(body.reason).toBe("Event has already started");
     });
-
     test("Event should be unavailable when it is not published", async () => {
       const { body }: { body: EventAvailabilityResponse } = await request(
         app
@@ -1871,7 +1865,6 @@ describe("Event Registration API", () => {
       expect(body.available).toBe(false);
       expect(body.reason).toBe("Event is draft, not published");
     });
-
     test("Event should be unavailable when it has reached max capacity", async () => {
       const { body }: { body: EventAvailabilityResponse } = await request(
         app
@@ -1880,7 +1873,6 @@ describe("Event Registration API", () => {
       expect(body.available).toBe(false);
       expect(body.reason).toBe("Event has reached maximum attendee capacity");
     });
-
     test("Should properly handle errors when checking non-existent event availability", async () => {
       const response = await request(app)
         .get("/api/events/9999/availability")
@@ -1889,7 +1881,6 @@ describe("Event Registration API", () => {
       expect(response.body.status).toBe("error");
       expect(response.body.msg).toBe("Event not found");
     });
-
     test("Should handle malformed event IDs in availability checks", async () => {
       const response = await request(app)
         .get(`/api/events/${testEvent.id}abc/availability`)
@@ -1905,7 +1896,6 @@ describe("Event Registration API", () => {
       expect(nonNumericResponse.body).toHaveProperty("msg");
     });
   });
-
   describe("Event Registration", () => {
     test("User can register for an available event", async () => {
       const token = await getAuthToken();
@@ -1923,7 +1913,6 @@ describe("Event Registration API", () => {
       expect(registration.user_id).toBe(testUser.id);
       expect(registration.status).toBe("registered");
     });
-
     test("User cannot register twice for the same event", async () => {
       const token = await getAuthToken();
       // First registration
@@ -1943,7 +1932,6 @@ describe("Event Registration API", () => {
         "User is already registered for this event"
       );
     });
-
     test("Cannot register for events with unavailable status", async () => {
       const token = await getAuthToken();
       // Try to register for past event
@@ -1975,7 +1963,6 @@ describe("Event Registration API", () => {
         "Event has reached maximum attendee capacity"
       );
     });
-
     test("Cannot register with invalid user information", async () => {
       const token = await getAuthToken();
       // Missing user ID
@@ -1996,7 +1983,6 @@ describe("Event Registration API", () => {
       expect(nonExistentUserResponse.status).toBe(400); // The controller appears to be rejecting non-existent user IDs
     });
   });
-
   describe("Registration Management", () => {
     test("User can cancel registration", async () => {
       const token = await getAuthToken();
@@ -2020,7 +2006,6 @@ describe("Event Registration API", () => {
       expect(response.body.msg).toBe("Registration cancelled successfully");
       expect(registration.status).toBe("cancelled");
     });
-
     test("User can reactivate a cancelled registration", async () => {
       const token = await getAuthToken();
       // Register first - use alice123's ID (1) instead of testUser.id
@@ -2046,7 +2031,6 @@ describe("Event Registration API", () => {
       expect(response.body.msg).toBe("Registration reactivated successfully");
       expect(response.body.registration.status).toBe("registered");
     });
-
     test("Cannot cancel an already cancelled registration", async () => {
       const token = await getAuthToken();
       // First register - use alice123's ID (1) instead of testUser.id
@@ -2072,7 +2056,6 @@ describe("Event Registration API", () => {
         "Registration is already cancelled"
       );
     });
-
     test("Should return 404 when cancelling a non-existent registration", async () => {
       const token = await getAuthToken();
       const response = await request(app)
@@ -2083,7 +2066,6 @@ describe("Event Registration API", () => {
       expect(response.body.msg).toBe("Registration not found");
     });
   });
-
   describe("Registration Listing", () => {
     test("Should get event registrations for an event", async () => {
       const token = await getAuthToken();
@@ -2109,7 +2091,6 @@ describe("Event Registration API", () => {
       expect(registration).toHaveProperty("user_id", expect.any(Number));
       expect(registration).toHaveProperty("status", "registered");
     });
-
     test("Should return empty array when getting registrations for an event with no registrations", async () => {
       const token = await getAuthToken();
       const response = await request(app)
@@ -2140,7 +2121,6 @@ describe("Events API Endpoints", () => {
       });
     });
   });
-
   describe("GET /api/events/:id - Event Lookup by ID", () => {
     test("Should successfully retrieve an event when provided a valid ID", async () => {
       // First create a test event
@@ -2171,7 +2151,6 @@ describe("Events API Endpoints", () => {
       expect(event).toHaveProperty("title", newEvent.title);
       expect(event).toHaveProperty("status", newEvent.status);
     });
-
     test("Should return appropriate error when event ID does not exist", async () => {
       const {
         body: { msg },
@@ -2179,7 +2158,6 @@ describe("Events API Endpoints", () => {
       expect(msg).toBe("Event not found");
     });
   });
-
   describe("GET /api/events/upcoming - Upcoming Events", () => {
     test("Should successfully retrieve upcoming events", async () => {
       // First create a few upcoming events
@@ -2216,7 +2194,6 @@ describe("Events API Endpoints", () => {
         });
       }
     });
-
     test("Should limit results when limit parameter is provided", async () => {
       const limit = 2;
       const {
@@ -2229,7 +2206,6 @@ describe("Events API Endpoints", () => {
       expect(events.length).toBeLessThanOrEqual(limit);
     });
   });
-
   describe("GET /api/events/team/:teamId - Events by Team ID", () => {
     test("Should successfully retrieve events for a valid team ID", async () => {
       const {
@@ -2245,7 +2221,6 @@ describe("Events API Endpoints", () => {
       }
     });
   });
-
   describe("POST /api/events - Event Creation", () => {
     test("Should successfully create a new event with valid details", async () => {
       const token = await getTokenForRole("admin");
@@ -2332,7 +2307,6 @@ describe("Events API Endpoints", () => {
       expect(response.body.event.status).toBe("draft"); // Default status
       expect(response.body.event.is_public).toBe(true); // Default is_public
     });
-
     test("Should reject event creation when user is not an admin or event_manager", async () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -2378,7 +2352,6 @@ describe("Events API Endpoints", () => {
       expect(validResponse.body.event.title).toBe("Authorized Event");
     });
   });
-
   describe("PATCH /api/events/:id - Event Update", () => {
     test("Should successfully update an event with valid details", async () => {
       const token = await getTokenForRole("admin");
@@ -2419,7 +2392,6 @@ describe("Events API Endpoints", () => {
       );
       expect(response.body.updatedEvent.status).toBe(updateData.status);
     });
-
     test("Should return appropriate error when updating non-existent event", async () => {
       const token = await getTokenForRole("admin");
       const updateData = {
@@ -2435,7 +2407,6 @@ describe("Events API Endpoints", () => {
       expect(response.status).toBe(404);
       expect(response.body.msg).toBe("Event not found");
     });
-
     test("Should reject update when end time is before start time", async () => {
       const token = await getTokenForRole("admin");
 
@@ -2471,7 +2442,6 @@ describe("Events API Endpoints", () => {
       expect(response.body.status).toBe("error");
       expect(response.body.msg).toBe("End time must be after start time");
     });
-
     test("Should handle different field types and conversions during update", async () => {
       const token = await getTokenForRole("admin");
       // First create an event
@@ -2510,7 +2480,6 @@ describe("Events API Endpoints", () => {
       expect(response.body.updatedEvent.price).toBe(15.99);
       expect(response.body.updatedEvent.is_public).toBe(true);
     });
-
     test("Should reject update when user is not authorized for the team", async () => {
       // We need tokens for different roles
       const adminToken = await getTokenForRole("admin");
@@ -2550,7 +2519,6 @@ describe("Events API Endpoints", () => {
       );
     });
   });
-
   describe("DELETE /api/events/:id - Event Deletion", () => {
     test("Should successfully delete an event with valid ID", async () => {
       const token = await getTokenForRole("admin");
@@ -2583,7 +2551,6 @@ describe("Events API Endpoints", () => {
         .get(`/api/events/${eventId}`)
         .expect(404);
     });
-
     test("Should return appropriate error when deleting non-existent event", async () => {
       const token = await getTokenForRole("admin");
 
@@ -2594,7 +2561,6 @@ describe("Events API Endpoints", () => {
       expect(response.status).toBe(404);
       expect(response.body.msg).toBe("Event not found");
     });
-
     test("Should reject deletion when user is not authorized", async () => {
       // We need tokens for different roles
       const adminToken = await getTokenForRole("admin");

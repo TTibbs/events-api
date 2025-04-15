@@ -26,6 +26,14 @@ export const selectTeamById = async (id: number): Promise<Team> => {
   return team as Team;
 };
 
+export const selectTeamByName = async (name: string): Promise<Team | null> => {
+  const { rows } = await db.query("SELECT * FROM teams WHERE name = $1", [
+    name,
+  ]);
+  if (rows.length === 0) return null;
+  return rows[0] as Team;
+};
+
 export const insertTeam = async (
   name: string,
   description?: string

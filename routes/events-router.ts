@@ -12,7 +12,7 @@ import {
   cancelEventRegistration,
   checkEventRegistrationAvailability,
 } from "../controllers/events-controller";
-import { authenticate, authMiddleware } from "../middlewares/auth-middleware";
+import { authMiddleware } from "../middlewares/auth-middleware";
 
 const eventsRouter = Router();
 

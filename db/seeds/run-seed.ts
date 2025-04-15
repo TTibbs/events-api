@@ -6,7 +6,6 @@ import {
   teamMembers,
   userSessions,
   tickets,
-  payments,
 } from "../data/test-data/index";
 import seed from "../seeds/seed";
 import db from "../connection";
@@ -19,7 +18,6 @@ const devData = {
   teamMembers,
   userSessions,
   tickets,
-  payments,
 };
 
 const runSeed = async (): Promise<void> => {
