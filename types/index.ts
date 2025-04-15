@@ -98,7 +98,6 @@ export interface EventResponse extends Event {
 
 export interface EventRegistrationResponse extends EventRegistration {
   id: number;
-  // Optional relation fields that might be included in responses
   username?: string;
   email?: string;
   event_title?: string;
