@@ -15,7 +15,8 @@ import {
 
 import { selectUserById, insertUser } from "../models/users-models";
 import bcryptjs from "bcryptjs";
-import { Team, TeamMember, User } from "../types";
+import { Team, TeamMember, User, TeamResponse } from "../types";
+import { withTransaction } from "../utils/db-transaction";
 
 export const getTeams = async (
   req: Request,
@@ -85,13 +86,7 @@ export const createTeam = async (
     });
   }
 
-  // Validate required fields
-  if (!name) {
-    return res.status(400).json({
-      status: "error",
-      msg: "Team name is required",
-    });
-  }
+  // Validation is now handled by express-validator middleware
 
   try {
     // Check if team name already exists
@@ -103,10 +98,27 @@ export const createTeam = async (
       });
     }
 
-    const newTeam = await insertTeam(name, description);
+    // We already checked that req.user exists above, so we can safely use it
+    const userId = req.user.id;
+
+    const result = await withTransaction(async () => {
+      // Create the team and properly type it as TeamResponse
+      const newTeam = (await insertTeam(
+        name,
+        description
+      )) as unknown as TeamResponse;
+
+      // Add the creator as a team admin
+      const newTeamMember = await insertTeamMember(userId, newTeam.id, "admin");
+
+      return { newTeam, newTeamMember };
+    });
+
     res.status(201).json({
       status: "success",
-      newTeam,
+      message: "Team created successfully and you were added as an admin",
+      team: result.newTeam,
+      teamMember: result.newTeamMember,
     });
   } catch (err) {
     next(err);

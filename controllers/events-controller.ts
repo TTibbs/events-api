@@ -70,14 +70,6 @@ export const createEvent = async (
     });
   }
 
-  // Check if team_id is provided
-  if (!team_id) {
-    return res.status(400).json({
-      status: "error",
-      msg: "Team ID is required",
-    });
-  }
-
   // Check if the user is authorized to create events for this team
   try {
     const teamMember = await selectTeamMemberByUserId(req.user.id);
@@ -99,32 +91,7 @@ export const createEvent = async (
     });
   }
 
-  // Validate required fields
-  const errors = [];
-  if (!title) {
-    errors.push("Event title is required");
-  }
-
-  if (!start_time) {
-    errors.push("Start time is required");
-  }
-
-  if (!end_time) {
-    errors.push("End time is required");
-  }
-
-  // Check if end_time is after start_time
-  if (start_time && end_time && new Date(end_time) <= new Date(start_time)) {
-    errors.push("End time must be after start time");
-  }
-
-  if (errors.length > 0) {
-    return res.status(400).send({
-      status: "error",
-      msg: errors.length === 1 ? errors[0] : "Missing required fields",
-      errors,
-    });
-  }
+  // Required fields and validation are now handled by express-validator middleware
 
   try {
     const eventStatus = status || "draft"; // Default to draft if not provided
@@ -201,17 +168,7 @@ export const updateEvent = async (
       });
     }
 
-    // Validate data
-    if (
-      updateData.start_time &&
-      updateData.end_time &&
-      new Date(updateData.end_time) <= new Date(updateData.start_time)
-    ) {
-      return res.status(400).send({
-        status: "error",
-        msg: "End time must be after start time",
-      });
-    }
+    // Validation is now handled by express-validator middleware
 
     // Convert numeric values
     if (updateData.team_id) updateData.team_id = Number(updateData.team_id);
