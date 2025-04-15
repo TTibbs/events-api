@@ -21,11 +21,6 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h",
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
 
-  // Stripe
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
-  stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || "",
-  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
-
   // Server
   port: process.env.PORT || 3000,
 

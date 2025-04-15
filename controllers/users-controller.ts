@@ -10,6 +10,19 @@ import {
   deleteUser,
 } from "../models/users-models";
 
+// Helper function to sanitize user objects (remove password_hash)
+const sanitizeUser = (user: any) => {
+  if (!user) return user;
+
+  const { password_hash, ...sanitizedUser } = user;
+  return sanitizedUser;
+};
+
+// Helper function to sanitize an array of users
+const sanitizeUsers = (users: any[]) => {
+  return users.map((user) => sanitizeUser(user));
+};
+
 export const getUsers = async (
   req: Request,
   res: Response,
@@ -17,7 +30,9 @@ export const getUsers = async (
 ) => {
   try {
     const users = await selectUsers();
-    res.status(200).send({ users });
+    // Sanitize all users
+    const sanitizedUsers = sanitizeUsers(users);
+    res.status(200).send({ users: sanitizedUsers });
   } catch (err) {
     next(err);
   }
@@ -31,7 +46,9 @@ export const getUserById = async (
   const { id } = req.params;
   try {
     const user = await selectUserById(Number(id));
-    res.status(200).send({ user });
+    // Sanitize user
+    const sanitizedUser = sanitizeUser(user);
+    res.status(200).send({ user: sanitizedUser });
   } catch (err) {
     next(err);
   }
@@ -45,7 +62,9 @@ export const getUserByUsername = async (
   const { username } = req.params;
   try {
     const user = await selectUserByUsername(username);
-    res.status(200).send({ user });
+    // Sanitize user
+    const sanitizedUser = sanitizeUser(user);
+    res.status(200).send({ user: sanitizedUser });
   } catch (err) {
     next(err);
   }
@@ -59,7 +78,9 @@ export const getUserByEmail = async (
   const { email } = req.params;
   try {
     const user = await selectUserByEmail(email);
-    res.status(200).send({ user });
+    // Sanitize user
+    const sanitizedUser = sanitizeUser(user);
+    res.status(200).send({ user: sanitizedUser });
   } catch (err) {
     next(err);
   }
@@ -102,7 +123,9 @@ export const createUser = async (
     const password_hash = await bcryptjs.hash(plainPassword, saltRounds);
 
     const newUser = await insertUser(username, email, password_hash);
-    res.status(201).send({ newUser });
+    // Sanitize user
+    const sanitizedUser = sanitizeUser(newUser);
+    res.status(201).send({ newUser: sanitizedUser });
   } catch (err) {
     next(err);
   }
@@ -179,10 +202,13 @@ export const updateUserById = async (
     // Proceed with the update
     const updatedUser = await updateUser(Number(id), updates);
 
+    // Sanitize user
+    const sanitizedUser = sanitizeUser(updatedUser);
+
     res.status(200).send({
       status: "success",
       msg: "User updated successfully",
-      user: updatedUser,
+      user: sanitizedUser,
     });
   } catch (err) {
     next(err);

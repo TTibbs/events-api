@@ -143,13 +143,16 @@ export const register = async (
     // Generate tokens
     const { accessToken, refreshToken } = await generateTokens(dbUser);
 
+    // Sanitize user object for response (remove password_hash)
+    const { password_hash, ...sanitizedUser } = dbUser;
+
     res.status(201).json({
       status: "success",
       data: {
         user: {
-          id: dbUser.id,
-          username: dbUser.username,
-          email: dbUser.email,
+          id: sanitizedUser.id,
+          username: sanitizedUser.username,
+          email: sanitizedUser.email,
         },
         accessToken,
         refreshToken,
@@ -199,13 +202,16 @@ export const login = async (
       // Generate tokens
       const { accessToken, refreshToken } = await generateTokens(dbUser);
 
+      // Sanitize user object for response (remove password_hash)
+      const { password_hash, ...sanitizedUser } = dbUser;
+
       res.status(200).json({
         status: "success",
         data: {
           user: {
-            id: dbUser.id,
-            username: dbUser.username,
-            email: dbUser.email,
+            id: sanitizedUser.id,
+            username: sanitizedUser.username,
+            email: sanitizedUser.email,
           },
           accessToken,
           refreshToken,
