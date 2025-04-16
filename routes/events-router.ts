@@ -113,8 +113,7 @@ const eventValidation = [
       return true;
     }),
   body("team_id")
-    .notEmpty()
-    .withMessage("Team ID is required")
+    .optional()
     .isNumeric()
     .withMessage("Team ID must be a number"),
 ];

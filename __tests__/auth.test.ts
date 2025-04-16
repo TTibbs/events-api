@@ -49,6 +49,9 @@ describe("Authentication - User Registration Functionality", () => {
     expect(body.data.user.email).toBe(newUser.email);
     expect(body.data).toHaveProperty("accessToken");
     expect(body.data).toHaveProperty("refreshToken");
+    // Regular users should not have team information
+    expect(body.data).not.toHaveProperty("team");
+    expect(body.data).not.toHaveProperty("teamMember");
   });
   test("Should reject registration when username already exists in the system", async () => {
     const existingUser = {
@@ -545,6 +548,114 @@ describe("Authentication - Additional Edge Cases", () => {
     expect(response.body.errors).toHaveLength(2); // Should have 2 validation errors
     expect(response.body.errors[0].message).toBe("Username is required");
     expect(response.body.errors[1].message).toBe("Password is required");
+  });
+});
+
+describe("Authentication - Event Organiser Registration", () => {
+  test("Should successfully register as an event organiser with team information", async () => {
+    const eventOrganiser = {
+      username: "organiser123",
+      email: "organiser@example.com",
+      password: "password123",
+      isEventOrganiser: true,
+      teamName: "New Team",
+      teamDescription: "Team created during registration",
+    };
+
+    const { body } = await request(app)
+      .post("/api/auth/register")
+      .send(eventOrganiser)
+      .expect(201);
+
+    expect(body.status).toBe("success");
+    expect(body.data.user).toHaveProperty("id");
+    expect(body.data.user.username).toBe(eventOrganiser.username);
+    expect(body.data.user.email).toBe(eventOrganiser.email);
+    expect(body.data).toHaveProperty("accessToken");
+    expect(body.data).toHaveProperty("refreshToken");
+    // Event organisers should have team information
+    expect(body.data).toHaveProperty("team");
+    expect(body.data.team.name).toBe(eventOrganiser.teamName);
+    expect(body.data).toHaveProperty("teamMember");
+    expect(body.data.teamMember.role).toBe("event_manager");
+  });
+
+  test("Should reject registration as an event organiser without team name", async () => {
+    const invalidOrganiser = {
+      username: "invalidorg",
+      email: "invalid@example.com",
+      password: "password123",
+      isEventOrganiser: true,
+      // Missing teamName
+    };
+
+    const { body } = await request(app)
+      .post("/api/auth/register")
+      .send(invalidOrganiser)
+      .expect(400);
+
+    expect(body.status).toBe("error");
+    // The error can come from either validation or controller
+    if (body.errors) {
+      // If it's a validation error
+      expect(body.errors).toContainEqual(
+        expect.objectContaining({
+          message: expect.stringMatching(/team name is required/i),
+        })
+      );
+    } else {
+      // If it's a controller error
+      expect(body.msg).toMatch(/team name is required/i);
+    }
+  });
+
+  test("Should successfully register as a regular user with isEventOrganiser set to false", async () => {
+    const regularUser = {
+      username: "regularuser456",
+      email: "regular456@example.com",
+      password: "password123",
+      isEventOrganiser: false,
+      // No team name provided, which should be allowed
+    };
+
+    const { body } = await request(app)
+      .post("/api/auth/register")
+      .send(regularUser)
+      .expect(201);
+
+    expect(body.status).toBe("success");
+    expect(body.data.user).toHaveProperty("id");
+    expect(body.data.user.username).toBe(regularUser.username);
+    expect(body.data.user.email).toBe(regularUser.email);
+    expect(body.data).toHaveProperty("accessToken");
+    expect(body.data).toHaveProperty("refreshToken");
+    // Regular users should not have team information
+    expect(body.data).not.toHaveProperty("team");
+    expect(body.data).not.toHaveProperty("teamMember");
+  });
+
+  test("Should successfully register as a regular user without specifying isEventOrganiser", async () => {
+    const regularUser = {
+      username: "regularuser789",
+      email: "regular789@example.com",
+      password: "password123",
+      // No isEventOrganiser specified, should default to regular user
+    };
+
+    const { body } = await request(app)
+      .post("/api/auth/register")
+      .send(regularUser)
+      .expect(201);
+
+    expect(body.status).toBe("success");
+    expect(body.data.user).toHaveProperty("id");
+    expect(body.data.user.username).toBe(regularUser.username);
+    expect(body.data.user.email).toBe(regularUser.email);
+    expect(body.data).toHaveProperty("accessToken");
+    expect(body.data).toHaveProperty("refreshToken");
+    // Regular users should not have team information
+    expect(body.data).not.toHaveProperty("team");
+    expect(body.data).not.toHaveProperty("teamMember");
   });
 });
 

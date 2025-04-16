@@ -246,6 +246,26 @@ export const getTeamMembersByTeamId = async (
   }
 };
 
+export const getTeamMemberRoleByUserId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req.params;
+  try {
+    const teamMember = await selectTeamMemberByUserId(Number(userId));
+    if (!teamMember) {
+      return res.status(404).send({
+        status: "error",
+        msg: "Team member not found",
+      });
+    }
+    res.status(200).send({ role: teamMember.role });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getTeamMemberById = async (
   req: Request,
   res: Response,

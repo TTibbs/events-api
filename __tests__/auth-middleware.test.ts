@@ -566,6 +566,25 @@ describe("Role-Based Authorization Tests", () => {
     expect(response.body.data.teamMember.role).toBe("event_manager");
   });
 
+  test("Should allow registration as a regular user without team", async () => {
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send({
+        username: "regularuser1",
+        email: "regular@example.com",
+        password: "password123",
+      })
+      .expect(201);
+
+    expect(response.body.status).toBe("success");
+    expect(response.body.data).toHaveProperty("user");
+    expect(response.body.data).toHaveProperty("accessToken");
+    expect(response.body.data).toHaveProperty("refreshToken");
+    // Regular users should not have team information
+    expect(response.body.data).not.toHaveProperty("team");
+    expect(response.body.data).not.toHaveProperty("teamMember");
+  });
+
   test("Should allow event managers to create teams", async () => {
     const response = await request(app)
       .post("/api/teams")
@@ -660,5 +679,32 @@ describe("Role-Based Authorization Tests", () => {
       .expect(400);
 
     expect(response.body).toHaveProperty("msg");
+  });
+
+  test("Should require team name when registering as an event organiser", async () => {
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send({
+        username: "eventorganizernoteam",
+        email: "noteam@example.com",
+        password: "password123",
+        isEventOrganiser: true,
+        // No teamName provided
+      })
+      .expect(400);
+
+    expect(response.body.status).toBe("error");
+    // The error can come from either validation or controller
+    if (response.body.errors) {
+      // If it's a validation error
+      expect(response.body.errors).toContainEqual(
+        expect.objectContaining({
+          message: expect.stringMatching(/team name is required/i),
+        })
+      );
+    } else {
+      // If it's a controller error
+      expect(response.body.msg).toMatch(/team name is required/i);
+    }
   });
 });

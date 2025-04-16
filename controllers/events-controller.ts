@@ -116,13 +116,23 @@ export const createEvent = async (
     });
   }
 
-  // Check if the user is authorized to create events for this team
   try {
+    // Get the user's team membership
     const teamMember = await selectTeamMemberByUserId(req.user.id);
 
+    if (!teamMember) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - You are not a member of any team",
+      });
+    }
+
+    // Use team_id from request if provided, otherwise use the user's team
+    const eventTeamId = team_id ? parseInt(team_id) : teamMember.team_id;
+
+    // Check if the user is authorized to create events for this team
     if (
-      !teamMember ||
-      teamMember.team_id !== parseInt(team_id) ||
+      teamMember.team_id !== eventTeamId ||
       (teamMember.role !== "admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).json({
@@ -130,26 +140,16 @@ export const createEvent = async (
         msg: "Forbidden - You don't have permission to create events for this team",
       });
     }
-  } catch (error) {
-    return res.status(403).json({
-      status: "error",
-      msg: "Forbidden - You don't have permission to create events for this team",
-    });
-  }
 
-  // Required fields and validation are now handled by express-validator middleware
+    // Required fields and validation are now handled by express-validator middleware
 
-  try {
     const eventStatus = status || "draft"; // Default to draft if not provided
     const eventIsPublic = is_public !== undefined ? is_public : true; // Default to public if not provided
 
     // Use the authenticated user's team member ID as created_by if not provided
     let createdBy = created_by;
     if (!createdBy) {
-      const teamMember = await selectTeamMemberByUserId(req.user.id);
-      if (teamMember) {
-        createdBy = teamMember.id;
-      }
+      createdBy = teamMember.id;
     }
 
     const newEvent = await insertEvent(
@@ -163,7 +163,7 @@ export const createEvent = async (
       price ? Number(price) : null,
       event_type || null,
       eventIsPublic,
-      team_id ? Number(team_id) : null,
+      eventTeamId,
       createdBy ? Number(createdBy) : null
     );
 

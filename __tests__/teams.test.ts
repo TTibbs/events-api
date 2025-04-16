@@ -168,6 +168,28 @@ describe("Teams API Endpoints", () => {
       expect(msg).toBe("Team member not found");
     });
   });
+  describe("GET /api/teams/members/:userId/role - Team Member Role Lookup by User ID", () => {
+    test("Should successfully retrieve a team member role when provided a valid user ID", async () => {
+      const token = await getAuthToken();
+      const {
+        body: { role },
+      } = await request(app)
+        .get("/api/teams/members/1/role")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      expect(role).toBe("admin");
+    });
+    test("Should return appropriate error when user has no team member record", async () => {
+      const token = await getAuthToken();
+      const {
+        body: { msg },
+      } = await request(app)
+        .get("/api/teams/members/9999/role")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(404);
+      expect(msg).toBe("Team member not found");
+    });
+  });
   describe("POST /api/teams - Team Creation", () => {
     test("Should successfully create a new team with valid details", async () => {
       const adminToken = await getTokenForRole("admin");

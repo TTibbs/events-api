@@ -155,7 +155,7 @@ export const register = async (
       let teamMember = null;
 
       // If user wants to be an event organiser, create a team and add them as an event_manager
-      if (isEventOrganiser && teamName) {
+      if (isEventOrganiser) {
         if (!teamName) {
           throw {
             status: 400,

@@ -19,6 +19,7 @@ import {
   createTeamMember,
   getTeamMembersByTeamId,
   getTeamByName,
+  getTeamMemberRoleByUserId,
 } from "../controllers/teams-controller";
 import { authenticate } from "../middlewares/auth-middleware";
 
@@ -80,6 +81,8 @@ const updateTeamHandler = updateTeam as RequestHandler;
 const deleteTeamHandler = deleteTeam as RequestHandler;
 
 const getTeamMembersHandler = getTeamMembers as RequestHandler;
+const getTeamMemberRoleByUserIdHandler =
+  getTeamMemberRoleByUserId as RequestHandler;
 const getTeamMemberByIdHandler = getTeamMemberById as RequestHandler;
 const getTeamMemberByUserIdHandler = getTeamMemberByUserId as RequestHandler;
 const createTeamMemberHandler = createTeamMember as RequestHandler;
@@ -101,6 +104,11 @@ teamsRouter.post(
 // These must come before the :id routes to avoid conflict
 teamsRouter.get("/members", authenticateHandler, getTeamMembersHandler);
 // The more specific route must come before the parameter route
+teamsRouter.get(
+  "/members/:userId/role",
+  authenticateHandler,
+  getTeamMemberRoleByUserIdHandler
+);
 teamsRouter.get(
   "/members/user/:userId",
   authenticateHandler,

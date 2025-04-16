@@ -573,6 +573,32 @@ describe("Events API Endpoints", () => {
       expect(event.description).toBe(newEvent.description);
       expect(event.is_public).toBe(true);
     });
+    test("Should successfully create a new event without specifying team_id", async () => {
+      const token = await getTokenForRole("admin");
+      const newEvent = {
+        status: "published",
+        title: "Auto Team Event",
+        description: "This event should use the user's team automatically",
+        location: "Auto Team Location",
+        start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+        end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
+        is_public: true,
+      };
+
+      const response = await request(app)
+        .post("/api/events")
+        .set("Authorization", `Bearer ${token}`)
+        .send(newEvent);
+
+      expect(response.status).toBe(201);
+      const event: EventResponse = response.body.event;
+      expect(event.title).toBe(newEvent.title);
+      expect(event.status).toBe(newEvent.status);
+      expect(event.description).toBe(newEvent.description);
+      // Admin user in test data belongs to team 1
+      expect(event.team_id).toBe(1);
+      expect(event.is_public).toBe(true);
+    });
     test("Should reject event creation when required fields are missing", async () => {
       const token = await getTokenForRole("admin");
       const missingFieldsEvent = {
@@ -605,7 +631,6 @@ describe("Events API Endpoints", () => {
         description: "Event with invalid times",
         location: "Test Location",
         team_id: 1,
-        // End time is before start time
         start_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
         end_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };

@@ -70,13 +70,19 @@ const registerValidation = [
   body("teamName")
     .optional()
     .custom((value, { req }) => {
-      if (req.body.isEventOrganiser && !value) {
+      // Only require teamName if isEventOrganiser is true
+      if (
+        req.body.isEventOrganiser === true &&
+        (!value || value.trim() === "")
+      ) {
         throw new Error(
           "Team name is required when registering as an event organiser"
         );
       }
       return true;
     })
+    // Only apply length validation if a non-empty value is provided
+    .if((value) => value !== undefined && value !== null && value.trim() !== "")
     .isLength({ min: 3, max: 100 })
     .withMessage("Team name must be between 3 and 100 characters"),
 
