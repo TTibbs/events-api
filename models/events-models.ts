@@ -6,10 +6,9 @@ import {
 } from "../utils/db-transaction";
 import crypto from "crypto";
 
-// Get all events
+// Get all published events
 export const selectEvents = async (): Promise<Event[]> => {
-  const result = await db.query(
-    `
+  const query = `
     SELECT 
       e.*,
       t.name as team_name,
@@ -18,9 +17,11 @@ export const selectEvents = async (): Promise<Event[]> => {
     LEFT JOIN teams t ON e.team_id = t.id
     LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
     LEFT JOIN users tm ON tm_link.user_id = tm.id
+    WHERE e.status = 'published'
     ORDER BY e.start_time ASC
-    `
-  );
+  `;
+
+  const result = await db.query(query);
 
   if (result.rows.length === 0) {
     return [];
@@ -36,10 +37,45 @@ export const selectEvents = async (): Promise<Event[]> => {
   }));
 };
 
-// Get event by ID
+// Get draft events for user's teams
+export const selectDraftEvents = async (userId: number): Promise<Event[]> => {
+  const query = `
+    SELECT 
+      e.*,
+      t.name as team_name,
+      tm.username as creator_username
+    FROM events e
+    LEFT JOIN teams t ON e.team_id = t.id
+    LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
+    LEFT JOIN users tm ON tm_link.user_id = tm.id
+    WHERE e.status = 'draft'
+    AND EXISTS (
+      SELECT 1 FROM team_members 
+      WHERE team_members.team_id = e.team_id 
+      AND team_members.user_id = $1
+    )
+    ORDER BY e.start_time ASC
+  `;
+
+  const result = await db.query(query, [userId]);
+
+  if (result.rows.length === 0) {
+    return [];
+  }
+
+  return result.rows.map((event) => ({
+    ...event,
+    id: Number(event.id),
+    team_id: event.team_id ? Number(event.team_id) : null,
+    created_by: event.created_by ? Number(event.created_by) : null,
+    price: event.price ? Number(event.price) : null,
+    max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+  }));
+};
+
+// Get event by ID (published events only)
 export const selectEventById = async (id: number): Promise<Event> => {
-  const result = await db.query(
-    `
+  const query = `
     SELECT 
       e.*,
       t.name as team_name,
@@ -49,14 +85,58 @@ export const selectEventById = async (id: number): Promise<Event> => {
     LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
     LEFT JOIN users tm ON tm_link.user_id = tm.id
     WHERE e.id = $1
-    `,
-    [id]
-  );
+    AND e.status = 'published'
+  `;
+
+  const result = await db.query(query, [id]);
 
   if (result.rows.length === 0) {
     return Promise.reject({
       status: 404,
       msg: "Event not found",
+    });
+  }
+
+  const event = result.rows[0];
+  return {
+    ...event,
+    id: Number(event.id),
+    team_id: event.team_id ? Number(event.team_id) : null,
+    created_by: event.created_by ? Number(event.created_by) : null,
+    price: event.price ? Number(event.price) : null,
+    max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+  };
+};
+
+// Get draft event by ID for a specific user's team
+export const selectDraftEventById = async (
+  id: number,
+  userId: number
+): Promise<Event> => {
+  const query = `
+    SELECT 
+      e.*,
+      t.name as team_name,
+      tm.username as creator_username
+    FROM events e
+    LEFT JOIN teams t ON e.team_id = t.id
+    LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
+    LEFT JOIN users tm ON tm_link.user_id = tm.id
+    WHERE e.id = $1
+    AND e.status = 'draft'
+    AND EXISTS (
+      SELECT 1 FROM team_members 
+      WHERE team_members.team_id = e.team_id 
+      AND team_members.user_id = $2
+    )
+  `;
+
+  const result = await db.query(query, [id, userId]);
+
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Draft event not found or you don't have access to it",
     });
   }
 
@@ -126,8 +206,8 @@ export const updateEventById = async (
   id: number,
   updateData: Partial<Event>
 ): Promise<Event> => {
-  // First check if event exists
-  await selectEventById(id);
+  // Don't check if event exists using selectEventById since it's filtered by status
+  // The controller should handle event existence and authorization first
 
   // Build the SET clause and parameters dynamically based on provided fields
   const updateFields: string[] = [];
@@ -186,9 +266,8 @@ export const updateEventById = async (
 
 // Delete event by ID
 export const deleteEventById = async (id: number): Promise<void> => {
-  // First check if event exists
-  await selectEventById(id);
-
+  // Don't check if event exists using selectEventById since it's filtered by status
+  // The controller should handle event existence and authorization first
   await db.query(`DELETE FROM events WHERE id = $1`, [id]);
 };
 
@@ -196,9 +275,8 @@ export const deleteEventById = async (id: number): Promise<void> => {
 export const selectEventRegistrationsByEventId = async (
   eventId: number
 ): Promise<any[]> => {
-  // First check if event exists
-  await selectEventById(eventId);
-
+  // Don't check if event exists using selectEventById since it's filtered by status
+  // The controller should handle event existence and authorization first
   const result = await db.query(
     `
     SELECT 
@@ -249,22 +327,55 @@ export const selectUpcomingEvents = async (
   }));
 };
 
-// Get events by team ID
+// Get published events by team ID
 export const selectEventsByTeamId = async (
   teamId: number
 ): Promise<Event[]> => {
-  const result = await db.query(
-    `
+  const query = `
     SELECT 
       e.*,
       t.name as team_name
     FROM events e
     LEFT JOIN teams t ON e.team_id = t.id
     WHERE e.team_id = $1
+    AND e.status = 'published'
     ORDER BY e.start_time DESC
-    `,
-    [teamId]
-  );
+  `;
+
+  const result = await db.query(query, [teamId]);
+
+  return result.rows.map((event) => ({
+    ...event,
+    id: Number(event.id),
+    team_id: Number(event.team_id),
+    created_by: event.created_by ? Number(event.created_by) : null,
+    price: event.price ? Number(event.price) : null,
+    max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+  }));
+};
+
+// Get draft events by team ID for a team member
+export const selectDraftEventsByTeamId = async (
+  teamId: number,
+  userId: number
+): Promise<Event[]> => {
+  const query = `
+    SELECT 
+      e.*,
+      t.name as team_name
+    FROM events e
+    LEFT JOIN teams t ON e.team_id = t.id
+    WHERE e.team_id = $1
+    AND e.status = 'draft'
+    AND EXISTS (
+      SELECT 1 FROM team_members 
+      WHERE team_members.team_id = e.team_id 
+      AND team_members.user_id = $2
+    )
+    ORDER BY e.start_time DESC
+  `;
+
+  const result = await db.query(query, [teamId, userId]);
 
   return result.rows.map((event) => ({
     ...event,
@@ -280,7 +391,20 @@ export const selectEventsByTeamId = async (
 export const checkEventAvailability = async (
   eventId: number
 ): Promise<{ available: boolean; reason?: string }> => {
-  const event = await selectEventById(eventId);
+  // Query the event directly instead of using selectEventById
+  // which now filters based on status and user
+  const result = await db.query(`SELECT * FROM events WHERE id = $1`, [
+    eventId,
+  ]);
+
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Event not found",
+    });
+  }
+
+  const event = result.rows[0];
 
   // Check if event is published
   if (event.status !== "published") {

@@ -933,3 +933,299 @@ describe("Events API Endpoints", () => {
     });
   });
 });
+
+describe("Event Visibility", () => {
+  let team1DraftEvent: EventResponse;
+  let team1PublishedEvent: EventResponse;
+  let team2DraftEvent: EventResponse;
+  let adminToken: string;
+  let team1MemberToken: string;
+  let team2MemberToken: string;
+  let nonTeamMemberToken: string;
+
+  beforeEach(async () => {
+    // Get authentication tokens for different roles
+    adminToken = await getTokenForRole("admin"); // Admin of team 1
+    team1MemberToken = await getAuthToken(); // Alice - team 1 member
+    team2MemberToken = await getTokenForRole("team_member"); // Charlie - team 2 member
+
+    // Create a user who isn't a member of any team
+    const nonTeamUser = await request(app).post("/api/users").send({
+      username: "nonteammember",
+      email: "nonteammember@example.com",
+      plainPassword: "password123",
+    });
+
+    // Login with the non-team user to get a token
+    const loginResponse = await request(app).post("/api/auth/login").send({
+      username: "nonteammember",
+      password: "password123",
+    });
+    nonTeamMemberToken = loginResponse.body.data.accessToken;
+
+    // Create events with different statuses for different teams
+    // Create a draft event for team 1
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+
+    const team1DraftEventResponse = await request(app)
+      .post("/api/events")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        status: "draft",
+        title: "Team 1 Draft Event",
+        description: "This is a draft event for team 1",
+        start_time: tomorrow.toISOString(),
+        end_time: dayAfter.toISOString(),
+        team_id: 1,
+      });
+    team1DraftEvent = team1DraftEventResponse.body.event;
+
+    // Create a published event for team 1
+    const team1PublishedEventResponse = await request(app)
+      .post("/api/events")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        status: "published",
+        title: "Team 1 Published Event",
+        description: "This is a published event for team 1",
+        start_time: tomorrow.toISOString(),
+        end_time: dayAfter.toISOString(),
+        team_id: 1,
+      });
+    team1PublishedEvent = team1PublishedEventResponse.body.event;
+
+    // Create a draft event for team 2
+    const team2DraftEventResponse = await request(app)
+      .post("/api/events")
+      .set("Authorization", `Bearer ${team2MemberToken}`)
+      .send({
+        status: "draft",
+        title: "Team 2 Draft Event",
+        description: "This is a draft event for team 2",
+        start_time: tomorrow.toISOString(),
+        end_time: dayAfter.toISOString(),
+        team_id: 2,
+      });
+    team2DraftEvent = team2DraftEventResponse.body.event;
+  });
+
+  test("Team 1 member should see team 1 draft events in GET /api/events", async () => {
+    // For published events
+    const publishedResponse = await request(app)
+      .get("/api/events")
+      .set("Authorization", `Bearer ${team1MemberToken}`);
+
+    expect(publishedResponse.status).toBe(200);
+    const publishedEvents = publishedResponse.body.events;
+
+    // Should NOT include the team 1 draft event in published events
+    const foundTeam1DraftInPublished = publishedEvents.some(
+      (event: any) => event.id === team1DraftEvent.id
+    );
+    expect(foundTeam1DraftInPublished).toBe(false);
+
+    // Should include the team 1 published event
+    const foundTeam1Published = publishedEvents.some(
+      (event: any) => event.id === team1PublishedEvent.id
+    );
+    expect(foundTeam1Published).toBe(true);
+
+    // For draft events, get from the /draft endpoint
+    const draftResponse = await request(app)
+      .get("/api/events/draft")
+      .set("Authorization", `Bearer ${team1MemberToken}`);
+
+    expect(draftResponse.status).toBe(200);
+    const draftEvents = draftResponse.body.events;
+
+    // Should include the team 1 draft event in draft events
+    const foundTeam1DraftInDrafts = draftEvents.some(
+      (event: any) => event.id === team1DraftEvent.id
+    );
+    expect(foundTeam1DraftInDrafts).toBe(true);
+
+    // Should NOT include the team 2 draft event in draft events
+    const foundTeam2DraftInDrafts = draftEvents.some(
+      (event: any) => event.id === team2DraftEvent.id
+    );
+    expect(foundTeam2DraftInDrafts).toBe(false);
+  });
+
+  test("Team 2 member should see team 2 draft events in GET /api/events", async () => {
+    // For published events
+    const publishedResponse = await request(app)
+      .get("/api/events")
+      .set("Authorization", `Bearer ${team2MemberToken}`);
+
+    expect(publishedResponse.status).toBe(200);
+    const publishedEvents = publishedResponse.body.events;
+
+    // Should NOT include the team 1 draft event
+    const foundTeam1DraftInPublished = publishedEvents.some(
+      (event: any) => event.id === team1DraftEvent.id
+    );
+    expect(foundTeam1DraftInPublished).toBe(false);
+
+    // Should include the team 1 published event
+    const foundTeam1Published = publishedEvents.some(
+      (event: any) => event.id === team1PublishedEvent.id
+    );
+    expect(foundTeam1Published).toBe(true);
+
+    // Should NOT include team 2 draft events in published events
+    const foundTeam2DraftInPublished = publishedEvents.some(
+      (event: any) => event.id === team2DraftEvent.id
+    );
+    expect(foundTeam2DraftInPublished).toBe(false);
+
+    // For draft events, get from the /draft endpoint
+    const draftResponse = await request(app)
+      .get("/api/events/draft")
+      .set("Authorization", `Bearer ${team2MemberToken}`);
+
+    expect(draftResponse.status).toBe(200);
+    const draftEvents = draftResponse.body.events;
+
+    // Should include the team 2 draft event in draft events
+    const foundTeam2DraftInDrafts = draftEvents.some(
+      (event: any) => event.id === team2DraftEvent.id
+    );
+    expect(foundTeam2DraftInDrafts).toBe(true);
+  });
+
+  test("Non-team member should only see published events in GET /api/events", async () => {
+    const response = await request(app)
+      .get("/api/events")
+      .set("Authorization", `Bearer ${nonTeamMemberToken}`);
+
+    expect(response.status).toBe(200);
+    const events = response.body.events;
+
+    // Should NOT include the team 1 draft event
+    const foundTeam1Draft = events.some(
+      (event: any) => event.id === team1DraftEvent.id
+    );
+    expect(foundTeam1Draft).toBe(false);
+
+    // Should include the team 1 published event
+    const foundTeam1Published = events.some(
+      (event: any) => event.id === team1PublishedEvent.id
+    );
+    expect(foundTeam1Published).toBe(true);
+
+    // Should NOT include the team 2 draft event
+    const foundTeam2Draft = events.some(
+      (event: any) => event.id === team2DraftEvent.id
+    );
+    expect(foundTeam2Draft).toBe(false);
+  });
+
+  test("Unauthenticated user should only see published events in GET /api/events", async () => {
+    const response = await request(app).get("/api/events");
+
+    expect(response.status).toBe(200);
+    const events = response.body.events;
+
+    // Should NOT include the team 1 draft event
+    const foundTeam1Draft = events.some(
+      (event: any) => event.id === team1DraftEvent.id
+    );
+    expect(foundTeam1Draft).toBe(false);
+
+    // Should include the team 1 published event
+    const foundTeam1Published = events.some(
+      (event: any) => event.id === team1PublishedEvent.id
+    );
+    expect(foundTeam1Published).toBe(true);
+
+    // Should NOT include the team 2 draft event
+    const foundTeam2Draft = events.some(
+      (event: any) => event.id === team2DraftEvent.id
+    );
+    expect(foundTeam2Draft).toBe(false);
+  });
+
+  test("Team member should see their team's draft event by ID", async () => {
+    // Try to get draft event using the regular endpoint (should fail)
+    const regularResponse = await request(app)
+      .get(`/api/events/${team1DraftEvent.id}`)
+      .set("Authorization", `Bearer ${team1MemberToken}`);
+
+    expect(regularResponse.status).toBe(404);
+
+    // Should be able to get draft event using the draft endpoint
+    const draftResponse = await request(app)
+      .get(`/api/events/${team1DraftEvent.id}/draft`)
+      .set("Authorization", `Bearer ${team1MemberToken}`);
+
+    expect(draftResponse.status).toBe(200);
+    expect(draftResponse.body.event.id).toBe(team1DraftEvent.id);
+  });
+
+  test("Non-team member should not see draft event by ID", async () => {
+    // Regular endpoint should return 404
+    const regularResponse = await request(app)
+      .get(`/api/events/${team1DraftEvent.id}`)
+      .set("Authorization", `Bearer ${nonTeamMemberToken}`);
+
+    expect(regularResponse.status).toBe(404);
+    expect(regularResponse.body.msg).toBe("Event not found");
+
+    // Draft endpoint should also return 404
+    const draftResponse = await request(app)
+      .get(`/api/events/${team1DraftEvent.id}/draft`)
+      .set("Authorization", `Bearer ${nonTeamMemberToken}`);
+
+    expect(draftResponse.status).toBe(404);
+    expect(draftResponse.body.msg).toBe(
+      "Draft event not found or you don't have access to it"
+    );
+  });
+
+  test("Team member should see only their team's draft events in team listing", async () => {
+    // Get Team 1 published events as Team 1 member
+    const team1PublishedResponse = await request(app)
+      .get("/api/events/team/1")
+      .set("Authorization", `Bearer ${team1MemberToken}`);
+
+    expect(team1PublishedResponse.status).toBe(200);
+    const team1PublishedEvents = team1PublishedResponse.body.events;
+
+    // Should NOT include the team 1 draft event in published events
+    const foundTeam1DraftInPublished = team1PublishedEvents.some(
+      (event: any) => event.id === team1DraftEvent.id
+    );
+    expect(foundTeam1DraftInPublished).toBe(false);
+
+    // Get Team 1 draft events as Team 1 member
+    const team1DraftResponse = await request(app)
+      .get("/api/events/team/1/draft")
+      .set("Authorization", `Bearer ${team1MemberToken}`);
+
+    expect(team1DraftResponse.status).toBe(200);
+    const team1DraftEvents = team1DraftResponse.body.events;
+
+    // Should include the team 1 draft event in draft events
+    const foundTeam1DraftInDrafts = team1DraftEvents.some(
+      (event: any) => event.id === team1DraftEvent.id
+    );
+    expect(foundTeam1DraftInDrafts).toBe(true);
+
+    // Get Team 2 draft events as Team 1 member (should be empty)
+    const team2DraftResponse = await request(app)
+      .get("/api/events/team/2/draft")
+      .set("Authorization", `Bearer ${team1MemberToken}`);
+
+    expect(team2DraftResponse.status).toBe(200);
+    const team2DraftEvents = team2DraftResponse.body.events;
+
+    // Should NOT include the team 2 draft event in team 2 draft events for team 1 member
+    const foundTeam2Draft = team2DraftEvents.some(
+      (event: any) => event.id === team2DraftEvent.id
+    );
+    expect(foundTeam2Draft).toBe(false);
+  });
+});

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import db from "../db/connection";
 import {
   selectEvents,
   selectEventById,
@@ -12,6 +13,9 @@ import {
   cancelRegistration,
   checkEventAvailability,
   getRegistrationById,
+  selectDraftEvents,
+  selectDraftEventById,
+  selectDraftEventsByTeamId,
 } from "../models/events-models";
 import { selectTeamMemberByUserId } from "../models/teams-models";
 
@@ -28,6 +32,26 @@ export const getEvents = async (
   }
 };
 
+export const getDraftEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        status: "error",
+        msg: "Unauthorized - Authentication required",
+      });
+    }
+
+    const events = await selectDraftEvents(req.user.id);
+    res.status(200).send({ events });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getEventById = async (
   req: Request,
   res: Response,
@@ -36,6 +60,28 @@ export const getEventById = async (
   const { id } = req.params;
   try {
     const event = await selectEventById(Number(id));
+    res.status(200).send({ event });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getDraftEventById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  try {
+    const event = await selectDraftEventById(Number(id), req.user.id);
     res.status(200).send({ event });
   } catch (err) {
     next(err);
@@ -144,22 +190,26 @@ export const updateEvent = async (
   }
 
   try {
-    // Get the event to check which team it belongs to
-    const event = await selectEventById(Number(id));
+    // Get the event to check which team it belongs to - query directly
+    const eventQuery = await db.query(`SELECT * FROM events WHERE id = $1`, [
+      id,
+    ]);
 
-    if (!event) {
+    if (eventQuery.rows.length === 0) {
       return res.status(404).json({
         status: "error",
         msg: "Event not found",
       });
     }
 
+    const event = eventQuery.rows[0];
+
     // Check if the user is authorized to update this event
     const teamMember = await selectTeamMemberByUserId(req.user.id);
 
     if (
       !teamMember ||
-      teamMember.team_id !== event.team_id ||
+      teamMember.team_id !== Number(event.team_id) ||
       (teamMember.role !== "admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).json({
@@ -205,22 +255,26 @@ export const deleteEvent = async (
   }
 
   try {
-    // Get the event to check which team it belongs to
-    const event = await selectEventById(Number(id));
+    // Get the event to check which team it belongs to - query directly
+    const eventQuery = await db.query(`SELECT * FROM events WHERE id = $1`, [
+      id,
+    ]);
 
-    if (!event) {
+    if (eventQuery.rows.length === 0) {
       return res.status(404).json({
         status: "error",
         msg: "Event not found",
       });
     }
 
+    const event = eventQuery.rows[0];
+
     // Check if the user is authorized to delete this event
     const teamMember = await selectTeamMemberByUserId(req.user.id);
 
     if (
       !teamMember ||
-      teamMember.team_id !== event.team_id ||
+      teamMember.team_id !== Number(event.team_id) ||
       (teamMember.role !== "admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).json({
@@ -243,6 +297,49 @@ export const getEventRegistrations = async (
 ) => {
   const { id } = req.params;
   try {
+    // First query the event directly to see if it exists
+    const eventQuery = await db.query(`SELECT * FROM events WHERE id = $1`, [
+      id,
+    ]);
+
+    if (eventQuery.rows.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Event not found",
+      });
+    }
+
+    const event = eventQuery.rows[0];
+
+    // If the event is a draft, check if the user is authorized to view it
+    if (event.status === "draft") {
+      if (!req.user) {
+        return res.status(404).json({
+          status: "error",
+          msg: "Event not found",
+        });
+      }
+
+      // Try to find the draft event with the user's ID to confirm access
+      try {
+        await selectDraftEventById(Number(id), req.user.id);
+      } catch (error) {
+        return res.status(404).json({
+          status: "error",
+          msg: "Event not found",
+        });
+      }
+    } else if (event.status !== "published") {
+      // If the event exists but isn't published or draft, return 404
+      return res.status(404).json({
+        status: "error",
+        msg: "Event not found",
+      });
+    }
+
+    // If we got here, either:
+    // 1. The event is published, or
+    // 2. The event is draft and the user has access to it
     const registrations = await selectEventRegistrationsByEventId(Number(id));
     res.status(200).send({ registrations });
   } catch (err) {
@@ -272,6 +369,28 @@ export const getEventsByTeamId = async (
   const { teamId } = req.params;
   try {
     const events = await selectEventsByTeamId(Number(teamId));
+    res.status(200).send({ events });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getDraftEventsByTeamId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { teamId } = req.params;
+
+  if (!req.user) {
+    return res.status(401).json({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  try {
+    const events = await selectDraftEventsByTeamId(Number(teamId), req.user.id);
     res.status(200).send({ events });
   } catch (err) {
     next(err);

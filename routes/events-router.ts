@@ -18,6 +18,9 @@ import {
   registerForEvent,
   cancelEventRegistration,
   checkEventRegistrationAvailability,
+  getDraftEvents,
+  getDraftEventById,
+  getDraftEventsByTeamId,
 } from "../controllers/events-controller";
 import { authMiddleware } from "../middlewares/auth-middleware";
 
@@ -168,19 +171,35 @@ const cancelEventRegistrationHandler =
   cancelEventRegistration as RequestHandler;
 const checkEventRegistrationAvailabilityHandler =
   checkEventRegistrationAvailability as RequestHandler;
+const getDraftEventsHandler = getDraftEvents as RequestHandler;
+const getDraftEventByIdHandler = getDraftEventById as RequestHandler;
+const getDraftEventsByTeamIdHandler = getDraftEventsByTeamId as RequestHandler;
 const authenticateHandler = authMiddleware.isAuthenticated as RequestHandler;
 
-// GET /api/events - Get all events
+// GET /api/events - Get all published events
 eventsRouter.get("/", getEventsHandler);
+
+// GET /api/events/draft - Get all draft events for the authenticated user's teams
+eventsRouter.get("/draft", authenticateHandler, getDraftEventsHandler);
 
 // GET /api/events/upcoming - Get upcoming events
 eventsRouter.get("/upcoming", getUpcomingEventsHandler);
 
-// GET /api/events/team/:teamId - Get events by team ID
+// GET /api/events/team/:teamId - Get published events by team ID
 eventsRouter.get("/team/:teamId", getEventsByTeamIdHandler);
 
-// GET /api/events/:id - Get event by ID
+// GET /api/events/team/:teamId/draft - Get draft events by team ID for team members
+eventsRouter.get(
+  "/team/:teamId/draft",
+  authenticateHandler,
+  getDraftEventsByTeamIdHandler
+);
+
+// GET /api/events/:id - Get published event by ID
 eventsRouter.get("/:id", getEventByIdHandler);
+
+// GET /api/events/:id/draft - Get draft event by ID for team members
+eventsRouter.get("/:id/draft", authenticateHandler, getDraftEventByIdHandler);
 
 // GET /api/events/:id/registrations - Get registrations for an event
 eventsRouter.get(
