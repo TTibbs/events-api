@@ -24,6 +24,7 @@ beforeEach(() =>
   })
 );
 
+// Keep the database connection open until all tests are complete
 afterAll(async () => {
   await db.end();
 });
@@ -326,6 +327,36 @@ describe("Authentication - Token Refresh Functionality", () => {
       process.env.REFRESH_TOKEN_EXPIRY = originalRefreshExpiry;
     }
   });
+  // Test handling of seconds format in refresh token expiry
+  test("Should handle seconds format in refresh token expiry", async () => {
+    // Store original environment variable
+    const originalRefreshExpiry = process.env.REFRESH_TOKEN_EXPIRY;
+
+    // Set environment variable to seconds format
+    process.env.REFRESH_TOKEN_EXPIRY = "3600";
+
+    try {
+      // Register a new user to test token generation with seconds expiry
+      const newUser = {
+        username: "secondsexpiryuser",
+        email: "seconds@example.com",
+        password: "password123",
+      };
+
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send(newUser)
+        .expect(201);
+
+      // Verify registration was successful
+      expect(response.body.status).toBe("success");
+      expect(response.body.data).toHaveProperty("accessToken");
+      expect(response.body.data).toHaveProperty("refreshToken");
+    } finally {
+      // Restore original environment variable
+      process.env.REFRESH_TOKEN_EXPIRY = originalRefreshExpiry;
+    }
+  });
 });
 
 describe("Authentication - User Logout Functionality", () => {
@@ -372,3 +403,163 @@ describe("Authentication - User Logout Functionality", () => {
     expect(msg).toBe("Logged out successfully");
   });
 });
+
+describe("Authentication - Edge Cases", () => {
+  test("Should handle additional fields in registration payload", async () => {
+    const userWithExtraFields = {
+      username: "extrafieldsuser",
+      email: "extra@example.com",
+      password: "password123",
+      extraField1: "should be ignored",
+      extraField2: 123,
+    };
+
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send(userWithExtraFields)
+      .expect(201);
+
+    expect(response.body.status).toBe("success");
+    expect(response.body.data.user).toHaveProperty("id");
+    expect(response.body.data.user.username).toBe(userWithExtraFields.username);
+    expect(response.body.data.user.email).toBe(userWithExtraFields.email);
+    // Extra fields should not be in the response
+    expect(response.body.data.user).not.toHaveProperty("extraField1");
+    expect(response.body.data.user).not.toHaveProperty("extraField2");
+  });
+
+  test("Should handle missing email in registration payload", async () => {
+    const missingEmail = {
+      username: "missingemail",
+      password: "password123",
+    };
+
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send(missingEmail)
+      .expect(400);
+
+    expect(response.body.status).toBe("error");
+    expect(response.body.errors).toContainEqual(
+      expect.objectContaining({
+        message: "Email is required",
+      })
+    );
+  });
+
+  test("Should handle JWT errors during token refresh", async () => {
+    // Use a malformed token
+    const malformedToken = {
+      refreshToken:
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzNDU2Nzg5MCwiaWF0IjoxNTE2MjM5MDIyfQ.invalid_signature",
+    };
+
+    const response = await request(app)
+      .post("/api/auth/refresh-token")
+      .send(malformedToken)
+      .expect(401);
+
+    expect(response.body.status).toBe("error");
+    expect(response.body.msg).toBe("Invalid refresh token");
+  });
+});
+
+describe("Authentication - Additional Edge Cases", () => {
+  test("Should handle corrupt JWT in refresh token flow", async () => {
+    // Register a new user
+    const registerResponse = await request(app)
+      .post("/api/auth/register")
+      .send({
+        username: "jwtuser",
+        email: "jwt@example.com",
+        password: "password123",
+      })
+      .expect(201);
+
+    // Extract the refresh token
+    const refreshToken = registerResponse.body.data.refreshToken;
+
+    // Corrupt the token by cutting it off
+    const corruptToken = refreshToken.substring(0, refreshToken.length - 5);
+
+    // Try to use the corrupt token
+    const response = await request(app)
+      .post("/api/auth/refresh-token")
+      .send({ refreshToken: corruptToken })
+      .expect(401);
+
+    expect(response.body.status).toBe("error");
+    expect(response.body.msg).toBe("Invalid refresh token");
+  });
+
+  test("Should handle missing refresh token in refresh token flow", async () => {
+    // Send empty body
+    const response = await request(app)
+      .post("/api/auth/refresh-token")
+      .send({})
+      .expect(400);
+
+    expect(response.body.status).toBe("error");
+    expect(response.body.errors[0].message).toBe("Refresh token is required");
+  });
+
+  test("Should handle special characters in username and password", async () => {
+    const userWithSpecialChars = {
+      username: "special_user@123",
+      email: "special@example.com",
+      password: "p@$$w0rd!",
+    };
+
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send(userWithSpecialChars)
+      .expect(201);
+
+    expect(response.body.status).toBe("success");
+
+    // Try to log in with the special characters
+    const loginResponse = await request(app)
+      .post("/api/auth/login")
+      .send({
+        username: userWithSpecialChars.username,
+        password: userWithSpecialChars.password,
+      })
+      .expect(200);
+
+    expect(loginResponse.body.status).toBe("success");
+    expect(loginResponse.body.data.user.username).toBe(
+      userWithSpecialChars.username
+    );
+  });
+
+  test("Should handle missing required fields in login validation", async () => {
+    // Missing both username and password
+    const emptyLogin = {};
+
+    const response = await request(app)
+      .post("/api/auth/login")
+      .send(emptyLogin)
+      .expect(400);
+
+    expect(response.body.status).toBe("error");
+    expect(response.body.errors).toHaveLength(2); // Should have 2 validation errors
+    expect(response.body.errors[0].message).toBe("Username is required");
+    expect(response.body.errors[1].message).toBe("Password is required");
+  });
+});
+
+/*
+ * Auth middleware tests would require building API integration tests that exercise
+ * protected endpoints. For better test organization, these should be included in their
+ * respective endpoint test files rather than the auth tests.
+ *
+ * To improve coverage in auth-controller.ts, consider:
+ *
+ * 1. Mocking the jwt.verify function to test token verification failures
+ * 2. Mocking database functions to test database error handling
+ * 3. Creating integration tests that exercise the auth middleware in real API calls
+ *
+ * Since we don't want to duplicate tests across files, and we don't want to handle
+ * the express error middleware logic, these tests would be better implemented as part
+ * of a broader integration test suite.
+ */

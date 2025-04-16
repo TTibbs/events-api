@@ -60,6 +60,27 @@ const registerValidation = [
     .withMessage("Password is required")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters"),
+
+  // Optional fields for event organiser registration
+  body("isEventOrganiser")
+    .optional()
+    .isBoolean()
+    .withMessage("isEventOrganiser must be a boolean"),
+
+  body("teamName")
+    .optional()
+    .custom((value, { req }) => {
+      if (req.body.isEventOrganiser && !value) {
+        throw new Error(
+          "Team name is required when registering as an event organiser"
+        );
+      }
+      return true;
+    })
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Team name must be between 3 and 100 characters"),
+
+  body("teamDescription").optional(),
 ];
 
 // Login validation

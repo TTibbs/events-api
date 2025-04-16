@@ -11,8 +11,13 @@ import {
   selectUserByUsername,
   selectUserByEmail,
 } from "../models/users-models";
-import { selectTeamMemberByUserId } from "../models/teams-models";
+import {
+  selectTeamMemberByUserId,
+  insertTeam,
+  insertTeamMember,
+} from "../models/teams-models";
 import { User } from "../types";
+import { withTransaction } from "../utils/db-transaction";
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -98,7 +103,14 @@ export const register = async (
   next: NextFunction
 ) => {
   try {
-    const { username, email, password } = req.body;
+    const {
+      username,
+      email,
+      password,
+      isEventOrganiser,
+      teamName,
+      teamDescription,
+    } = req.body;
 
     // Check if username or email already exists
     try {
@@ -133,29 +145,56 @@ export const register = async (
     const saltRounds = 10;
     const passwordHash = await bcryptjs.hash(password, saltRounds);
 
-    // Create user
-    const newUser = await insertUser(username, email, passwordHash);
+    // Use transaction to ensure all operations succeed or fail together
+    const result = await withTransaction(async () => {
+      // Create user
+      const newUser = await insertUser(username, email, passwordHash);
+      const dbUser = newUser as User;
 
-    // Since newUser comes from the database after creation,
-    // it will have an ID assigned by PostgreSQL's SERIAL
-    const dbUser = newUser as User;
+      let team = null;
+      let teamMember = null;
 
-    // Generate tokens
-    const { accessToken, refreshToken } = await generateTokens(dbUser);
+      // If user wants to be an event organiser, create a team and add them as an event_manager
+      if (isEventOrganiser && teamName) {
+        if (!teamName) {
+          throw {
+            status: 400,
+            msg: "Team name is required for event organisers",
+          };
+        }
 
-    // Sanitize user object for response (remove password_hash)
-    const { password_hash, ...sanitizedUser } = dbUser;
+        // Create team
+        team = await insertTeam(teamName, teamDescription);
+
+        // Add user as team event_manager
+        teamMember = await insertTeamMember(
+          dbUser.id as number,
+          (team as any).id,
+          "event_manager"
+        );
+      }
+
+      // Generate tokens
+      const { accessToken, refreshToken } = await generateTokens(dbUser);
+
+      // Sanitize user object for response (remove password_hash)
+      const { password_hash, ...sanitizedUser } = dbUser;
+
+      return { sanitizedUser, accessToken, refreshToken, team, teamMember };
+    });
 
     res.status(201).json({
       status: "success",
       data: {
         user: {
-          id: sanitizedUser.id,
-          username: sanitizedUser.username,
-          email: sanitizedUser.email,
+          id: result.sanitizedUser.id,
+          username: result.sanitizedUser.username,
+          email: result.sanitizedUser.email,
         },
-        accessToken,
-        refreshToken,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        ...(result.team && { team: result.team }),
+        ...(result.teamMember && { teamMember: result.teamMember }),
       },
     });
   } catch (error) {
