@@ -311,6 +311,7 @@ export const refreshToken = async (
         id: decoded.id,
         username: "", // These are required by DatabaseUser type
         email: "", // but not used in token generation
+        profile_image_url: "",
         is_site_admin: false,
         password_hash: "",
         created_at: new Date(),

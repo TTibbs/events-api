@@ -47,7 +47,7 @@ describe("Users API Endpoints", () => {
       const {
         body: { total_users },
       } = await request(app).get("/api/users").expect(200);
-      expect(total_users).toBe(4);
+      expect(total_users).toBe(5);
     });
   });
   describe("GET /api/users/:id - User Lookup by ID", () => {
@@ -57,6 +57,7 @@ describe("Users API Endpoints", () => {
       } = await request(app).get("/api/users/1").expect(200);
       expect(user).toHaveProperty("id", 1);
       expect(user).toHaveProperty("username", "alice123");
+      expect(user).toHaveProperty("profile_image_url", expect.any(String));
     });
     test("Should return appropriate error when user ID does not exist", async () => {
       const {
@@ -72,6 +73,7 @@ describe("Users API Endpoints", () => {
       } = await request(app).get("/api/users/username/alice123").expect(200);
       expect(user).toHaveProperty("id", 1);
       expect(user).toHaveProperty("username", "alice123");
+      expect(user).toHaveProperty("profile_image_url", expect.any(String));
     });
     test("Should return appropriate error when username does not exist", async () => {
       const {
@@ -89,6 +91,7 @@ describe("Users API Endpoints", () => {
         .expect(200);
       expect(user).toHaveProperty("id", 1);
       expect(user).toHaveProperty("email", "alice@example.com");
+      expect(user).toHaveProperty("profile_image_url", expect.any(String));
     });
     test("Should return appropriate error when email address does not exist", async () => {
       const {

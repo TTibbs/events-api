@@ -49,6 +49,7 @@ const seed = async ({
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
+        profile_image_url TEXT,
         is_site_admin BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -211,11 +212,12 @@ const seed = async ({
 
     // 1. Insert users first as they have no dependencies
     const insertUsersQueryString = format(
-      `INSERT INTO users (username, email, password_hash, is_site_admin) VALUES %L RETURNING id`,
+      `INSERT INTO users (username, email, password_hash, profile_image_url, is_site_admin) VALUES %L RETURNING id`,
       users.map((user) => [
         user.username,
         user.email,
         user.password_hash,
+        user.profile_image_url,
         user.is_site_admin,
       ])
     );

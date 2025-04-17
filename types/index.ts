@@ -3,6 +3,7 @@ export type User = {
   username: string;
   email: string;
   password_hash: string;
+  profile_image_url: string;
   is_site_admin: boolean;
   created_at: Date;
   updated_at: Date;
