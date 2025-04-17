@@ -289,4 +289,92 @@ describe("Users API Endpoints", () => {
       expect(response.body.msg).toBe("Username already exists");
     });
   });
+  describe("GET /api/users/:id/registrations - User Event Registrations", () => {
+    test("Should successfully retrieve event registrations for a user", async () => {
+      const token = await getAuthToken();
+
+      // Register a user for an event
+      // First get a valid event ID
+      const eventsResponse = await request(app).get("/api/events");
+      const eventId = eventsResponse.body.events[0].id;
+
+      // Register for the event - using default user ID 1 (alice123)
+      await request(app)
+        .post(`/api/events/${eventId}/register`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ userId: 1 });
+
+      // Get user's registrations
+      const response = await request(app)
+        .get("/api/users/1/registrations")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty("status", "success");
+      expect(response.body).toHaveProperty("registrations");
+      expect(response.body.registrations).toBeInstanceOf(Array);
+
+      // Check if any registration matches our registered event
+      if (response.body.registrations.length > 0) {
+        const foundRegistration = response.body.registrations.some(
+          (reg: any) => reg.event_id === eventId
+        );
+        expect(foundRegistration).toBe(true);
+      }
+
+      // Verify registration structure
+      if (response.body.registrations.length > 0) {
+        const registration = response.body.registrations[0];
+        expect(registration).toHaveProperty("id", expect.any(Number));
+        expect(registration).toHaveProperty("event_id", expect.any(Number));
+        expect(registration).toHaveProperty("user_id", expect.any(Number));
+        expect(registration).toHaveProperty("status", expect.any(String));
+        expect(registration).toHaveProperty("event_title", expect.any(String));
+        expect(registration).toHaveProperty("start_time", expect.any(String));
+        expect(registration).toHaveProperty("end_time", expect.any(String));
+      }
+    });
+    test("Should return empty array for user with no registrations", async () => {
+      const token = await getAuthToken();
+
+      // Create a new user who has no registrations
+      const newUserResponse = await request(app).post("/api/users").send({
+        username: "noregistrations",
+        email: "noregistrations@example.com",
+        plainPassword: "password123",
+      });
+
+      const newUserId = newUserResponse.body.newUser.id;
+
+      // Get registrations for the new user
+      const response = await request(app)
+        .get(`/api/users/${newUserId}/registrations`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty("status", "success");
+      expect(response.body).toHaveProperty("registrations");
+      expect(response.body.registrations).toBeInstanceOf(Array);
+      expect(response.body.registrations.length).toBe(0);
+    });
+    test("Should return 404 for non-existent user", async () => {
+      const token = await getAuthToken();
+
+      const response = await request(app)
+        .get("/api/users/9999/registrations")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body).toHaveProperty("msg", "User not found");
+    });
+    test("Should require authentication", async () => {
+      // Request without auth token
+      const response = await request(app)
+        .get("/api/users/1/registrations")
+        .expect(401);
+
+      expect(response.body).toHaveProperty("status", "error");
+      expect(response.body.msg).toBe("Unauthorized - No token provided");
+    });
+  });
 });

@@ -318,10 +318,44 @@ export const updateUser = async (
 };
 
 export const deleteUser = async (id: number): Promise<void> => {
-  // The team_members table has ON DELETE CASCADE, so we don't need to explicitly delete team memberships
-  const { rowCount } = await db.query("DELETE FROM users WHERE id = $1", [id]);
+  const { rows } = await db.query(
+    "DELETE FROM users WHERE id = $1 RETURNING *",
+    [id]
+  );
 
-  if (rowCount === 0) {
+  if (rows.length === 0) {
     return Promise.reject({ status: 404, msg: "User not found" });
   }
+};
+
+// Get event registrations for a user
+export const selectUserEventRegistrations = async (
+  userId: number
+): Promise<any[]> => {
+  const { rows } = await db.query(
+    `
+    SELECT 
+      er.*,
+      e.title as event_title,
+      e.description as event_description,
+      e.location as event_location,
+      e.start_time,
+      e.end_time,
+      e.status as event_status,
+      t.name as team_name
+    FROM event_registrations er
+    JOIN events e ON er.event_id = e.id
+    LEFT JOIN teams t ON e.team_id = t.id
+    WHERE er.user_id = $1
+    ORDER BY e.start_time DESC
+    `,
+    [userId]
+  );
+
+  return rows.map((registration) => ({
+    ...registration,
+    id: Number(registration.id),
+    event_id: Number(registration.event_id),
+    user_id: Number(registration.user_id),
+  }));
 };

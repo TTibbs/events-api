@@ -8,6 +8,7 @@ import {
   insertUser,
   updateUser,
   deleteUser,
+  selectUserEventRegistrations,
 } from "../models/users-models";
 
 // Helper function to sanitize user objects (remove password_hash)
@@ -225,6 +226,30 @@ export const deleteUserById = async (
   try {
     await deleteUser(Number(id));
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get all event registrations for a user
+export const getUserEventRegistrations = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+
+  try {
+    // First check if the user exists
+    await selectUserById(Number(id));
+
+    // Get the registrations
+    const registrations = await selectUserEventRegistrations(Number(id));
+
+    res.status(200).send({
+      status: "success",
+      registrations,
+    });
   } catch (err) {
     next(err);
   }

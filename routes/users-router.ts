@@ -8,6 +8,7 @@ import {
   createUser,
   updateUserById,
   deleteUserById,
+  getUserEventRegistrations,
 } from "../controllers/users-controller";
 import { authenticate } from "../middlewares/auth-middleware";
 
@@ -19,6 +20,8 @@ const createUserHandler = createUser as RequestHandler;
 const updateUserByIdHandler = updateUserById as RequestHandler;
 const deleteUserByIdHandler = deleteUserById as RequestHandler;
 const authenticateHandler = authenticate as RequestHandler;
+const getUserEventRegistrationsHandler =
+  getUserEventRegistrations as RequestHandler;
 
 // Public endpoints - no authentication required
 usersRouter.get("/", getUsersHandler);
@@ -30,5 +33,10 @@ usersRouter.post("/", createUserHandler);
 // Protected endpoints - require authentication
 usersRouter.patch("/:id", authenticateHandler, updateUserByIdHandler);
 usersRouter.delete("/:id", authenticateHandler, deleteUserByIdHandler);
+usersRouter.get(
+  "/:id/registrations",
+  authenticateHandler,
+  getUserEventRegistrationsHandler
+);
 
 export default usersRouter;
