@@ -4,7 +4,7 @@ export const teamMembers: TeamMember[] = [
   {
     user_id: 1,
     team_id: 1,
-    role: "admin",
+    role: "team_admin",
     created_at: new Date(),
   },
   {
@@ -16,7 +16,7 @@ export const teamMembers: TeamMember[] = [
   {
     user_id: 3,
     team_id: 2,
-    role: "admin",
+    role: "team_admin",
     created_at: new Date(),
   },
   {

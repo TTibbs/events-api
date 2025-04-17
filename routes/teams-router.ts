@@ -68,8 +68,8 @@ const teamMemberValidation = [
   body("role")
     .notEmpty()
     .withMessage("Role is required")
-    .isIn(["admin", "event_manager", "team_member"])
-    .withMessage("Role must be admin, event_manager, or team_member"),
+    .isIn(["team_admin", "event_manager", "team_member"])
+    .withMessage("Role must be team_admin, event_manager, or team_member"),
 ];
 
 // Type assertions for controllers

@@ -20,6 +20,37 @@ declare global {
   }
 }
 
+// Helper function to calculate token expiry time in human-readable format
+const getTokenExpiryInfo = (token: string): string => {
+  try {
+    const decoded = jwt.decode(token) as { exp?: number };
+    if (!decoded || !decoded.exp) {
+      return "unknown expiry time";
+    }
+
+    const expiryTimestamp = decoded.exp;
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+
+    if (expiryTimestamp < currentTimestamp) {
+      return "token has expired";
+    }
+
+    const secondsRemaining = expiryTimestamp - currentTimestamp;
+
+    if (secondsRemaining < 60) {
+      return `${secondsRemaining} seconds`;
+    } else if (secondsRemaining < 3600) {
+      return `${Math.floor(secondsRemaining / 60)} minutes`;
+    } else if (secondsRemaining < 86400) {
+      return `${Math.floor(secondsRemaining / 3600)} hours`;
+    } else {
+      return `${Math.floor(secondsRemaining / 86400)} days`;
+    }
+  } catch (error) {
+    return "invalid token format";
+  }
+};
+
 // Middleware to verify JWT token
 export const authenticate = (
   req: Request,
@@ -51,9 +82,14 @@ export const authenticate = (
     next();
   } catch (error) {
     if (error instanceof Error && error.name === "TokenExpiredError") {
+      // Get token anyway to provide expiry info
+      const token = req.headers.authorization?.split(" ")[1] || "";
+
       return res.status(401).json({
         status: "error",
         msg: "Unauthorized - Token expired",
+        details: "Please refresh your access token or log in again",
+        tokenInfo: getTokenExpiryInfo(token),
       });
     }
 
@@ -185,7 +221,8 @@ export const authorizeEventAction = () => {
       if (
         !teamMember ||
         teamMember.team_id !== eventTeamId ||
-        (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+        (teamMember.role !== "team_admin" &&
+          teamMember.role !== "event_manager")
       ) {
         return res.status(403).json({
           status: "error",
@@ -209,15 +246,15 @@ export const authMiddleware = {
   isStaff: [authenticate, authorize("event_manager")],
 
   // Middleware to ensure user is an admin
-  isAdmin: [authenticate, authorize("admin")],
+  isAdmin: [authenticate, authorize("team_admin")],
 
   // Middleware to ensure user is authorized for team actions
-  isTeamAdmin: [authenticate, authorize("admin")],
+  isTeamAdmin: [authenticate, authorize("team_admin")],
 
   // Middleware to ensure user can manage team events
   canManageTeamEvents: [
     authenticate,
-    authorizeTeamAction(["admin", "event_manager"]),
+    authorizeTeamAction(["team_admin", "event_manager"]),
   ],
 
   // Middleware to ensure user can manage a specific event

@@ -93,11 +93,35 @@ describe("Authentication Middleware Integration Tests", () => {
       expect(body).toHaveProperty("status", "error");
       expect(body).toHaveProperty("msg", "Unauthorized - Token expired");
     });
+    test("Should allow access to protected endpoint with valid token that's older than the previous 15-minute window", async () => {
+      // Generate a token with an expiry time that would have failed with the previous 15-minute setting
+      // but works with the new 1-day setting
+      const payload = {
+        id: 1,
+        username: "alice123",
+        email: "alice@example.com",
+        // Set timestamp to be 30 minutes in the past
+        exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 1 day from now
+        iat: Math.floor(Date.now() / 1000) - 30 * 60, // Issued 30 minutes ago
+      };
+
+      const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+      const token = jwt.sign(payload, JWT_SECRET);
+
+      const { body } = await request(app)
+        .patch("/api/users/1")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ username: "alice_longtoken" })
+        .expect(200);
+
+      expect(body).toHaveProperty("status", "success");
+      expect(body).toHaveProperty("user");
+    });
   });
 
   describe("Role-Based Authorization", () => {
     test("Should allow admin to create a team", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
       const { body } = await request(app)
         .post("/api/teams")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -110,7 +134,7 @@ describe("Authentication Middleware Integration Tests", () => {
       expect(body).toHaveProperty("team");
     });
     test("Should allow admin to delete a team", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
 
       // Create a team to delete
       const createResponse = await request(app)
@@ -137,7 +161,7 @@ describe("Authentication Middleware Integration Tests", () => {
       expect(getResponse.body.status).toBe("error");
     });
     test("Should allow admin to update a user", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
 
       const response = await request(app)
         .patch("/api/users/2")
@@ -156,7 +180,7 @@ describe("Authentication Middleware Integration Tests", () => {
     let testEventId: number;
 
     beforeEach(async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -189,7 +213,7 @@ describe("Authentication Middleware Integration Tests", () => {
     });
 
     test("Should allow admin to delete an event", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
 
       // Create a new event to delete
       const tomorrow = new Date();
@@ -221,7 +245,7 @@ describe("Authentication Middleware Integration Tests", () => {
     });
 
     test("Should allow updating an event with a valid token", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
 
       const response = await request(app)
         .patch(`/api/events/${testEventId}`)
@@ -237,7 +261,7 @@ describe("Authentication Middleware Integration Tests", () => {
 
   describe("Team Member Operations", () => {
     test("Should allow admin to view team members", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
 
       const response = await request(app)
         .get("/api/teams/members")
@@ -248,7 +272,7 @@ describe("Authentication Middleware Integration Tests", () => {
     });
 
     test("Should allow admin to add a team member", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
 
       // Create a new user
       const userResponse = await request(app).post("/api/users").send({
@@ -309,7 +333,7 @@ describe("Authentication Middleware Integration Tests", () => {
     });
 
     test("Should handle nonexistent resource ID", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
 
       const response = await request(app)
         .get("/api/events/9999")
@@ -328,7 +352,7 @@ describe("Team Action Authorization", () => {
 
   beforeEach(async () => {
     // Get tokens for different roles
-    adminToken = await getTokenForRole("admin");
+    adminToken = await getTokenForRole("team_admin");
     eventManagerToken = await getTokenForRole("event_manager");
     teamMemberToken = await getTokenForRole("team_member");
 
@@ -430,7 +454,7 @@ describe("Event Action Authorization", () => {
 
   beforeEach(async () => {
     // Get tokens for different roles
-    adminToken = await getTokenForRole("admin");
+    adminToken = await getTokenForRole("team_admin");
     eventManagerToken = await getTokenForRole("event_manager");
     teamMemberToken = await getTokenForRole("team_member");
 
@@ -526,7 +550,7 @@ describe("Role-Based Authorization Tests", () => {
   let adminToken: string, eventManagerToken: string, teamMemberToken: string;
 
   beforeEach(async () => {
-    adminToken = await getTokenForRole("admin");
+    adminToken = await getTokenForRole("team_admin");
     eventManagerToken = await getTokenForRole("event_manager");
     teamMemberToken = await getTokenForRole("team_member");
   });

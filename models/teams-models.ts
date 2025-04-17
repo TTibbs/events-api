@@ -196,14 +196,14 @@ export const checkUserRole = async (
   const teamMember = await selectTeamMemberByUserId(userId);
   if (!teamMember) return false;
 
-  // If requiredRole is 'admin', only admins can access
-  if (requiredRole === "admin") {
-    return teamMember.role === "admin";
+  // If requiredRole is 'admin' or 'team_admin', only team_admins can access
+  if (requiredRole === "admin" || requiredRole === "team_admin") {
+    return teamMember.role === "team_admin";
   }
 
-  // If requiredRole is 'event_manager', both admins and event_managers can access
+  // If requiredRole is 'event_manager', both team_admins and event_managers can access
   if (requiredRole === "event_manager") {
-    return ["admin", "event_manager"].includes(teamMember.role);
+    return ["team_admin", "event_manager"].includes(teamMember.role);
   }
 
   // Return true for any other role matching exactly

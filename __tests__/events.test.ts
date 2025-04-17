@@ -47,7 +47,7 @@ describe("Event Registration API", () => {
 
   beforeEach(async () => {
     // Get an auth token for creating events
-    const adminToken = await getTokenForRole("admin");
+    const adminToken = await getTokenForRole("team_admin");
 
     // Create a test user
     const userResponse = await request(app).post("/api/users").send({
@@ -450,7 +450,7 @@ describe("Events API Endpoints", () => {
   describe("GET /api/events/:id - Event Lookup by ID", () => {
     test("Should successfully retrieve an event when provided a valid ID", async () => {
       // First create a test event
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const newEvent = {
         title: "Test Event for Lookup",
         description: "This event is for testing lookup by ID",
@@ -487,7 +487,7 @@ describe("Events API Endpoints", () => {
   describe("GET /api/events/upcoming - Upcoming Events", () => {
     test("Should successfully retrieve upcoming events", async () => {
       // First create a few upcoming events
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const newEvent = {
         title: "Upcoming Test Event",
         description: "This event is for testing upcoming events",
@@ -549,7 +549,7 @@ describe("Events API Endpoints", () => {
   });
   describe("POST /api/events - Event Creation", () => {
     test("Should successfully create a new event with valid details", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const newEvent = {
         status: "published",
         title: "Test Event",
@@ -574,7 +574,7 @@ describe("Events API Endpoints", () => {
       expect(event.is_public).toBe(true);
     });
     test("Should successfully create a new event without specifying team_id", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const newEvent = {
         status: "published",
         title: "Auto Team Event",
@@ -600,7 +600,7 @@ describe("Events API Endpoints", () => {
       expect(event.is_public).toBe(true);
     });
     test("Should reject event creation when required fields are missing", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const missingFieldsEvent = {
         status: "published",
         // title is missing
@@ -624,7 +624,7 @@ describe("Events API Endpoints", () => {
       );
     });
     test("Should reject event creation when end time is before start time", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const invalidTimesEvent = {
         status: "published",
         title: "Invalid Times Event",
@@ -651,7 +651,7 @@ describe("Events API Endpoints", () => {
       );
     });
     test("Should handle default values and optional fields correctly", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const minimalEvent = {
         title: "Minimal Event",
         start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
@@ -716,7 +716,7 @@ describe("Events API Endpoints", () => {
   });
   describe("PATCH /api/events/:id - Event Update", () => {
     test("Should successfully update an event with valid details", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       // First create an event
       const newEvent = {
         status: "draft",
@@ -755,7 +755,7 @@ describe("Events API Endpoints", () => {
       expect(response.body.updatedEvent.status).toBe(updateData.status);
     });
     test("Should return appropriate error when updating non-existent event", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       const updateData = {
         title: "Updated Title",
         description: "Updated Description",
@@ -770,7 +770,7 @@ describe("Events API Endpoints", () => {
       expect(response.body.msg).toBe("Event not found");
     });
     test("Should reject update when end time is before start time", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
 
       // First create an event
       const newEvent = {
@@ -805,7 +805,7 @@ describe("Events API Endpoints", () => {
       expect(response.body.msg).toBe("End time must be after start time");
     });
     test("Should handle different field types and conversions during update", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
       // First create an event
       const newEvent = {
         status: "draft",
@@ -844,7 +844,7 @@ describe("Events API Endpoints", () => {
     });
     test("Should reject update when user is not authorized for the team", async () => {
       // We need tokens for different roles
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
       const regularToken = await getTokenForRole("team_member");
 
       // First create an event as admin
@@ -883,7 +883,7 @@ describe("Events API Endpoints", () => {
   });
   describe("DELETE /api/events/:id - Event Deletion", () => {
     test("Should successfully delete an event with valid ID", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
 
       // First create an event to delete
       const newEvent = {
@@ -914,7 +914,7 @@ describe("Events API Endpoints", () => {
         .expect(404);
     });
     test("Should return appropriate error when deleting non-existent event", async () => {
-      const token = await getTokenForRole("admin");
+      const token = await getTokenForRole("team_admin");
 
       const response = await request(app)
         .delete("/api/events/9999")
@@ -925,7 +925,7 @@ describe("Events API Endpoints", () => {
     });
     test("Should reject deletion when user is not authorized", async () => {
       // We need tokens for different roles
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
       const regularToken = await getTokenForRole("team_member");
 
       // Create event as admin
@@ -970,7 +970,7 @@ describe("Event Visibility", () => {
 
   beforeEach(async () => {
     // Get authentication tokens for different roles
-    adminToken = await getTokenForRole("admin"); // Admin of team 1
+    adminToken = await getTokenForRole("team_admin"); // Admin of team 1
     team1MemberToken = await getAuthToken(); // Alice - team 1 member
     team2MemberToken = await getTokenForRole("team_member"); // Charlie - team 2 member
 

@@ -3,7 +3,11 @@ import app from "../app";
 import request from "supertest";
 
 // Test User Types
-export type TestUserRole = "admin" | "event_manager" | "team_member" | "user";
+export type TestUserRole =
+  | "team_admin"
+  | "event_manager"
+  | "team_member"
+  | "user";
 export interface TestUser {
   id: number;
   username: string;
@@ -19,7 +23,7 @@ export const TEST_USERS: Record<string, TestUser> = {
     username: "alice123",
     email: "alice@example.com",
     teamId: 1,
-    role: "admin",
+    role: "team_admin",
   },
   bob123: {
     id: 2,
@@ -33,7 +37,7 @@ export const TEST_USERS: Record<string, TestUser> = {
     username: "charlie123",
     email: "charlie@example.com",
     teamId: 2,
-    role: "admin",
+    role: "team_member",
   },
 };
 
@@ -100,7 +104,7 @@ export async function getAuthToken(username = "alice123"): Promise<string> {
  */
 export async function getTokenForRole(role: TestUserRole): Promise<string> {
   switch (role) {
-    case "admin":
+    case "team_admin":
       return getAuthToken("alice123"); // Team 1 admin
     case "event_manager":
       return getAuthToken("bob123"); // Team 1 event manager
@@ -116,7 +120,7 @@ export async function getTokenForRole(role: TestUserRole): Promise<string> {
  */
 export async function authorizeRequest(
   request: any,
-  role: TestUserRole = "admin"
+  role: TestUserRole = "team_admin"
 ): Promise<Response> {
   const token = await getTokenForRole(role);
   return request.set("Authorization", `Bearer ${token}`);

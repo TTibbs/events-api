@@ -133,7 +133,7 @@ export const createEvent = async (
     // Check if the user is authorized to create events for this team
     if (
       teamMember.team_id !== eventTeamId ||
-      (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+      (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).json({
         status: "error",
@@ -210,7 +210,7 @@ export const updateEvent = async (
     if (
       !teamMember ||
       teamMember.team_id !== Number(event.team_id) ||
-      (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+      (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).json({
         status: "error",
@@ -275,7 +275,7 @@ export const deleteEvent = async (
     if (
       !teamMember ||
       teamMember.team_id !== Number(event.team_id) ||
-      (teamMember.role !== "admin" && teamMember.role !== "event_manager")
+      (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).json({
         status: "error",

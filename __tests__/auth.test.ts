@@ -11,6 +11,7 @@ import {
   teams,
   tickets,
 } from "../db/data/test-data/index";
+import jwt from "jsonwebtoken";
 
 beforeEach(() =>
   seed({
@@ -358,6 +359,46 @@ describe("Authentication - Token Refresh Functionality", () => {
     } finally {
       // Restore original environment variable
       process.env.REFRESH_TOKEN_EXPIRY = originalRefreshExpiry;
+    }
+  });
+  // Test for the new access token expiry
+  test("Should set access token expiry to 1 day by default", async () => {
+    // Store original environment variable
+    const originalAccessExpiry = process.env.ACCESS_TOKEN_EXPIRY;
+
+    // Clear environment variable to use default
+    delete process.env.ACCESS_TOKEN_EXPIRY;
+
+    try {
+      // Register a new user to test token generation with default expiry
+      const newUser = {
+        username: "defaultexpiryuser",
+        email: "default@example.com",
+        password: "password123",
+      };
+
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send(newUser)
+        .expect(201);
+
+      // Verify registration was successful
+      expect(response.body.status).toBe("success");
+      expect(response.body.data).toHaveProperty("accessToken");
+
+      // Decode token to verify expiry (without verification)
+      const token = response.body.data.accessToken;
+      const decoded = jwt.decode(token);
+
+      // Check if expiry is approximately 1 day (with 5 minute margin for test execution time)
+      const expectedExpiry = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
+      const actualExpiry = (decoded as any).exp;
+
+      expect(actualExpiry).toBeGreaterThan(expectedExpiry - 300); // Within 5 minutes of expected
+      expect(actualExpiry).toBeLessThan(expectedExpiry + 300);
+    } finally {
+      // Restore original environment variable
+      process.env.ACCESS_TOKEN_EXPIRY = originalAccessExpiry;
     }
   });
 });

@@ -109,7 +109,11 @@ export const createTeam = async (
       )) as unknown as TeamResponse;
 
       // Add the creator as a team admin
-      const newTeamMember = await insertTeamMember(userId, newTeam.id, "admin");
+      const newTeamMember = await insertTeamMember(
+        userId,
+        newTeam.id,
+        "team_admin"
+      );
 
       return { newTeam, newTeamMember };
     });
@@ -184,8 +188,9 @@ export const deleteTeam = async (
     const teamMember = await selectTeamMemberByUserId(req.user.id);
     if (
       !teamMember ||
-      (teamMember.team_id !== parseInt(id) && teamMember.role !== "admin") ||
-      (teamMember.team_id === parseInt(id) && teamMember.role !== "admin")
+      (teamMember.team_id !== parseInt(id) &&
+        teamMember.role !== "team_admin") ||
+      (teamMember.team_id === parseInt(id) && teamMember.role !== "team_admin")
     ) {
       return res.status(403).json({
         status: "error",
@@ -327,8 +332,9 @@ export const createTeamMember = async (
     if (
       !teamMember ||
       (teamMember.team_id !== parseInt(team_id) &&
-        teamMember.role !== "admin") ||
-      (teamMember.team_id === parseInt(team_id) && teamMember.role !== "admin")
+        teamMember.role !== "team_admin") ||
+      (teamMember.team_id === parseInt(team_id) &&
+        teamMember.role !== "team_admin")
     ) {
       return res.status(403).json({
         status: "error",

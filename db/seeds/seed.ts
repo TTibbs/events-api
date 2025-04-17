@@ -30,7 +30,7 @@ const seed = async ({
 
     // Create types
     await db.query(`
-      CREATE TYPE team_role AS ENUM ('admin', 'event_manager', 'team_member');
+      CREATE TYPE team_role AS ENUM ('team_admin', 'event_manager', 'team_member');
     `);
     await db.query(`
       CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
@@ -49,6 +49,7 @@ const seed = async ({
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
+        is_site_admin BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );

@@ -23,7 +23,7 @@ import { withTransaction } from "../utils/db-transaction";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const JWT_REFRESH_SECRET =
   process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key";
-const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "15m";
+const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "1d";
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 // Helper function to generate tokens
@@ -311,6 +311,7 @@ export const refreshToken = async (
         id: decoded.id,
         username: "", // These are required by DatabaseUser type
         email: "", // but not used in token generation
+        is_site_admin: false,
         password_hash: "",
         created_at: new Date(),
         updated_at: new Date(),

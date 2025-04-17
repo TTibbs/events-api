@@ -177,7 +177,7 @@ describe("Teams API Endpoints", () => {
         .get("/api/teams/members/1/role")
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
-      expect(role).toBe("admin");
+      expect(role).toBe("team_admin");
     });
     test("Should return appropriate error when user has no team member record", async () => {
       const token = await getAuthToken();
@@ -192,7 +192,7 @@ describe("Teams API Endpoints", () => {
   });
   describe("POST /api/teams - Team Creation", () => {
     test("Should successfully create a new team with valid details", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
       const newTeam = {
         name: "New Test Team",
         description: "This is a test team created for testing",
@@ -211,7 +211,7 @@ describe("Teams API Endpoints", () => {
       expect(team).toHaveProperty("description", newTeam.description);
     });
     test("Should return appropriate error when required fields are missing", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
       const invalidTeam = {
         // Missing 'name' field
         description: "This team is missing a name",
@@ -234,7 +234,7 @@ describe("Teams API Endpoints", () => {
       );
     });
     test("Should reject team creation when name is already in use", async () => {
-      const adminToken = await getTokenForRole("admin");
+      const adminToken = await getTokenForRole("team_admin");
       const duplicateTeam = {
         name: "Tech Events Team",
         description: "Team for tech events and promotions",
@@ -255,7 +255,7 @@ describe("Teams API Endpoints", () => {
       const insertedTeamMember = {
         user_id: 3, // Changed from 1 to 3 to avoid duplicate constraint with team_id 1
         team_id: 1,
-        role: "admin",
+        role: "team_admin",
       };
       const {
         body: { newTeamMember },
@@ -267,7 +267,7 @@ describe("Teams API Endpoints", () => {
       expect(newTeamMember).toHaveProperty("id", expect.any(Number));
       expect(newTeamMember).toHaveProperty("user_id", 3);
       expect(newTeamMember).toHaveProperty("team_id", 1);
-      expect(newTeamMember).toHaveProperty("role", "admin");
+      expect(newTeamMember).toHaveProperty("role", "team_admin");
     });
     test("Should reject team member creation when user does not exist", async () => {
       const token = await getAuthToken();
@@ -346,7 +346,7 @@ describe("Teams API Endpoints", () => {
       const token = await getAuthToken();
       const missingTeamIdTeamMember = {
         user_id: 3,
-        role: "admin",
+        role: "team_admin",
         // team_id is missing
       };
 
@@ -373,7 +373,7 @@ describe("Teams API Endpoints", () => {
         email: "newmember@example.com",
         plainPassword: "password123",
         team_id: 1,
-        role: "admin",
+        role: "team_admin",
       };
 
       const response1 = await request(app)
@@ -392,7 +392,7 @@ describe("Teams API Endpoints", () => {
         // email is missing
         plainPassword: "password123",
         team_id: 1,
-        role: "admin",
+        role: "team_admin",
       };
 
       const response2 = await request(app)
@@ -410,7 +410,7 @@ describe("Teams API Endpoints", () => {
         email: "newmember@example.com",
         // password is missing
         team_id: 1,
-        role: "admin",
+        role: "team_admin",
       };
 
       const response3 = await request(app)
@@ -430,7 +430,7 @@ describe("Teams API Endpoints", () => {
         email: "another@example.com", // Different email
         plainPassword: "password123",
         team_id: 1,
-        role: "admin",
+        role: "team_admin",
       };
 
       const response = await request(app)
