@@ -32,6 +32,12 @@ const sanitizeUsers = (users: any[]) => {
   return users.map((user) => sanitizeUser(user));
 };
 
+// Helper function to check if a user is a site admin
+const checkIsUserSiteAdmin = async (userId: number): Promise<boolean> => {
+  const user = await selectUserById(userId);
+  return !!user?.is_site_admin;
+};
+
 export const getUsers = async (
   req: Request,
   res: Response,
@@ -70,8 +76,7 @@ export const getIsUserSiteAdmin = async (
 ) => {
   const { id } = req.params;
   try {
-    const user = await selectUserById(Number(id));
-    const is_site_admin = user?.is_site_admin;
+    const is_site_admin = await checkIsUserSiteAdmin(Number(id));
     res.status(200).send({ is_site_admin });
   } catch (err) {
     next(err);
@@ -285,7 +290,7 @@ export const getAdminDashboard = async (
   next: NextFunction
 ) => {
   try {
-    // Check if the user is a site admin
+    // Check if the user is authenticated
     if (!req.user) {
       return res.status(401).json({
         status: "error",
@@ -293,9 +298,9 @@ export const getAdminDashboard = async (
       });
     }
 
-    // Get the user from the database to check if they are a site admin
-    const user = await selectUserById(req.user.id);
-    if (user && !user.is_site_admin) {
+    // Check if the user is a site admin
+    const is_site_admin = await checkIsUserSiteAdmin(req.user.id);
+    if (!is_site_admin) {
       return res.status(403).json({
         status: "error",
         msg: "Forbidden - Site admin access required",
