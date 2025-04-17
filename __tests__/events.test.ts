@@ -21,6 +21,12 @@ import {
   getTokenForRole,
   authorizeRequest,
 } from "../utils/testHelpers";
+import { sendRegistrationConfirmation } from "../utils/email";
+
+// Mock the email utility
+jest.mock("../utils/email", () => ({
+  sendRegistrationConfirmation: jest.fn().mockResolvedValue({ success: true }),
+}));
 
 beforeEach(() =>
   seed({
@@ -306,7 +312,7 @@ describe("Event Registration API", () => {
         .set("Authorization", `Bearer ${token}`)
         .send({ userId: 9999 });
 
-      expect(nonExistentUserResponse.status).toBe(400); // The controller appears to be rejecting non-existent user IDs
+      expect(nonExistentUserResponse.status).toBe(404); // The model now returns 404 for non-existent users
     });
   });
   describe("Registration Management", () => {
@@ -426,6 +432,45 @@ describe("Event Registration API", () => {
       expect(response.status).toBe(200);
       expect(response.body.registrations).toBeInstanceOf(Array);
       expect(response.body.registrations.length).toBe(0);
+    });
+  });
+  describe("Event Registration with Email Confirmation", () => {
+    test("Should send email confirmation when registering for an event", async () => {
+      // Get token for authenticated user
+      const userToken = await getAuthToken();
+
+      // Reset mock before test
+      (sendRegistrationConfirmation as jest.Mock).mockClear();
+
+      // Create a new user for registration to avoid conflicts with existing registrations
+      const userResponse = await request(app).post("/api/users").send({
+        username: "emailtestuser",
+        email: "emailtest@example.com",
+        plainPassword: "password123",
+      });
+      const newUser = userResponse.body.newUser;
+
+      // Register for the event with the new user
+      const response = await request(app)
+        .post(`/api/events/${testEvent.id}/register`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ userId: newUser.id });
+
+      // Check registration was successful
+      expect(response.statusCode).toBe(201);
+      expect(response.body.msg).toBe("Registration successful");
+
+      // Verify email confirmation was called
+      expect(sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
+
+      // Verify email was sent with correct data
+      const emailParams = (sendRegistrationConfirmation as jest.Mock).mock
+        .calls[0][0];
+      expect(emailParams).toHaveProperty("to");
+      expect(emailParams).toHaveProperty("name");
+      expect(emailParams).toHaveProperty("eventTitle");
+      expect(emailParams).toHaveProperty("eventDate");
+      expect(emailParams).toHaveProperty("ticketCode");
     });
   });
 });

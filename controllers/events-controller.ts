@@ -18,6 +18,7 @@ import {
   selectDraftEventsByTeamId,
 } from "../models/events-models";
 import { selectTeamMemberByUserId } from "../models/teams-models";
+import { sendRegistrationConfirmation } from "../utils/email";
 
 export const getEvents = async (
   req: Request,
@@ -427,7 +428,54 @@ export const registerForEvent = async (
       userId = Number(req.body.userId);
     }
 
+    console.log(`Registering user ${userId} for event ${eventId}`);
     const registration = await registerUserForEvent(Number(eventId), userId);
+
+    // Send confirmation email if registration was successful
+    if (registration.ticket_info) {
+      try {
+        console.log(
+          `Attempting to send email to ${registration.ticket_info.user_email}`
+        );
+        console.log(
+          `SENDGRID_API_KEY is ${
+            process.env.SENDGRID_API_KEY ? "set" : "not set"
+          }`
+        );
+        console.log(
+          `SENDGRID_FROM_EMAIL is ${
+            process.env.SENDGRID_FROM_EMAIL
+              ? process.env.SENDGRID_FROM_EMAIL
+              : "not set"
+          }`
+        );
+
+        const emailResult = await sendRegistrationConfirmation({
+          to: registration.ticket_info.user_email,
+          name: registration.ticket_info.user_name,
+          eventTitle: registration.ticket_info.event_title,
+          eventDate: registration.ticket_info.event_date,
+          eventLocation: registration.ticket_info.event_location,
+          ticketCode: registration.ticket_info.ticket_code,
+        });
+
+        console.log(
+          `Email sending result: ${emailResult.success ? "success" : "failed"}`
+        );
+        if (!emailResult.success) {
+          console.error("Email error details:", emailResult.error);
+        } else {
+          console.log(
+            `Confirmation email sent for registration ID: ${registration.id}`
+          );
+        }
+      } catch (emailError) {
+        // Log the error but don't fail the registration process
+        console.error("Failed to send confirmation email:", emailError);
+      }
+    } else {
+      console.warn("No ticket_info available for sending confirmation email");
+    }
 
     // If registration was reactivated, return 200 instead of 201
     const statusCode = registration.reactivated ? 200 : 201;
@@ -439,6 +487,7 @@ export const registerForEvent = async (
       registration,
     });
   } catch (error) {
+    console.error("Registration error:", error);
     next(error);
   }
 };

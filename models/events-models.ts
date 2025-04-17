@@ -482,7 +482,13 @@ export const registerUserForEvent = async (
   return executeWithRowLock("events", "id = $1", [eventId], async (client) => {
     // Check if event exists and is available (within transaction)
     const eventAvailabilityQuery = await client.query(
-      `SELECT * FROM events WHERE id = $1`,
+      `SELECT 
+        e.*, 
+        TO_CHAR(e.start_time, 'FMDay, FMMM DD, YYYY at FMHH12:MI PM') as formatted_date,
+        t.name as team_name
+      FROM events e
+      LEFT JOIN teams t ON e.team_id = t.id
+      WHERE e.id = $1`,
       [eventId]
     );
 
@@ -535,6 +541,20 @@ export const registerUserForEvent = async (
       }
     }
 
+    // Get the user information for the email
+    const userQuery = await client.query(`SELECT * FROM users WHERE id = $1`, [
+      userId,
+    ]);
+
+    if (userQuery.rows.length === 0) {
+      return Promise.reject({
+        status: 404,
+        msg: "User not found",
+      });
+    }
+
+    const user = userQuery.rows[0];
+
     // Check if user is already registered
     const existingRegistration = await client.query(
       `
@@ -560,12 +580,54 @@ export const registerUserForEvent = async (
         );
 
         const updatedRegistration = reactivatedResult.rows[0];
+
+        // Get existing ticket for this registration or create new one
+        const ticketQuery = await client.query(
+          `SELECT * FROM tickets WHERE registration_id = $1`,
+          [registration.id]
+        );
+
+        let ticketCode = "";
+
+        if (ticketQuery.rows.length > 0) {
+          const ticket = ticketQuery.rows[0];
+          ticketCode = ticket.ticket_code;
+
+          // Update the ticket if needed
+          if (ticket.status !== "valid") {
+            await client.query(
+              `UPDATE tickets SET status = 'valid' WHERE id = $1`,
+              [ticket.id]
+            );
+          }
+        } else {
+          // Create new ticket if for some reason one doesn't exist
+          ticketCode = generateTicketCode();
+          await client.query(
+            `
+            INSERT INTO tickets
+              (event_id, user_id, registration_id, ticket_code, status)
+            VALUES
+              ($1, $2, $3, $4, 'valid')
+            `,
+            [eventId, userId, registration.id, ticketCode]
+          );
+        }
+
         return {
           ...updatedRegistration,
           id: Number(updatedRegistration.id),
           event_id: Number(updatedRegistration.event_id),
           user_id: Number(updatedRegistration.user_id),
           reactivated: true,
+          ticket_info: {
+            ticket_code: ticketCode,
+            event_title: event.title,
+            event_date: event.formatted_date,
+            event_location: event.location,
+            user_name: user.username,
+            user_email: user.email,
+          },
         };
       }
 
@@ -609,6 +671,14 @@ export const registerUserForEvent = async (
       id: Number(registration.id),
       event_id: Number(registration.event_id),
       user_id: Number(registration.user_id),
+      ticket_info: {
+        ticket_code: ticketCode,
+        event_title: event.title,
+        event_date: event.formatted_date,
+        event_location: event.location,
+        user_name: user.username,
+        user_email: user.email,
+      },
     };
   });
 };
