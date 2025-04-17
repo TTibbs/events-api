@@ -33,8 +33,8 @@ export const users: User[] = [
     updated_at: new Date(),
   },
   {
-    username: "admin123",
-    email: "admin@example.com",
+    username: "siteadmin",
+    email: "siteadmin@example.com",
     password_hash: passwordHash,
     is_site_admin: true,
     created_at: new Date(),

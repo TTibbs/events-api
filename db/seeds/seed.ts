@@ -211,8 +211,13 @@ const seed = async ({
 
     // 1. Insert users first as they have no dependencies
     const insertUsersQueryString = format(
-      `INSERT INTO users (username, email, password_hash) VALUES %L RETURNING id`,
-      users.map((user) => [user.username, user.email, user.password_hash])
+      `INSERT INTO users (username, email, password_hash, is_site_admin) VALUES %L RETURNING id`,
+      users.map((user) => [
+        user.username,
+        user.email,
+        user.password_hash,
+        user.is_site_admin,
+      ])
     );
     await db.query(insertUsersQueryString);
 

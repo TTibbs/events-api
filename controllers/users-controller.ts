@@ -55,6 +55,21 @@ export const getUserById = async (
   }
 };
 
+export const getIsUserSiteAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  try {
+    const user = await selectUserById(Number(id));
+    const is_site_admin = user?.is_site_admin;
+    res.status(200).send({ is_site_admin });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getUserByUsername = async (
   req: Request,
   res: Response,

@@ -377,4 +377,45 @@ describe("Users API Endpoints", () => {
       expect(response.body.msg).toBe("Unauthorized - No token provided");
     });
   });
+  describe("GET /api/users/:id/is-site-admin - User Site Admin Check", () => {
+    test("Should return true for site admin", async () => {
+      const token = await getAuthToken();
+
+      const response = await request(app)
+        .get("/api/users/4/is-site-admin")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      console.log(response.body);
+      expect(response.body).toHaveProperty("is_site_admin", true);
+    });
+    test("Should return false for non-site admin", async () => {
+      const token = await getAuthToken();
+
+      const response = await request(app)
+        .get("/api/users/2/is-site-admin")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty("is_site_admin", false);
+    });
+    test("Should return 404 for non-existent user", async () => {
+      const token = await getAuthToken();
+
+      const response = await request(app)
+        .get("/api/users/9999/is-site-admin")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body).toHaveProperty("msg", "User not found");
+    });
+    test("Should require authentication", async () => {
+      // Request without auth token
+      const response = await request(app)
+        .get("/api/users/1/is-site-admin")
+        .expect(401);
+
+      expect(response.body).toHaveProperty("status", "error");
+      expect(response.body.msg).toBe("Unauthorized - No token provided");
+    });
+  });
 });
