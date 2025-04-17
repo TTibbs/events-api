@@ -51,6 +51,20 @@ describe("Teams API Endpoints", () => {
         });
       }
     });
+
+    test("Should return the total number of teams", async () => {
+      const token = await getAuthToken();
+
+      const {
+        body: { total_teams },
+      } = await request(app)
+        .get("/api/teams")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(total_teams).toBeGreaterThanOrEqual(1);
+      expect(total_teams).toEqual(expect.any(Number));
+    });
   });
   describe("GET /api/teams/:id - Team Lookup by ID", () => {
     test("Should successfully retrieve a team when provided a valid ID", async () => {

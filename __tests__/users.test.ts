@@ -43,6 +43,12 @@ describe("Users API Endpoints", () => {
         expect(user).toHaveProperty("email", expect.any(String));
       });
     });
+    test("Should return the total number of users", async () => {
+      const {
+        body: { total_users },
+      } = await request(app).get("/api/users").expect(200);
+      expect(total_users).toBe(4);
+    });
   });
   describe("GET /api/users/:id - User Lookup by ID", () => {
     test("Should successfully retrieve a user when provided a valid ID", async () => {
@@ -385,7 +391,6 @@ describe("Users API Endpoints", () => {
         .get("/api/users/4/is-site-admin")
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
-      console.log(response.body);
       expect(response.body).toHaveProperty("is_site_admin", true);
     });
     test("Should return false for non-site admin", async () => {

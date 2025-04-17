@@ -30,10 +30,10 @@ export const getUsers = async (
   next: NextFunction
 ) => {
   try {
-    const users = await selectUsers();
+    const { users, total_users } = await selectUsers();
     // Sanitize all users
     const sanitizedUsers = sanitizeUsers(users);
-    res.status(200).send({ users: sanitizedUsers });
+    res.status(200).send({ users: sanitizedUsers, total_users });
   } catch (err) {
     next(err);
   }

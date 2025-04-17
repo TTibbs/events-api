@@ -7,7 +7,10 @@ import {
 import crypto from "crypto";
 
 // Get all published events
-export const selectEvents = async (): Promise<Event[]> => {
+export const selectEvents = async (): Promise<{
+  events: Event[];
+  total_events: number;
+}> => {
   const query = `
     SELECT 
       e.*,
@@ -23,18 +26,29 @@ export const selectEvents = async (): Promise<Event[]> => {
 
   const result = await db.query(query);
 
+  // Get total count of published events
+  const countResult = await db.query(`
+    SELECT COUNT(*) as total_events FROM events WHERE status = 'published'
+  `);
+
   if (result.rows.length === 0) {
-    return [];
+    return {
+      events: [],
+      total_events: 0,
+    };
   }
 
-  return result.rows.map((event) => ({
-    ...event,
-    id: Number(event.id),
-    team_id: event.team_id ? Number(event.team_id) : null,
-    created_by: event.created_by ? Number(event.created_by) : null,
-    price: event.price ? Number(event.price) : null,
-    max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
-  }));
+  return {
+    events: result.rows.map((event) => ({
+      ...event,
+      id: Number(event.id),
+      team_id: event.team_id ? Number(event.team_id) : null,
+      created_by: event.created_by ? Number(event.created_by) : null,
+      price: event.price ? Number(event.price) : null,
+      max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    })),
+    total_events: parseInt(countResult.rows[0].total_events),
+  };
 };
 
 // Get draft events for user's teams

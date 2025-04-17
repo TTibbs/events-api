@@ -446,6 +446,14 @@ describe("Events API Endpoints", () => {
         expect(event).toHaveProperty("status", expect.any(String));
       });
     });
+
+    test("Should return the total number of published events", async () => {
+      const {
+        body: { total_events },
+      } = await request(app).get("/api/events").expect(200);
+      expect(total_events).toBeGreaterThanOrEqual(1);
+      expect(total_events).toEqual(expect.any(Number));
+    });
   });
   describe("GET /api/events/:id - Event Lookup by ID", () => {
     test("Should successfully retrieve an event when provided a valid ID", async () => {

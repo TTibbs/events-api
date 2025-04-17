@@ -24,8 +24,8 @@ export const getTeams = async (
   next: NextFunction
 ) => {
   try {
-    const teams = await selectTeams();
-    res.status(200).send({ teams });
+    const { teams, total_teams } = await selectTeams();
+    res.status(200).send({ teams, total_teams });
   } catch (err) {
     next(err);
   }

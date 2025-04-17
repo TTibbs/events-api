@@ -1,15 +1,28 @@
 import db from "../db/connection";
 import { Team, TeamMember, User } from "../types";
 
-export const selectTeams = async (): Promise<Team[]> => {
+export const selectTeams = async (): Promise<{
+  teams: Team[];
+  total_teams: number;
+}> => {
   const result = await db.query("SELECT * FROM teams");
+
+  // Get total count of teams
+  const countResult = await db.query(
+    "SELECT COUNT(*) as total_teams FROM teams"
+  );
+
   if (result.rows.length === 0) {
     return Promise.reject({ status: 404, msg: "No teams found" });
   }
-  return result.rows.map((team) => ({
-    ...team,
-    id: Number(team.id),
-  })) as Team[];
+
+  return {
+    teams: result.rows.map((team) => ({
+      ...team,
+      id: Number(team.id),
+    })) as Team[],
+    total_teams: parseInt(countResult.rows[0].total_teams),
+  };
 };
 
 export const selectTeamById = async (id: number): Promise<Team> => {

@@ -25,8 +25,8 @@ export const getEvents = async (
   next: NextFunction
 ) => {
   try {
-    const events = await selectEvents();
-    res.status(200).send({ events });
+    const { events, total_events } = await selectEvents();
+    res.status(200).send({ events, total_events });
   } catch (err) {
     next(err);
   }
