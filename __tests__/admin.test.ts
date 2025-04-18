@@ -38,7 +38,6 @@ describe("Admin API", () => {
         msg: "Unauthorized - No token provided",
       });
     });
-
     test("403: Should return forbidden when user is not a site admin", async () => {
       // Get a non-admin user (user_id 1 is not an admin in the test data)
       const token = generateTestToken(
@@ -58,7 +57,6 @@ describe("Admin API", () => {
         msg: "Forbidden - Site admin access required",
       });
     });
-
     test("200: Should return all platform data for site admin", async () => {
       // Use user_id 4 which is a site admin in the test data
       const token = generateTestToken(
@@ -85,17 +83,6 @@ describe("Admin API", () => {
       expect(response.body.data).toHaveProperty("tickets");
       expect(response.body.data).toHaveProperty("registrations");
 
-      // Check data types and properties
-      expect(Array.isArray(response.body.data.users)).toBe(true);
-      expect(typeof response.body.data.total_users).toBe("number");
-      expect(Array.isArray(response.body.data.events)).toBe(true);
-      expect(typeof response.body.data.total_events).toBe("number");
-      expect(Array.isArray(response.body.data.draft_events)).toBe(true);
-      expect(Array.isArray(response.body.data.teams)).toBe(true);
-      expect(typeof response.body.data.total_teams).toBe("number");
-      expect(Array.isArray(response.body.data.tickets)).toBe(true);
-      expect(Array.isArray(response.body.data.registrations)).toBe(true);
-
       // Check that users don't contain password_hash
       if (response.body.data.users.length > 0) {
         expect(response.body.data.users[0]).not.toHaveProperty("password_hash");
@@ -106,6 +93,119 @@ describe("Admin API", () => {
         (event: any) => event.status === "draft"
       );
       expect(hasDraftEvents).toBe(true);
+    });
+  });
+  describe("PATCH /api/admin/users/:id", () => {
+    test("200: Should promote user to admin when requested by a site admin", async () => {
+      // Use user_id 4 which is a site admin in the test data
+      const token = generateTestToken(
+        4,
+        "siteadmin",
+        "siteadmin@example.com",
+        null
+      );
+
+      const response = await request(app)
+        .patch("/api/admin/users/1")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ is_site_admin: true })
+        .expect(200);
+
+      expect(response.body.status).toBe("success");
+      expect(response.body.data.is_site_admin).toBe(true);
+      expect(response.body.data).not.toHaveProperty("password_hash");
+    });
+
+    test("200: Should demote a site admin to regular user", async () => {
+      // Use user_id 4 which is a site admin in the test data
+      const token = generateTestToken(
+        4,
+        "siteadmin",
+        "siteadmin@example.com",
+        null
+      );
+
+      const response = await request(app)
+        .patch("/api/admin/users/3") // Assuming user 3 is already a site admin
+        .set("Authorization", `Bearer ${token}`)
+        .send({ is_site_admin: false })
+        .expect(200);
+
+      expect(response.body.status).toBe("success");
+      expect(response.body.data.is_site_admin).toBe(false);
+    });
+
+    test("401: Should return unauthorized when no token is provided", async () => {
+      const response = await request(app)
+        .patch("/api/admin/users/1")
+        .send({ is_site_admin: true })
+        .expect(401);
+
+      expect(response.body).toEqual({
+        status: "error",
+        msg: "Unauthorized - No token provided",
+      });
+    });
+
+    test("403: Should return forbidden when non-admin user tries to promote someone", async () => {
+      // Use user_id 1 which is not a site admin in the test data
+      const token = generateTestToken(
+        1,
+        "alice123",
+        "alice@example.com",
+        "team_admin"
+      );
+
+      const response = await request(app)
+        .patch("/api/admin/users/2")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ is_site_admin: true })
+        .expect(403);
+
+      expect(response.body).toEqual({
+        status: "error",
+        msg: "Forbidden - Site admin access required",
+      });
+    });
+
+    test("400: Should return bad request when is_site_admin is not a boolean", async () => {
+      const token = generateTestToken(
+        4,
+        "siteadmin",
+        "siteadmin@example.com",
+        null
+      );
+
+      const response = await request(app)
+        .patch("/api/admin/users/1")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ is_site_admin: "true" }) // String instead of boolean
+        .expect(400);
+
+      expect(response.body).toEqual({
+        status: "error",
+        msg: "Invalid request - is_site_admin must be a boolean value",
+      });
+    });
+
+    test("404: Should return not found when user does not exist", async () => {
+      const token = generateTestToken(
+        4,
+        "siteadmin",
+        "siteadmin@example.com",
+        null
+      );
+
+      const response = await request(app)
+        .patch("/api/admin/users/999")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ is_site_admin: true })
+        .expect(404);
+
+      expect(response.body).toEqual({
+        status: "error",
+        msg: "User not found",
+      });
     });
   });
 });

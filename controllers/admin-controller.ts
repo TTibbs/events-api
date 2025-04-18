@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { selectUsers } from "../models/users-models";
+import { selectUserById, selectUsers } from "../models/users-models";
 import {
   selectEventRegistrationsByEventId,
   selectEvents,
@@ -8,6 +8,7 @@ import { selectTeams } from "../models/teams-models";
 import { fetchAllTickets } from "../models/tickets-models";
 import { checkIsUserSiteAdmin } from "./users-controller";
 import db from "../db/connection";
+import { updateUserToAdmin } from "../models/admin-models";
 
 const sanitizeUser = (user: any) => {
   if (!user) return user;
@@ -104,6 +105,59 @@ export const getAdminDashboard = async (
         tickets,
         registrations: registrations.flat(),
       },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const promoteUserById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Check if the user is authenticated
+    if (!req.user) {
+      return res.status(401).json({
+        status: "error",
+        msg: "Unauthorized - Authentication required",
+      });
+    }
+
+    // Check if the user is a site admin
+    const is_site_admin = await checkIsUserSiteAdmin(req.user.id);
+    if (!is_site_admin) {
+      return res.status(403).json({
+        status: "error",
+        msg: "Forbidden - Site admin access required",
+      });
+    }
+
+    const { id } = req.params;
+    const { is_site_admin: newAdminStatus } = req.body;
+
+    if (typeof newAdminStatus !== "boolean") {
+      return res.status(400).json({
+        status: "error",
+        msg: "Invalid request - is_site_admin must be a boolean value",
+      });
+    }
+
+    const user = await selectUserById(Number(id));
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        msg: "User not found",
+      });
+    }
+
+    const updatedUser = await updateUserToAdmin(Number(id), newAdminStatus);
+    const sanitizedUser = sanitizeUser(updatedUser);
+
+    res.status(200).json({
+      status: "success",
+      data: sanitizedUser,
     });
   } catch (err) {
     next(err);
