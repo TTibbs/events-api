@@ -7,8 +7,7 @@ import {
 import { selectTeams } from "../models/teams-models";
 import { fetchAllTickets } from "../models/tickets-models";
 import { checkIsUserSiteAdmin } from "./users-controller";
-import db from "../db/connection";
-import { updateUserToAdmin } from "../models/admin-models";
+import { updateUserToAdmin, getDraftEvents } from "../models/admin-models";
 import { sanitizeUser, sanitizeUsers } from "../utils/databaseHelpers";
 import {
   AdminDashboardData,
@@ -62,28 +61,7 @@ export const getAdminDashboard = async (
     const registrations = await Promise.all(registrationsPromise);
 
     // Get all draft events specifically
-    const draftEventsQuery = `
-        SELECT 
-          e.*,
-          t.name as team_name,
-          tm.username as creator_username
-        FROM events e
-        LEFT JOIN teams t ON e.team_id = t.id
-        LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
-        LEFT JOIN users tm ON tm_link.user_id = tm.id
-        WHERE e.status = 'draft'
-        ORDER BY e.start_time ASC
-      `;
-
-    const draftEventsResult = await db.query(draftEventsQuery);
-    const draftEvents = draftEventsResult.rows.map((event) => ({
-      ...event,
-      id: Number(event.id),
-      team_id: event.team_id ? Number(event.team_id) : null,
-      created_by: event.created_by ? Number(event.created_by) : null,
-      price: event.price ? Number(event.price) : null,
-      max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
-    })) as EventResponse[];
+    const draftEvents = await getDraftEvents();
 
     // Sanitize all users to remove password hashes
     const sanitizedUsers = sanitizeUsers(users) as unknown as User[];
