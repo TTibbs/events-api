@@ -16,6 +16,7 @@ import {
   selectDraftEventById,
   selectDraftEventsByTeamId,
   getEventByIdForAdmin,
+  selectCategoryByName,
 } from "../models/events-models";
 import { selectTeamMemberByUserId } from "../models/teams-models";
 import { sendRegistrationConfirmation } from "../utils/email";
@@ -34,8 +35,56 @@ export const getEvents = async (
   next: NextFunction
 ) => {
   try {
-    const { events, total_events } = await selectEvents();
+    const {
+      sort_by,
+      order,
+      category,
+      limit,
+      page,
+      location,
+      min_price,
+      max_price,
+      start_date,
+    } = req.query;
+
+    // If category is provided, verify it exists first
+    if (category) {
+      try {
+        await selectCategoryByName(category as string);
+      } catch (err) {
+        return res.status(404).send({
+          status: "error",
+          msg: `Category '${category}' not found`,
+        });
+      }
+    }
+
+    const { events, total_events } = await selectEvents(
+      sort_by as string,
+      order as string,
+      category as string,
+      limit as string,
+      page as string,
+      location as string,
+      min_price as string,
+      max_price as string,
+      start_date as string
+    );
     res.status(200).send({ events, total_events });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCategoryByName = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { name } = req.params;
+  try {
+    const category = await selectCategoryByName(name);
+    res.status(200).send({ category });
   } catch (err) {
     next(err);
   }
@@ -112,7 +161,7 @@ export const createEvent = async (
     end_time,
     max_attendees,
     price,
-    event_type,
+    category,
     is_public,
     team_id,
     created_by,
@@ -174,7 +223,7 @@ export const createEvent = async (
       new Date(end_time),
       max_attendees ? Number(max_attendees) : null,
       price ? Number(price) : null,
-      event_type || null,
+      category || null,
       eventIsPublic,
       eventTeamId,
       createdBy
@@ -436,7 +485,6 @@ export const getDraftEventsByTeamId = async (
   }
 };
 
-// Register a user for an event
 export const registerForEvent = async (
   req: Request,
   res: Response,
@@ -535,7 +583,6 @@ export const registerForEvent = async (
   }
 };
 
-// Cancel a registration
 export const cancelEventRegistration = async (
   req: Request,
   res: Response,
@@ -593,7 +640,6 @@ export const cancelEventRegistration = async (
   }
 };
 
-// Check event availability
 export const checkEventRegistrationAvailability = async (
   req: Request,
   res: Response,

@@ -11,6 +11,7 @@ import {
   teams,
   tickets,
   stripePayments,
+  categories,
 } from "../db/data/test-data/index";
 import { TicketResponse, TicketWithEventInfo } from "../types";
 import * as ticketModels from "../models/tickets-models";
@@ -27,6 +28,7 @@ beforeEach(() =>
     teams,
     tickets,
     stripePayments,
+    categories,
   })
 );
 
@@ -258,6 +260,7 @@ describe("Tickets API Endpoints", () => {
         start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
         end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
         team_id: 1,
+        category: "Workshop",
       };
 
       const eventResponse = await request(app)

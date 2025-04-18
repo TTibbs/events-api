@@ -11,6 +11,7 @@ import {
   teams,
   tickets,
   stripePayments,
+  categories,
 } from "../db/data/test-data/index";
 import { getAuthToken } from "../utils/testHelpers";
 import Stripe from "stripe";
@@ -77,6 +78,7 @@ beforeEach(() =>
     teams,
     tickets,
     stripePayments,
+    categories,
   })
 );
 

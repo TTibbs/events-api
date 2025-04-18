@@ -6,6 +6,7 @@ import { userSessions } from "./user-sessions";
 import { teams } from "./teams";
 import { tickets } from "./tickets";
 import { stripePayments } from "./stripe-payments";
+import { categories } from "./categories";
 
 export {
   users,
@@ -16,4 +17,5 @@ export {
   teams,
   tickets,
   stripePayments,
+  categories,
 };

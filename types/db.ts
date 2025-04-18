@@ -4,6 +4,7 @@ import { Team } from "./teams";
 import { User, UserSession } from "./users";
 import { Ticket } from "./tickets";
 import { StripePayment } from "./stripe";
+import { Category } from "./events";
 
 // Authentication types
 export interface AuthTokens {
@@ -24,6 +25,7 @@ export interface SeedData {
   users: User[];
   events: Event[];
   eventRegistrations: EventRegistration[];
+  categories: Category[];
   teams: Team[];
   teamMembers: TeamMember[];
   userSessions: UserSession[];

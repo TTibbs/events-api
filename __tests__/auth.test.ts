@@ -11,6 +11,7 @@ import {
   teams,
   tickets,
   stripePayments,
+  categories,
 } from "../db/data/test-data/index";
 import jwt from "jsonwebtoken";
 
@@ -24,6 +25,7 @@ beforeEach(() =>
     teams,
     tickets,
     stripePayments,
+    categories,
   })
 );
 

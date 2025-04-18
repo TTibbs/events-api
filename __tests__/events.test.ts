@@ -11,6 +11,7 @@ import {
   userSessions,
   tickets,
   stripePayments,
+  categories,
 } from "../db/data/test-data/index";
 import {
   EventResponse,
@@ -23,6 +24,7 @@ import {
   authorizeRequest,
 } from "../utils/testHelpers";
 import { sendRegistrationConfirmation } from "../utils/email";
+import "jest-sorted";
 
 // Mock the email utility
 jest.mock("../utils/email", () => ({
@@ -70,6 +72,7 @@ const createTestEvent = async (options: {
     max_attendees: options.maxAttendees,
     is_public: true,
     team_id: options.teamId || 1,
+    category: "Conference", // Default category if not provided in otherFields
     ...options.otherFields,
   };
 
@@ -106,6 +109,7 @@ beforeEach(() =>
     userSessions,
     tickets,
     stripePayments,
+    categories,
   })
 );
 
@@ -141,7 +145,7 @@ describe("Event Registration API", () => {
       maxAttendees: 10,
       otherFields: {
         price: 0,
-        event_type: "workshop",
+        category: "Workshop",
       },
     });
 
@@ -157,6 +161,9 @@ describe("Event Registration API", () => {
       title: "Full Test Event",
       description: "An event with limited capacity",
       maxAttendees: 1,
+      otherFields: {
+        category: "Conference",
+      },
     });
 
     draftEvent = await createTestEvent({
@@ -166,6 +173,22 @@ describe("Event Registration API", () => {
       description: "An event that's not published yet",
     });
 
+    // Log the created events to help with debugging
+    console.log("Created events for testing:", {
+      testEvent: testEvent
+        ? { id: testEvent.id, title: testEvent.title }
+        : "failed to create",
+      pastEvent: pastEvent
+        ? { id: pastEvent.id, title: pastEvent.title }
+        : "failed to create",
+      fullEvent: fullEvent
+        ? { id: fullEvent.id, title: fullEvent.title }
+        : "failed to create",
+      draftEvent: draftEvent
+        ? { id: draftEvent.id, title: draftEvent.title }
+        : "failed to create",
+    });
+
     // Register another user for the full event to reach capacity
     const otherUserResponse = await request(app).post("/api/users").send({
       username: "capacityuser",
@@ -173,10 +196,12 @@ describe("Event Registration API", () => {
       plainPassword: "password123",
     });
 
-    // Only try to register if user creation was successful
+    // Only try to register if user creation was successful and fullEvent was created successfully
     if (
       otherUserResponse.statusCode === 201 &&
-      otherUserResponse.body.newUser
+      otherUserResponse.body.newUser &&
+      fullEvent &&
+      fullEvent.id
     ) {
       const otherUser = otherUserResponse.body.newUser;
 
@@ -194,9 +219,11 @@ describe("Event Registration API", () => {
         .set("Authorization", `Bearer ${capacityUserToken}`)
         .send({ userId: otherUser.id });
     } else {
-      console.log(
-        "Skipping capacity user registration due to user creation failure"
-      );
+      console.log("Skipping capacity user registration due to failure:", {
+        userCreated: otherUserResponse.statusCode === 201,
+        fullEventCreated: !!fullEvent,
+        fullEventId: fullEvent ? fullEvent.id : "undefined",
+      });
     }
   });
   describe("Event Availability", () => {
@@ -226,7 +253,13 @@ describe("Event Registration API", () => {
         "Event is draft, not published"
       );
 
-      // Check full event
+      // Check if fullEvent is created properly
+      if (!fullEvent || !fullEvent.id) {
+        throw new Error(
+          "Full event was not created successfully, test cannot continue"
+        );
+      }
+
       const fullEventResponse = await request(app).get(
         `/api/events/${fullEvent.id}/availability`
       );
@@ -317,7 +350,13 @@ describe("Event Registration API", () => {
       expect(draftResponse.status).toBe(400);
       expect(draftResponse.body.msg).toBe("Event is draft, not published");
 
-      // Try to register for full event
+      // Check if fullEvent is created and has proper registration
+      if (!fullEvent || !fullEvent.id) {
+        throw new Error(
+          "Full event was not created successfully, test cannot continue"
+        );
+      }
+
       const fullResponse = await request(app)
         .post(`/api/events/${fullEvent.id}/register`)
         .set("Authorization", `Bearer ${token}`)
@@ -544,6 +583,7 @@ describe("Events API Endpoints", () => {
         end_time: new Date(Date.now() + 172800000).toISOString(),
         team_id: 1,
         status: "published",
+        category: "Conference",
       };
 
       const createResponse = await request(app)
@@ -582,6 +622,7 @@ describe("Events API Endpoints", () => {
         end_time: new Date(Date.now() + 172800000).toISOString(),
         team_id: 1,
         status: "published",
+        category: "Conference",
       };
 
       // Create an event to ensure there's at least one upcoming event
@@ -647,6 +688,7 @@ describe("Events API Endpoints", () => {
         start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
         end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
         is_public: true,
+        category: "Conference",
       };
 
       const {
@@ -666,7 +708,7 @@ describe("Events API Endpoints", () => {
       expect(event).toHaveProperty("end_time", newEvent.end_time);
       expect(event).toHaveProperty("max_attendees", null);
       expect(event).toHaveProperty("price", null);
-      expect(event).toHaveProperty("event_type", null);
+      expect(event).toHaveProperty("category", newEvent.category);
       expect(event).toHaveProperty("is_public", newEvent.is_public);
       expect(event).toHaveProperty("team_id", expect.any(Number));
       expect(event).toHaveProperty("created_by", expect.any(Number));
@@ -679,6 +721,7 @@ describe("Events API Endpoints", () => {
         title: "Test Event",
         start_time: new Date(Date.now() + 86400000).toISOString(),
         end_time: new Date(Date.now() + 172800000).toISOString(),
+        category: "Conference",
       };
 
       const {
@@ -705,6 +748,7 @@ describe("Events API Endpoints", () => {
         // title is missing
         location: "Test Location",
         team_id: 1,
+        category: "Conference", // Add a valid category
       };
 
       const missingFieldsResponse = await request(app)
@@ -731,6 +775,7 @@ describe("Events API Endpoints", () => {
         team_id: 1,
         start_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
         end_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+        category: "Conference", // Add a valid category
       };
 
       const invalidTimesResponse = await request(app)
@@ -761,6 +806,7 @@ describe("Events API Endpoints", () => {
         start_time: tomorrow.toISOString(),
         end_time: nextWeek.toISOString(),
         team_id: 1, // Team 1 where charlie123 is not a member
+        category: "Conference",
       };
 
       // Use authorizeRequest helper with team_member role (charlie123)
@@ -781,6 +827,7 @@ describe("Events API Endpoints", () => {
         start_time: tomorrow.toISOString(),
         end_time: nextWeek.toISOString(),
         team_id: 2, // Team 2 where charlie123 is admin
+        category: "Conference",
       };
 
       const authorizedResponse = await authorizeRequest(
@@ -1178,5 +1225,256 @@ describe("Event Visibility", () => {
     expect(eventExistsInArray(team2DraftEvents, team2DraftEvent.id)).toBe(
       false
     );
+  });
+});
+
+// Add tests for the event filtering functionality
+describe("GET /api/events - Filter Events", () => {
+  beforeEach(async () => {
+    // Get admin token for creating test events
+    const adminToken = await getTokenForRole("team_admin");
+
+    // Create events with different categories, locations, prices
+    await createTestEvent({
+      token: adminToken,
+      title: "Conference Event",
+      description: "A conference event",
+      otherFields: {
+        category: "Conference",
+        location: "London",
+        price: 100,
+      },
+    });
+
+    await createTestEvent({
+      token: adminToken,
+      title: "Workshop Event",
+      description: "A workshop event",
+      otherFields: {
+        category: "Workshop",
+        location: "New York",
+        price: 50,
+      },
+    });
+
+    await createTestEvent({
+      token: adminToken,
+      title: "Meetup Event",
+      description: "A meetup event",
+      otherFields: {
+        category: "Meetup",
+        location: "Berlin",
+        price: 0,
+      },
+    });
+
+    await createTestEvent({
+      token: adminToken,
+      title: "Tech Workshop",
+      description: "A tech workshop event",
+      otherFields: {
+        category: "Workshop",
+        location: "New York",
+        price: 75,
+      },
+    });
+  });
+
+  test("should filter events by category", async () => {
+    const response = await request(app)
+      .get("/api/events?category=Workshop")
+      .expect(200);
+    expect(response.body.events.length).toBeGreaterThan(0);
+    response.body.events.forEach((event: any) => {
+      expect(event.category).toBe("Workshop");
+    });
+  });
+
+  test("should filter events by location", async () => {
+    const response = await request(app)
+      .get("/api/events?location=New York")
+      .expect(200);
+
+    expect(response.body.events.length).toBeGreaterThan(0);
+    response.body.events.forEach((event: any) => {
+      expect(event.location).toContain("New York");
+    });
+  });
+
+  test("should filter events by minimum price", async () => {
+    const response = await request(app)
+      .get("/api/events?min_price=50")
+      .expect(200);
+
+    expect(response.body.events.length).toBeGreaterThan(0);
+    response.body.events.forEach((event: any) => {
+      expect(parseFloat(event.price)).toBeGreaterThanOrEqual(50);
+    });
+  });
+
+  test("should filter events by maximum price", async () => {
+    const response = await request(app)
+      .get("/api/events?max_price=75")
+      .expect(200);
+
+    expect(response.body.events.length).toBeGreaterThan(0);
+    response.body.events.forEach((event: any) => {
+      expect(parseFloat(event.price)).toBeLessThanOrEqual(75);
+    });
+  });
+
+  test("should filter events by price range", async () => {
+    const response = await request(app)
+      .get("/api/events?min_price=50&max_price=100")
+      .expect(200);
+
+    expect(response.body.events.length).toBeGreaterThan(0);
+    response.body.events.forEach((event: any) => {
+      const price = parseFloat(event.price);
+      expect(price).toBeGreaterThanOrEqual(50);
+      expect(price).toBeLessThanOrEqual(100);
+    });
+  });
+
+  test("should filter events by start date", async () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0]; // Get YYYY-MM-DD
+
+    const response = await request(app)
+      .get(`/api/events?start_date=${tomorrowStr}`)
+      .expect(200);
+
+    expect(response.body.events.length).toBeGreaterThan(0);
+    response.body.events.forEach((event: any) => {
+      const eventDate = new Date(event.start_time);
+      // Check only the date part, ignore time differences
+      expect(
+        new Date(eventDate.toISOString().split("T")[0]).getTime()
+      ).toBeGreaterThanOrEqual(new Date(tomorrowStr).getTime());
+    });
+  });
+
+  test("should handle non-existent category", async () => {
+    const response = await request(app)
+      .get("/api/events?category=NonExistentCategory")
+      .expect(404);
+
+    expect(response.body.status).toBe("error");
+    expect(response.body.msg).toContain("NonExistentCategory");
+  });
+
+  test("should combine multiple filters correctly", async () => {
+    const response = await request(app)
+      .get(
+        "/api/events?category=Workshop&location=New York&min_price=50&max_price=75"
+      )
+      .expect(200);
+
+    console.log("response.body.events:", response.body.events);
+    expect(response.body.events.length).toBeGreaterThan(0);
+    response.body.events.forEach((event: any) => {
+      expect(event.category).toBe("Workshop");
+      expect(event.location).toContain("New York");
+      const price = parseFloat(event.price);
+      expect(price).toBeGreaterThanOrEqual(50);
+      expect(price).toBeLessThanOrEqual(75);
+    });
+  });
+
+  test("should return correct total_events count when filtering", async () => {
+    const response = await request(app)
+      .get("/api/events?category=Workshop")
+      .expect(200);
+
+    // Count should match the number of workshop events
+    expect(response.body.total_events).toBe(response.body.events.length);
+  });
+});
+
+describe("Event Sorting", () => {
+  let adminToken: string;
+
+  beforeEach(async () => {
+    adminToken = await getTokenForRole("team_admin");
+  });
+
+  test("GET /api/events - should sort events by start_time in ascending order by default", async () => {
+    const { body } = await request(app).get("/api/events").expect(200);
+
+    expect(body.events.length).toBeGreaterThan(0); // At least one event exists
+    expect(body.events).toBeSorted({ key: "start_time" });
+  });
+
+  test("GET /api/events - should sort events by start_time in descending order when specified", async () => {
+    const { body } = await request(app)
+      .get("/api/events?order=desc")
+      .expect(200);
+
+    expect(body.events).toBeSorted({ key: "start_time", descending: true });
+  });
+
+  test("GET /api/events - should sort events by price in ascending order when specified", async () => {
+    const { body } = await request(app)
+      .get("/api/events?sort_by=price")
+      .expect(200);
+
+    expect(body.events).toBeSorted({ key: "price" });
+  });
+
+  test("GET /api/events - should sort events by price in descending order when specified", async () => {
+    const { body } = await request(app)
+      .get("/api/events?sort_by=price&order=desc")
+      .expect(200);
+
+    expect(body.events).toBeSorted({ key: "price", descending: true });
+  });
+
+  test("GET /api/events - should sort events by location in ascending order when specified", async () => {
+    const { body } = await request(app)
+      .get("/api/events?sort_by=location")
+      .expect(200);
+
+    expect(body.events).toBeSorted({ key: "location" });
+  });
+
+  test("GET /api/events - should sort events by location in descending order when specified", async () => {
+    const { body } = await request(app)
+      .get("/api/events?sort_by=location&order=desc")
+      .expect(200);
+
+    expect(body.events).toBeSorted({ key: "location", descending: true });
+  });
+
+  test("GET /api/events - should sort events by category in ascending order when specified", async () => {
+    const { body } = await request(app)
+      .get("/api/events?sort_by=category")
+      .expect(200);
+
+    expect(body.events).toBeSorted({ key: "category" });
+  });
+
+  test("GET /api/events - should sort events by category in descending order when specified", async () => {
+    const { body } = await request(app)
+      .get("/api/events?sort_by=category&order=desc")
+      .expect(200);
+
+    expect(body.events).toBeSorted({ key: "category", descending: true });
+  });
+
+  test("GET /api/events - should return 400 error for invalid sort_by parameter", async () => {
+    const { body } = await request(app)
+      .get("/api/events?sort_by=invalid_field")
+      .expect(400);
+
+    expect(body.msg).toBe("Invalid sort_by query");
+  });
+
+  test("GET /api/events - should return 400 error for invalid order parameter", async () => {
+    const { body } = await request(app)
+      .get("/api/events?order=invalid_order")
+      .expect(400);
+
+    expect(body.msg).toBe("Invalid order query");
   });
 });

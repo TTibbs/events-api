@@ -11,6 +11,7 @@ import {
   teams,
   tickets,
   stripePayments,
+  categories,
 } from "../db/data/test-data/index";
 import {
   getAuthToken,
@@ -29,6 +30,7 @@ beforeEach(() =>
     teams,
     tickets,
     stripePayments,
+    categories,
   })
 );
 
@@ -235,6 +237,7 @@ describe("Authentication Middleware Integration Tests", () => {
           location: "Test Location",
           status: "published",
           team_id: 1,
+          category: "Conference",
         });
 
       const eventToDeleteId = createResponse.body.event.id;
@@ -401,6 +404,7 @@ describe("Team Action Authorization", () => {
         end_time: nextWeek.toISOString(),
         team_id: 1, // Team 1 where bob123 (event_manager) is a member
         status: "published",
+        category: "Conference",
       })
       .expect(201);
 
@@ -477,6 +481,7 @@ describe("Event Action Authorization", () => {
         end_time: nextWeek.toISOString(),
         team_id: 1, // Create in Team 1
         status: "published",
+        category: "Conference",
       });
 
     testEventId = eventResponse.body.event.id;
@@ -643,6 +648,7 @@ describe("Role-Based Authorization Tests", () => {
         end_time: nextWeek.toISOString(),
         team_id: 1,
         status: "published",
+        category: "Conference",
       })
       .expect(201);
 
@@ -657,6 +663,7 @@ describe("Role-Based Authorization Tests", () => {
         end_time: nextWeek.toISOString(),
         team_id: 1, // Team 1 where bob123 is an event manager
         status: "published",
+        category: "Conference",
       })
       .expect(201);
 
@@ -676,6 +683,7 @@ describe("Role-Based Authorization Tests", () => {
         end_time: new Date(Date.now() + 172800000).toISOString(),
         team_id: 1, // Team 1 (charlie is admin of Team 2)
         status: "published",
+        category: "Conference",
       })
       .expect(403);
 

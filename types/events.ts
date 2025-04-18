@@ -11,7 +11,7 @@ export type Event = {
   end_time: Date;
   max_attendees: number;
   price: number;
-  event_type: string;
+  category: string;
   is_public: boolean;
   created_by: number;
   created_at: Date;
@@ -48,7 +48,7 @@ export interface EventUpdateData {
   end_time?: Date;
   max_attendees?: number | null;
   price?: number | null;
-  event_type?: string | null;
+  category?: string | null;
   is_public?: boolean;
   team_id?: number;
   created_by?: number | null;
@@ -63,4 +63,9 @@ export interface ExtendedEventRegistration extends EventRegistrationResponse {
 export interface EventAvailabilityResponse {
   available: boolean;
   reason?: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
 }

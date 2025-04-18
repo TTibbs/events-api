@@ -1,17 +1,40 @@
 import db from "../db/connection";
-import { Event } from "../types";
+import { Category, Event } from "../types";
 import {
   executeTransaction,
   executeWithRowLock,
 } from "../utils/db-transaction";
 import crypto from "crypto";
 
-// Get all published events
-export const selectEvents = async (): Promise<{
+export const selectEvents = async (
+  sort_by: string = "start_time",
+  order: string = "asc",
+  category: string = "",
+  limit: string = "10",
+  page: string = "1",
+  location: string = "",
+  min_price: string = "",
+  max_price: string = "",
+  start_date: string = ""
+): Promise<{
   events: Event[];
   total_events: number;
 }> => {
-  const query = `
+  sort_by = sort_by.toLowerCase();
+  order = order.toLowerCase();
+
+  const validSortBy = ["category", "start_time", "location", "price"];
+  const validOrderQueries = ["asc", "desc"];
+
+  if (!validSortBy.includes(sort_by)) {
+    return Promise.reject({ status: 400, msg: "Invalid sort_by query" });
+  }
+
+  if (!validOrderQueries.includes(order)) {
+    return Promise.reject({ status: 400, msg: "Invalid order query" });
+  }
+
+  let queryString = `
     SELECT 
       e.*,
       t.name as team_name,
@@ -21,22 +44,96 @@ export const selectEvents = async (): Promise<{
     LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
     LEFT JOIN users tm ON tm_link.user_id = tm.id
     WHERE e.status = 'published'
-    ORDER BY e.start_time ASC
   `;
 
-  const result = await db.query(query);
+  const queryValues: any[] = [];
+  let paramIndex = 1;
 
-  // Get total count of published events
-  const countResult = await db.query(`
-    SELECT COUNT(*) as total_events FROM events WHERE status = 'published'
-  `);
-
-  if (result.rows.length === 0) {
-    return {
-      events: [],
-      total_events: 0,
-    };
+  // Add category filter
+  if (category) {
+    queryString += ` AND e.category = $${paramIndex}`;
+    queryValues.push(category);
+    paramIndex++;
   }
+
+  // Add location filter
+  if (location) {
+    queryString += ` AND e.location ILIKE $${paramIndex}`;
+    queryValues.push(`%${location}%`);
+    paramIndex++;
+  }
+
+  // Add price range filter
+  if (min_price) {
+    queryString += ` AND e.price >= $${paramIndex}`;
+    queryValues.push(parseFloat(min_price));
+    paramIndex++;
+  }
+
+  if (max_price) {
+    queryString += ` AND e.price <= $${paramIndex}`;
+    queryValues.push(parseFloat(max_price));
+    paramIndex++;
+  }
+
+  // Add start date filter
+  if (start_date) {
+    queryString += ` AND e.start_time >= $${paramIndex}`;
+    queryValues.push(new Date(start_date));
+    paramIndex++;
+  }
+
+  // Add sorting
+  queryString += ` ORDER BY e.${sort_by} ${order}`;
+
+  // Add pagination
+  const limitValue = parseInt(limit) || 10;
+  const pageValue = parseInt(page) || 1;
+  const offset = (pageValue - 1) * limitValue;
+
+  queryString += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  queryValues.push(limitValue, offset);
+
+  // Execute query for events
+  const result = await db.query(queryString, queryValues);
+
+  // Build count query with the same filters but without pagination
+  let countQueryString = `
+    SELECT COUNT(*) as total_events 
+    FROM events e
+    WHERE e.status = 'published'
+  `;
+
+  const countValues = [...queryValues.slice(0, -2)]; // Remove LIMIT and OFFSET values
+
+  let countParamIndex = 1;
+
+  if (category) {
+    countQueryString += ` AND e.category = $${countParamIndex}`;
+    countParamIndex++;
+  }
+
+  if (location) {
+    countQueryString += ` AND e.location ILIKE $${countParamIndex}`;
+    countParamIndex++;
+  }
+
+  if (min_price) {
+    countQueryString += ` AND e.price >= $${countParamIndex}`;
+    countParamIndex++;
+  }
+
+  if (max_price) {
+    countQueryString += ` AND e.price <= $${countParamIndex}`;
+    countParamIndex++;
+  }
+
+  if (start_date) {
+    countQueryString += ` AND e.start_time >= $${countParamIndex}`;
+    countParamIndex++;
+  }
+
+  const countResult = await db.query(countQueryString, countValues);
 
   return {
     events: result.rows.map((event) => ({
@@ -51,7 +148,21 @@ export const selectEvents = async (): Promise<{
   };
 };
 
-// Get draft events for user's teams
+export const selectCategoryByName = async (name: string): Promise<Category> => {
+  const result = await db.query(`SELECT * FROM categories WHERE name = $1`, [
+    name,
+  ]);
+
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: `Category '${name}' not found`,
+    });
+  }
+
+  return result.rows[0];
+};
+
 export const selectDraftEvents = async (userId: number): Promise<Event[]> => {
   const query = `
     SELECT 
@@ -87,7 +198,6 @@ export const selectDraftEvents = async (userId: number): Promise<Event[]> => {
   }));
 };
 
-// Get event by ID (published events only)
 export const selectEventById = async (id: number): Promise<Event> => {
   const query = `
     SELECT 
@@ -122,7 +232,6 @@ export const selectEventById = async (id: number): Promise<Event> => {
   };
 };
 
-// Get any event by ID regardless of status - for admin operations
 export const getEventByIdForAdmin = async (id: number): Promise<Event> => {
   const query = `
     SELECT 
@@ -156,7 +265,6 @@ export const getEventByIdForAdmin = async (id: number): Promise<Event> => {
   };
 };
 
-// Get draft event by ID for a specific user's team
 export const selectDraftEventById = async (
   id: number,
   userId: number
@@ -199,7 +307,6 @@ export const selectDraftEventById = async (
   };
 };
 
-// Insert new event
 export const insertEvent = async (
   status: string,
   title: string,
@@ -210,7 +317,7 @@ export const insertEvent = async (
   end_time: Date,
   max_attendees: number | null,
   price: number | null,
-  event_type: string | null,
+  category: string | null,
   is_public: boolean,
   team_id: number | null,
   created_by: number | null
@@ -218,7 +325,7 @@ export const insertEvent = async (
   const result = await db.query(
     `
     INSERT INTO events
-      (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, event_type, is_public, team_id, created_by)
+      (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, category, is_public, team_id, created_by)
     VALUES
       ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     RETURNING *
@@ -233,7 +340,7 @@ export const insertEvent = async (
       end_time,
       max_attendees,
       price,
-      event_type,
+      category,
       is_public,
       team_id,
       created_by,
@@ -251,7 +358,6 @@ export const insertEvent = async (
   };
 };
 
-// Update event by ID
 export const updateEventById = async (
   id: number,
   updateData: Partial<Event>
@@ -274,7 +380,7 @@ export const updateEventById = async (
     "end_time",
     "max_attendees",
     "price",
-    "event_type",
+    "category",
     "is_public",
     "team_id",
     "created_by",
@@ -322,7 +428,6 @@ export const deleteEventById = async (id: number): Promise<void> => {
   await db.query(`DELETE FROM events WHERE id = $1`, [id]);
 };
 
-// Get event registrations by event ID
 export const selectEventRegistrationsByEventId = async (
   eventId: number
 ): Promise<any[]> => {
@@ -354,7 +459,6 @@ export const selectEventRegistrationsByEventId = async (
   }));
 };
 
-// Get upcoming events
 export const selectUpcomingEvents = async (
   limit: number = 10
 ): Promise<Event[]> => {
@@ -382,7 +486,6 @@ export const selectUpcomingEvents = async (
   }));
 };
 
-// Get published events by team ID
 export const selectEventsByTeamId = async (
   teamId: number
 ): Promise<Event[]> => {
@@ -409,7 +512,6 @@ export const selectEventsByTeamId = async (
   }));
 };
 
-// Get draft events by team ID for a team member
 export const selectDraftEventsByTeamId = async (
   teamId: number,
   userId: number
@@ -442,7 +544,6 @@ export const selectDraftEventsByTeamId = async (
   }));
 };
 
-// Check if event is available for registration
 export const checkEventAvailability = async (
   eventId: number
 ): Promise<{ available: boolean; reason?: string }> => {
@@ -503,10 +604,6 @@ export const checkEventAvailability = async (
   return { available: true };
 };
 
-// Common ID fields that need to be converted
-const idFields = ["id", "team_id", "created_by", "user_id", "event_id"];
-
-// Helper function to generate a random ticket code
 function generateTicketCode(): string {
   return crypto
     .createHash("md5")
@@ -514,7 +611,6 @@ function generateTicketCode(): string {
     .digest("hex");
 }
 
-// Register user for an event
 export const registerUserForEvent = async (
   eventId: number,
   userId: number
@@ -724,7 +820,6 @@ export const registerUserForEvent = async (
   });
 };
 
-// Cancel registration
 export const cancelRegistration = async (
   registrationId: number
 ): Promise<any> => {
@@ -787,7 +882,6 @@ export const cancelRegistration = async (
   });
 };
 
-// Get registration by ID
 export const getRegistrationById = async (registrationId: number) => {
   const result = await db.query(
     `

@@ -2,6 +2,7 @@ import {
   users,
   teams,
   events,
+  categories,
   eventRegistrations,
   teamMembers,
   userSessions,
@@ -20,6 +21,7 @@ const devData = {
   userSessions,
   tickets,
   stripePayments,
+  categories,
 };
 
 const runSeed = async (): Promise<void> => {

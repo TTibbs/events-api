@@ -5,6 +5,7 @@ import { SeedData } from "../../types/db";
 const seed = async ({
   users,
   teams,
+  categories,
   events,
   eventRegistrations,
   teamMembers,
@@ -20,6 +21,7 @@ const seed = async ({
     await db.query("DROP TABLE IF EXISTS events CASCADE");
     await db.query("DROP TABLE IF EXISTS team_members CASCADE");
     await db.query("DROP TABLE IF EXISTS teams CASCADE");
+    await db.query("DROP TABLE IF EXISTS categories CASCADE");
     await db.query("DROP TABLE IF EXISTS user_sessions CASCADE");
     await db.query("DROP TABLE IF EXISTS users CASCADE");
 
@@ -75,6 +77,13 @@ const seed = async ({
     `);
 
     await db.query(`
+      CREATE TABLE categories (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+      );
+    `);
+
+    await db.query(`
       CREATE TABLE teams (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
@@ -107,7 +116,7 @@ const seed = async ({
         end_time TIMESTAMP WITH TIME ZONE NOT NULL,
         max_attendees INTEGER,
         price DECIMAL(10, 2) CHECK (price IS NULL OR price >= 0),
-        event_type TEXT,
+        category VARCHAR NOT NULL REFERENCES categories (name),
         is_public BOOLEAN NOT NULL DEFAULT true,
         team_id BIGINT REFERENCES teams (id) ON DELETE SET NULL,
         created_by BIGINT REFERENCES team_members (id) ON DELETE SET NULL,
@@ -262,7 +271,14 @@ const seed = async ({
     );
     await db.query(insertUsersQueryString);
 
-    // 2. Insert teams second as they have no dependencies beyond being created
+    // 2. Insert categories second as they have no dependencies
+    const insertCategoriesQueryString = format(
+      `INSERT INTO categories (name) VALUES %L RETURNING id`,
+      categories.map((category) => [category.name])
+    );
+    await db.query(insertCategoriesQueryString);
+
+    // 3. Insert teams third as they have no dependencies beyond being created
     const insertTeamsQueryString = format(
       `INSERT INTO teams (name, description) VALUES %L RETURNING id`,
       teams.map((team) => [team.name, team.description])
@@ -283,7 +299,7 @@ const seed = async ({
 
     // 4. Insert events fourth as they depend on teams and team_members
     const insertEventsQueryString = format(
-      `INSERT INTO events (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, event_type, is_public, team_id, created_by, created_at, updated_at) VALUES %L RETURNING id`,
+      `INSERT INTO events (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, category, is_public, team_id, created_by, created_at, updated_at) VALUES %L RETURNING id`,
       events.map((event) => [
         event.status,
         event.title,
@@ -294,7 +310,7 @@ const seed = async ({
         event.end_time,
         event.max_attendees,
         event.price,
-        event.event_type,
+        event.category,
         event.is_public,
         event.team_id,
         event.created_by,
