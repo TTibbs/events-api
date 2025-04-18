@@ -41,6 +41,7 @@ export interface UserUpdates {
   email?: string;
   password_hash?: string;
   is_site_admin?: boolean;
+  profile_image_url?: string;
 }
 
 export interface RegistrationData {

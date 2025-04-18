@@ -262,6 +262,7 @@ describe("Users API Endpoints", () => {
         username: "newuser123",
         email: "newuser@example.com",
         plainPassword: "password123",
+        profile_image_url: "https://example.com/profile.jpg",
       };
 
       const {
@@ -273,6 +274,7 @@ describe("Users API Endpoints", () => {
       expect(newUser).toHaveProperty("email", expect.any(String));
       expect(newUser).toHaveProperty("is_site_admin", false);
       expect(newUser.stripe_customer_id).toBeNull();
+      expect(newUser).toHaveProperty("profile_image_url", expect.any(String));
       expect(newUser).toHaveProperty("created_at", expect.any(String));
       expect(newUser).toHaveProperty("updated_at", expect.any(String));
       expect(newUser.teams).toBeInstanceOf(Array);
@@ -370,6 +372,20 @@ describe("Users API Endpoints", () => {
       expect(body.user.username).toBe(updateData.username);
       expect(body.user.email).toBe(updateData.email);
     });
+    test("Should accept partial updates to a user profile", async () => {
+      const token = await getAuthToken();
+      const { body } = await request(app)
+        .patch(`/api/users/1`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ profile_image_url: "https://example.com/profile.jpg" })
+        .expect(200);
+
+      expect(body.status).toBe("success");
+      expect(body.msg).toBe("User updated successfully");
+      expect(body.user.profile_image_url).toBe(
+        "https://example.com/profile.jpg"
+      );
+    });
     test("Should reject user update when not authenticated", async () => {
       // Try to update a user without authentication
       const response = await request(app)
@@ -381,44 +397,14 @@ describe("Users API Endpoints", () => {
       expect(response.body.msg).toBe("Unauthorized - No token provided");
     });
     test("Should prevent updating to an existing username (409 Conflict)", async () => {
-      // Create two users, then try to update one to have the same username as the other
-      const user1 = {
-        username: `conflict_user1_${Date.now()}`,
-        email: `conflict1_${Date.now()}@example.com`,
-        plainPassword: "password123",
-      };
-
-      const user2 = {
-        username: `conflict_user2_${Date.now()}`,
-        email: `conflict2_${Date.now()}@example.com`,
-        plainPassword: "password123",
-      };
-
-      // Create the users
-      const createResponse1 = await request(app)
-        .post("/api/users")
-        .send(user1)
-        .expect(201);
-
-      const createResponse2 = await request(app)
-        .post("/api/users")
-        .send(user2)
-        .expect(201);
-
-      const userId2 = createResponse2.body.newUser.id;
-
-      // Get authentication token
-      const token = await getAuthToken();
-
-      // Try to update user2 to have the same username as user1
-      const response = await request(app)
-        .patch(`/api/users/${userId2}`)
+      const token = await getAuthToken("team_admin");
+      const { body } = await request(app)
+        .patch(`/api/users/3`)
         .set("Authorization", `Bearer ${token}`)
-        .send({ username: user1.username })
+        .send({ username: "alice123" })
         .expect(409);
-
-      expect(response.body.status).toBe("error");
-      expect(response.body.msg).toBe("Username already exists");
+      expect(body.status).toBe("error");
+      expect(body.msg).toBe("Username already exists");
     });
   });
   describe("DELETE /api/users/:id - User Deletion", () => {
