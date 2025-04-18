@@ -12,6 +12,7 @@ export interface AdminDashboardData {
   draft_events: EventResponse[];
   teams: TeamResponse[];
   total_teams: number;
+  total_team_members: number;
   tickets: TicketResponse[];
   registrations: EventRegistrationResponse[];
 }

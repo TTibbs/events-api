@@ -227,8 +227,13 @@ export const getTeamMembers = async (
   next: NextFunction
 ) => {
   try {
-    const teamMembers = await selectTeamMembers();
-    res.status(200).send({ teamMembers });
+    const { teamMembers, total_team_members } = await selectTeamMembers();
+
+    // Send both the team members array and the total count as separate properties
+    res.status(200).send({
+      teamMembers,
+      total_team_members,
+    });
   } catch (err) {
     next(err);
   }
@@ -245,8 +250,10 @@ export const getTeamMembersByTeamId = async (
     // First check if the team exists
     await selectTeamById(Number(id));
 
-    const members = await selectTeamMembersByTeamId(Number(id));
-    res.status(200).send({ members });
+    const { members, total_members } = await selectTeamMembersByTeamId(
+      Number(id)
+    );
+    res.status(200).send({ members, total_members });
   } catch (err) {
     next(err);
   }

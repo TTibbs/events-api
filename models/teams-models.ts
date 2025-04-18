@@ -96,31 +96,45 @@ export const deleteTeamById = async (id: number): Promise<void> => {
 
 // Team Member Functions
 
-export const selectTeamMembers = async (): Promise<(User & TeamMember)[]> => {
-  const { rows } = await db.query(
-    `SELECT users.*, 
-            team_members.id, 
-            team_members.user_id, 
-            team_members.team_id,
-            team_members.role, 
-            team_members.created_at as team_created_at
-     FROM team_members
-     JOIN users ON users.id = team_members.user_id`
-  );
+export const selectTeamMembers = async (): Promise<{
+  teamMembers: (User & TeamMember)[];
+  total_team_members: number;
+}> => {
+  // Define the queries
+  const teamMembersQuery = `
+    SELECT users.*, 
+           team_members.id, 
+           team_members.user_id, 
+           team_members.team_id,
+           team_members.role, 
+           team_members.created_at as team_created_at
+    FROM team_members
+    JOIN users ON users.id = team_members.user_id
+  `;
 
-  // Return empty array instead of rejecting when no team members exist
-  // This is different from other select functions to support the use case
-  // where having no team members is a valid state
+  const countQuery = `
+    SELECT COUNT(*) as total_team_members 
+    FROM team_members
+  `;
+
+  // Execute both queries in parallel
+  const [teamMembersResult, countResult] = await Promise.all([
+    db.query(teamMembersQuery),
+    db.query(countQuery),
+  ]);
 
   // Parse numeric fields as numbers to ensure consistency
-  const teamMembers = rows.map((row) => ({
+  const teamMembers = teamMembersResult.rows.map((row) => ({
     ...row,
     id: Number(row.id),
     user_id: Number(row.user_id),
     team_id: Number(row.team_id),
   }));
 
-  return teamMembers as (User & TeamMember)[];
+  return {
+    teamMembers: teamMembers as (User & TeamMember)[],
+    total_team_members: parseInt(countResult.rows[0].total_team_members),
+  };
 };
 
 export const selectTeamMemberByUserId = async (
@@ -226,9 +240,12 @@ export const checkUserRole = async (
 // Get team members by team ID
 export const selectTeamMembersByTeamId = async (
   teamId: number
-): Promise<(User & TeamMember)[]> => {
-  const { rows } = await db.query(
-    `SELECT users.*, 
+): Promise<{
+  members: (User & TeamMember)[];
+  total_members: number;
+}> => {
+  const teamMembersQuery = `
+    SELECT users.*, 
             team_members.id, 
             team_members.user_id, 
             team_members.team_id,
@@ -236,17 +253,31 @@ export const selectTeamMembersByTeamId = async (
             team_members.created_at as team_created_at
      FROM team_members
      JOIN users ON users.id = team_members.user_id
-     WHERE team_members.team_id = $1`,
-    [teamId]
-  );
+     WHERE team_members.team_id = $1
+  `;
+
+  const countQuery = `
+    SELECT COUNT(*) as total_members 
+    FROM team_members
+    WHERE team_id = $1
+  `;
+
+  // Execute both queries in parallel
+  const [teamMembersResult, countResult] = await Promise.all([
+    db.query(teamMembersQuery, [teamId]),
+    db.query(countQuery, [teamId]),
+  ]);
 
   // Parse numeric fields as numbers to ensure consistency
-  const teamMembers = rows.map((row) => ({
+  const members = teamMembersResult.rows.map((row) => ({
     ...row,
     id: Number(row.id),
     user_id: Number(row.user_id),
     team_id: Number(row.team_id),
   }));
 
-  return teamMembers as (User & TeamMember)[];
+  return {
+    members: members as (User & TeamMember)[],
+    total_members: parseInt(countResult.rows[0].total_members),
+  };
 };

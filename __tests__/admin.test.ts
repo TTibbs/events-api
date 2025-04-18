@@ -82,6 +82,7 @@ describe("Admin API", () => {
       expect(response.body.data).toHaveProperty("draft_events");
       expect(response.body.data).toHaveProperty("teams");
       expect(response.body.data).toHaveProperty("total_teams");
+      expect(response.body.data).toHaveProperty("total_team_members");
       expect(response.body.data).toHaveProperty("tickets");
       expect(response.body.data).toHaveProperty("registrations");
 
@@ -95,6 +96,41 @@ describe("Admin API", () => {
         (event: any) => event.status === "draft"
       );
       expect(hasDraftEvents).toBe(true);
+    });
+
+    test("200: Should return correct count values in the dashboard data", async () => {
+      // Use user_id 4 which is a site admin in the test data
+      const token = generateTestToken(
+        4,
+        "siteadmin",
+        "siteadmin@example.com",
+        null
+      );
+
+      const response = await request(app)
+        .get("/api/admin/dashboard")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      // Check that all count properties are numbers
+      expect(typeof response.body.data.total_users).toBe("number");
+      expect(typeof response.body.data.total_events).toBe("number");
+      expect(typeof response.body.data.total_teams).toBe("number");
+      expect(typeof response.body.data.total_team_members).toBe("number");
+
+      // Check that count values match array lengths
+      expect(response.body.data.total_users).toBe(
+        response.body.data.users.length
+      );
+      expect(response.body.data.total_events).toBe(
+        response.body.data.events.length
+      );
+      expect(response.body.data.total_teams).toBe(
+        response.body.data.teams.length
+      );
+
+      // Make sure total_team_members is greater than zero (assuming test data has team members)
+      expect(response.body.data.total_team_members).toBeGreaterThan(0);
     });
   });
   describe("PATCH /api/admin/users/:id", () => {

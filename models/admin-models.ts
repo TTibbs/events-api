@@ -31,3 +31,8 @@ export const getDraftEvents = async (): Promise<EventResponse[]> => {
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
   })) as EventResponse[];
 };
+
+export const getTotalTeamMembers = async (): Promise<number> => {
+  const result = await db.query(`SELECT COUNT(*) FROM team_members`);
+  return parseInt(result.rows[0].count);
+};

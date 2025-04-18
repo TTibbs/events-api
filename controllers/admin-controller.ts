@@ -7,7 +7,11 @@ import {
 import { selectTeams } from "../models/teams-models";
 import { fetchAllTickets } from "../models/tickets-models";
 import { checkIsUserSiteAdmin } from "./users-controller";
-import { updateUserToAdmin, getDraftEvents } from "../models/admin-models";
+import {
+  updateUserToAdmin,
+  getDraftEvents,
+  getTotalTeamMembers,
+} from "../models/admin-models";
 import { sanitizeUser, sanitizeUsers } from "../utils/databaseHelpers";
 import {
   AdminDashboardData,
@@ -51,6 +55,9 @@ export const getAdminDashboard = async (
     // Get all tickets
     const tickets = await fetchAllTickets();
 
+    // Get total team members count
+    const total_team_members = await getTotalTeamMembers();
+
     // Get all registrations
     const registrationsPromise = (events as EventResponse[]).map(
       async (event) => {
@@ -75,6 +82,7 @@ export const getAdminDashboard = async (
       draft_events: draftEvents,
       teams: teams as unknown as TeamResponse[],
       total_teams,
+      total_team_members,
       tickets,
       registrations: registrations.flat(),
     };

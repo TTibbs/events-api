@@ -98,14 +98,15 @@ describe("Teams API Endpoints", () => {
     test("Should successfully retrieve team members", async () => {
       const token = await getAuthToken();
 
-      const {
-        body: { members },
-      } = await request(app)
+      const response = await request(app)
         .get("/api/teams/1/members")
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
 
+      const { members, total_members } = response.body;
+
       expect(members).toBeInstanceOf(Array);
+      expect(total_members).toEqual(expect.any(Number));
     });
     test("Should return appropriate error when team ID does not exist", async () => {
       const token = await getAuthToken();
@@ -123,12 +124,15 @@ describe("Teams API Endpoints", () => {
   describe("GET /api/teams/members - Team Members Listing", () => {
     test("Should successfully retrieve a list of all team members", async () => {
       const token = await getAuthToken();
-      const {
-        body: { teamMembers },
-      } = await request(app)
+      const response = await request(app)
         .get("/api/teams/members")
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
+
+      const { teamMembers, total_team_members } = response.body;
+
+      expect(teamMembers).toBeInstanceOf(Array);
+      expect(total_team_members).toEqual(expect.any(Number));
       teamMembers.forEach((teamMember: TeamMember) => {
         expect(teamMember).toHaveProperty("id", expect.any(Number));
         expect(teamMember).toHaveProperty("user_id", expect.any(Number));
