@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for events-platform/controllers/events-controller.ts</title>
+    <title>Code coverage report for events-platform/controllers/stripe-controller.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">events-platform/controllers</a> events-controller.ts</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">events-platform/controllers</a> stripe-controller.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.86% </span>
+                <span class="strong">76.85% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>176/215</span>
+                <span class='fraction'>93/121</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.49% </span>
+                <span class="strong">52.63% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>61/83</span>
+                <span class='fraction'>20/38</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">90.9% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>29/29</span>
+                <span class='fraction'>10/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80.31% </span>
+                <span class="strong">74.77% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>155/193</span>
+                <span class='fraction'>83/111</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -409,286 +409,10 @@
 <a name='L344'></a><a href='#L344'>344</a>
 <a name='L345'></a><a href='#L345'>345</a>
 <a name='L346'></a><a href='#L346'>346</a>
-<a name='L347'></a><a href='#L347'>347</a>
-<a name='L348'></a><a href='#L348'>348</a>
-<a name='L349'></a><a href='#L349'>349</a>
-<a name='L350'></a><a href='#L350'>350</a>
-<a name='L351'></a><a href='#L351'>351</a>
-<a name='L352'></a><a href='#L352'>352</a>
-<a name='L353'></a><a href='#L353'>353</a>
-<a name='L354'></a><a href='#L354'>354</a>
-<a name='L355'></a><a href='#L355'>355</a>
-<a name='L356'></a><a href='#L356'>356</a>
-<a name='L357'></a><a href='#L357'>357</a>
-<a name='L358'></a><a href='#L358'>358</a>
-<a name='L359'></a><a href='#L359'>359</a>
-<a name='L360'></a><a href='#L360'>360</a>
-<a name='L361'></a><a href='#L361'>361</a>
-<a name='L362'></a><a href='#L362'>362</a>
-<a name='L363'></a><a href='#L363'>363</a>
-<a name='L364'></a><a href='#L364'>364</a>
-<a name='L365'></a><a href='#L365'>365</a>
-<a name='L366'></a><a href='#L366'>366</a>
-<a name='L367'></a><a href='#L367'>367</a>
-<a name='L368'></a><a href='#L368'>368</a>
-<a name='L369'></a><a href='#L369'>369</a>
-<a name='L370'></a><a href='#L370'>370</a>
-<a name='L371'></a><a href='#L371'>371</a>
-<a name='L372'></a><a href='#L372'>372</a>
-<a name='L373'></a><a href='#L373'>373</a>
-<a name='L374'></a><a href='#L374'>374</a>
-<a name='L375'></a><a href='#L375'>375</a>
-<a name='L376'></a><a href='#L376'>376</a>
-<a name='L377'></a><a href='#L377'>377</a>
-<a name='L378'></a><a href='#L378'>378</a>
-<a name='L379'></a><a href='#L379'>379</a>
-<a name='L380'></a><a href='#L380'>380</a>
-<a name='L381'></a><a href='#L381'>381</a>
-<a name='L382'></a><a href='#L382'>382</a>
-<a name='L383'></a><a href='#L383'>383</a>
-<a name='L384'></a><a href='#L384'>384</a>
-<a name='L385'></a><a href='#L385'>385</a>
-<a name='L386'></a><a href='#L386'>386</a>
-<a name='L387'></a><a href='#L387'>387</a>
-<a name='L388'></a><a href='#L388'>388</a>
-<a name='L389'></a><a href='#L389'>389</a>
-<a name='L390'></a><a href='#L390'>390</a>
-<a name='L391'></a><a href='#L391'>391</a>
-<a name='L392'></a><a href='#L392'>392</a>
-<a name='L393'></a><a href='#L393'>393</a>
-<a name='L394'></a><a href='#L394'>394</a>
-<a name='L395'></a><a href='#L395'>395</a>
-<a name='L396'></a><a href='#L396'>396</a>
-<a name='L397'></a><a href='#L397'>397</a>
-<a name='L398'></a><a href='#L398'>398</a>
-<a name='L399'></a><a href='#L399'>399</a>
-<a name='L400'></a><a href='#L400'>400</a>
-<a name='L401'></a><a href='#L401'>401</a>
-<a name='L402'></a><a href='#L402'>402</a>
-<a name='L403'></a><a href='#L403'>403</a>
-<a name='L404'></a><a href='#L404'>404</a>
-<a name='L405'></a><a href='#L405'>405</a>
-<a name='L406'></a><a href='#L406'>406</a>
-<a name='L407'></a><a href='#L407'>407</a>
-<a name='L408'></a><a href='#L408'>408</a>
-<a name='L409'></a><a href='#L409'>409</a>
-<a name='L410'></a><a href='#L410'>410</a>
-<a name='L411'></a><a href='#L411'>411</a>
-<a name='L412'></a><a href='#L412'>412</a>
-<a name='L413'></a><a href='#L413'>413</a>
-<a name='L414'></a><a href='#L414'>414</a>
-<a name='L415'></a><a href='#L415'>415</a>
-<a name='L416'></a><a href='#L416'>416</a>
-<a name='L417'></a><a href='#L417'>417</a>
-<a name='L418'></a><a href='#L418'>418</a>
-<a name='L419'></a><a href='#L419'>419</a>
-<a name='L420'></a><a href='#L420'>420</a>
-<a name='L421'></a><a href='#L421'>421</a>
-<a name='L422'></a><a href='#L422'>422</a>
-<a name='L423'></a><a href='#L423'>423</a>
-<a name='L424'></a><a href='#L424'>424</a>
-<a name='L425'></a><a href='#L425'>425</a>
-<a name='L426'></a><a href='#L426'>426</a>
-<a name='L427'></a><a href='#L427'>427</a>
-<a name='L428'></a><a href='#L428'>428</a>
-<a name='L429'></a><a href='#L429'>429</a>
-<a name='L430'></a><a href='#L430'>430</a>
-<a name='L431'></a><a href='#L431'>431</a>
-<a name='L432'></a><a href='#L432'>432</a>
-<a name='L433'></a><a href='#L433'>433</a>
-<a name='L434'></a><a href='#L434'>434</a>
-<a name='L435'></a><a href='#L435'>435</a>
-<a name='L436'></a><a href='#L436'>436</a>
-<a name='L437'></a><a href='#L437'>437</a>
-<a name='L438'></a><a href='#L438'>438</a>
-<a name='L439'></a><a href='#L439'>439</a>
-<a name='L440'></a><a href='#L440'>440</a>
-<a name='L441'></a><a href='#L441'>441</a>
-<a name='L442'></a><a href='#L442'>442</a>
-<a name='L443'></a><a href='#L443'>443</a>
-<a name='L444'></a><a href='#L444'>444</a>
-<a name='L445'></a><a href='#L445'>445</a>
-<a name='L446'></a><a href='#L446'>446</a>
-<a name='L447'></a><a href='#L447'>447</a>
-<a name='L448'></a><a href='#L448'>448</a>
-<a name='L449'></a><a href='#L449'>449</a>
-<a name='L450'></a><a href='#L450'>450</a>
-<a name='L451'></a><a href='#L451'>451</a>
-<a name='L452'></a><a href='#L452'>452</a>
-<a name='L453'></a><a href='#L453'>453</a>
-<a name='L454'></a><a href='#L454'>454</a>
-<a name='L455'></a><a href='#L455'>455</a>
-<a name='L456'></a><a href='#L456'>456</a>
-<a name='L457'></a><a href='#L457'>457</a>
-<a name='L458'></a><a href='#L458'>458</a>
-<a name='L459'></a><a href='#L459'>459</a>
-<a name='L460'></a><a href='#L460'>460</a>
-<a name='L461'></a><a href='#L461'>461</a>
-<a name='L462'></a><a href='#L462'>462</a>
-<a name='L463'></a><a href='#L463'>463</a>
-<a name='L464'></a><a href='#L464'>464</a>
-<a name='L465'></a><a href='#L465'>465</a>
-<a name='L466'></a><a href='#L466'>466</a>
-<a name='L467'></a><a href='#L467'>467</a>
-<a name='L468'></a><a href='#L468'>468</a>
-<a name='L469'></a><a href='#L469'>469</a>
-<a name='L470'></a><a href='#L470'>470</a>
-<a name='L471'></a><a href='#L471'>471</a>
-<a name='L472'></a><a href='#L472'>472</a>
-<a name='L473'></a><a href='#L473'>473</a>
-<a name='L474'></a><a href='#L474'>474</a>
-<a name='L475'></a><a href='#L475'>475</a>
-<a name='L476'></a><a href='#L476'>476</a>
-<a name='L477'></a><a href='#L477'>477</a>
-<a name='L478'></a><a href='#L478'>478</a>
-<a name='L479'></a><a href='#L479'>479</a>
-<a name='L480'></a><a href='#L480'>480</a>
-<a name='L481'></a><a href='#L481'>481</a>
-<a name='L482'></a><a href='#L482'>482</a>
-<a name='L483'></a><a href='#L483'>483</a>
-<a name='L484'></a><a href='#L484'>484</a>
-<a name='L485'></a><a href='#L485'>485</a>
-<a name='L486'></a><a href='#L486'>486</a>
-<a name='L487'></a><a href='#L487'>487</a>
-<a name='L488'></a><a href='#L488'>488</a>
-<a name='L489'></a><a href='#L489'>489</a>
-<a name='L490'></a><a href='#L490'>490</a>
-<a name='L491'></a><a href='#L491'>491</a>
-<a name='L492'></a><a href='#L492'>492</a>
-<a name='L493'></a><a href='#L493'>493</a>
-<a name='L494'></a><a href='#L494'>494</a>
-<a name='L495'></a><a href='#L495'>495</a>
-<a name='L496'></a><a href='#L496'>496</a>
-<a name='L497'></a><a href='#L497'>497</a>
-<a name='L498'></a><a href='#L498'>498</a>
-<a name='L499'></a><a href='#L499'>499</a>
-<a name='L500'></a><a href='#L500'>500</a>
-<a name='L501'></a><a href='#L501'>501</a>
-<a name='L502'></a><a href='#L502'>502</a>
-<a name='L503'></a><a href='#L503'>503</a>
-<a name='L504'></a><a href='#L504'>504</a>
-<a name='L505'></a><a href='#L505'>505</a>
-<a name='L506'></a><a href='#L506'>506</a>
-<a name='L507'></a><a href='#L507'>507</a>
-<a name='L508'></a><a href='#L508'>508</a>
-<a name='L509'></a><a href='#L509'>509</a>
-<a name='L510'></a><a href='#L510'>510</a>
-<a name='L511'></a><a href='#L511'>511</a>
-<a name='L512'></a><a href='#L512'>512</a>
-<a name='L513'></a><a href='#L513'>513</a>
-<a name='L514'></a><a href='#L514'>514</a>
-<a name='L515'></a><a href='#L515'>515</a>
-<a name='L516'></a><a href='#L516'>516</a>
-<a name='L517'></a><a href='#L517'>517</a>
-<a name='L518'></a><a href='#L518'>518</a>
-<a name='L519'></a><a href='#L519'>519</a>
-<a name='L520'></a><a href='#L520'>520</a>
-<a name='L521'></a><a href='#L521'>521</a>
-<a name='L522'></a><a href='#L522'>522</a>
-<a name='L523'></a><a href='#L523'>523</a>
-<a name='L524'></a><a href='#L524'>524</a>
-<a name='L525'></a><a href='#L525'>525</a>
-<a name='L526'></a><a href='#L526'>526</a>
-<a name='L527'></a><a href='#L527'>527</a>
-<a name='L528'></a><a href='#L528'>528</a>
-<a name='L529'></a><a href='#L529'>529</a>
-<a name='L530'></a><a href='#L530'>530</a>
-<a name='L531'></a><a href='#L531'>531</a>
-<a name='L532'></a><a href='#L532'>532</a>
-<a name='L533'></a><a href='#L533'>533</a>
-<a name='L534'></a><a href='#L534'>534</a>
-<a name='L535'></a><a href='#L535'>535</a>
-<a name='L536'></a><a href='#L536'>536</a>
-<a name='L537'></a><a href='#L537'>537</a>
-<a name='L538'></a><a href='#L538'>538</a>
-<a name='L539'></a><a href='#L539'>539</a>
-<a name='L540'></a><a href='#L540'>540</a>
-<a name='L541'></a><a href='#L541'>541</a>
-<a name='L542'></a><a href='#L542'>542</a>
-<a name='L543'></a><a href='#L543'>543</a>
-<a name='L544'></a><a href='#L544'>544</a>
-<a name='L545'></a><a href='#L545'>545</a>
-<a name='L546'></a><a href='#L546'>546</a>
-<a name='L547'></a><a href='#L547'>547</a>
-<a name='L548'></a><a href='#L548'>548</a>
-<a name='L549'></a><a href='#L549'>549</a>
-<a name='L550'></a><a href='#L550'>550</a>
-<a name='L551'></a><a href='#L551'>551</a>
-<a name='L552'></a><a href='#L552'>552</a>
-<a name='L553'></a><a href='#L553'>553</a>
-<a name='L554'></a><a href='#L554'>554</a>
-<a name='L555'></a><a href='#L555'>555</a>
-<a name='L556'></a><a href='#L556'>556</a>
-<a name='L557'></a><a href='#L557'>557</a>
-<a name='L558'></a><a href='#L558'>558</a>
-<a name='L559'></a><a href='#L559'>559</a>
-<a name='L560'></a><a href='#L560'>560</a>
-<a name='L561'></a><a href='#L561'>561</a>
-<a name='L562'></a><a href='#L562'>562</a>
-<a name='L563'></a><a href='#L563'>563</a>
-<a name='L564'></a><a href='#L564'>564</a>
-<a name='L565'></a><a href='#L565'>565</a>
-<a name='L566'></a><a href='#L566'>566</a>
-<a name='L567'></a><a href='#L567'>567</a>
-<a name='L568'></a><a href='#L568'>568</a>
-<a name='L569'></a><a href='#L569'>569</a>
-<a name='L570'></a><a href='#L570'>570</a>
-<a name='L571'></a><a href='#L571'>571</a>
-<a name='L572'></a><a href='#L572'>572</a>
-<a name='L573'></a><a href='#L573'>573</a>
-<a name='L574'></a><a href='#L574'>574</a>
-<a name='L575'></a><a href='#L575'>575</a>
-<a name='L576'></a><a href='#L576'>576</a>
-<a name='L577'></a><a href='#L577'>577</a>
-<a name='L578'></a><a href='#L578'>578</a>
-<a name='L579'></a><a href='#L579'>579</a>
-<a name='L580'></a><a href='#L580'>580</a>
-<a name='L581'></a><a href='#L581'>581</a>
-<a name='L582'></a><a href='#L582'>582</a>
-<a name='L583'></a><a href='#L583'>583</a>
-<a name='L584'></a><a href='#L584'>584</a>
-<a name='L585'></a><a href='#L585'>585</a>
-<a name='L586'></a><a href='#L586'>586</a>
-<a name='L587'></a><a href='#L587'>587</a>
-<a name='L588'></a><a href='#L588'>588</a>
-<a name='L589'></a><a href='#L589'>589</a>
-<a name='L590'></a><a href='#L590'>590</a>
-<a name='L591'></a><a href='#L591'>591</a>
-<a name='L592'></a><a href='#L592'>592</a>
-<a name='L593'></a><a href='#L593'>593</a>
-<a name='L594'></a><a href='#L594'>594</a>
-<a name='L595'></a><a href='#L595'>595</a>
-<a name='L596'></a><a href='#L596'>596</a>
-<a name='L597'></a><a href='#L597'>597</a>
-<a name='L598'></a><a href='#L598'>598</a>
-<a name='L599'></a><a href='#L599'>599</a>
-<a name='L600'></a><a href='#L600'>600</a>
-<a name='L601'></a><a href='#L601'>601</a>
-<a name='L602'></a><a href='#L602'>602</a>
-<a name='L603'></a><a href='#L603'>603</a>
-<a name='L604'></a><a href='#L604'>604</a>
-<a name='L605'></a><a href='#L605'>605</a>
-<a name='L606'></a><a href='#L606'>606</a>
-<a name='L607'></a><a href='#L607'>607</a>
-<a name='L608'></a><a href='#L608'>608</a>
-<a name='L609'></a><a href='#L609'>609</a>
-<a name='L610'></a><a href='#L610'>610</a>
-<a name='L611'></a><a href='#L611'>611</a>
-<a name='L612'></a><a href='#L612'>612</a>
-<a name='L613'></a><a href='#L613'>613</a>
-<a name='L614'></a><a href='#L614'>614</a>
-<a name='L615'></a><a href='#L615'>615</a>
-<a name='L616'></a><a href='#L616'>616</a>
-<a name='L617'></a><a href='#L617'>617</a>
-<a name='L618'></a><a href='#L618'>618</a>
-<a name='L619'></a><a href='#L619'>619</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L347'></a><a href='#L347'>347</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -704,129 +428,184 @@
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">98x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
@@ -837,455 +616,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">95x</span>
-<span class="cline-any cline-yes">95x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">95x</span>
-<span class="cline-any cline-yes">95x</span>
-<span class="cline-any cline-yes">95x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">95x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">95x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1293,624 +629,472 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response, NextFunction } from "express";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response } from "express";
+import Stripe from "stripe";
+import { generateUniqueCode } from "../utils/codeGenerator";
 import {
-  selectEvents,
-  selectEventById,
-  insertEvent,
-  updateEventById,
-  deleteEventById,
-  selectEventRegistrationsByEventId,
-  selectUpcomingEvents,
-  selectEventsByTeamId,
-  registerUserForEvent,
-  cancelRegistration,
-  checkEventAvailability,
-  getRegistrationById,
-  selectDraftEvents,
-  selectDraftEventById,
-  selectDraftEventsByTeamId,
-  getEventByIdForAdmin,
-} from "../models/events-models";
-import { selectTeamMemberByUserId } from "../models/teams-models";
-import { sendRegistrationConfirmation } from "../utils/email";
-import {
-  EmailInfo,
-  Event,
-  EventRegistrationResponse,
-  EventUpdateData,
-  ExtendedEventRegistration,
-  ExtendedTeamMember,
-} from "../types";
+  selectUserPayments,
+  updateUserStripeCustomerId,
+  findRegistrationByEventAndUser,
+  createRegistration,
+  createTicket,
+  createPaymentRecord,
+  updateTicket,
+  updatePaymentStatus,
+  findPaymentBySessionId,
+} from "../models/stripe-models";
+import { CheckoutSessionData, StripeSessionInfo, WebhookEvent } from "../types";
+import { selectEventById } from "../models/events-models";
+import { selectUserById } from "../models/users-models";
 &nbsp;
-export const getEvents = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  try {
-    const { events, total_events } = await selectEvents();
-    res.status(200).send({ events, total_events });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
+// Check if Stripe API key is available
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+<span class="missing-if-branch" title="if path not taken" >I</span>if (!stripeSecretKey) {
+<span class="cstat-no" title="statement not covered" >  console.warn(</span>
+    "⚠️ WARNING: STRIPE_SECRET_KEY environment variable is not set. Stripe payment features will not work."
+  );
+}
+&nbsp;
+// Initialize Stripe with the secret key, use a dummy key in development if not provided
+const stripe = new Stripe(
+  stripeSecretKey || <span class="branch-1 cbranch-no" title="branch not covered" >"sk_test_dummy_key_for_development_only",</span>
+  {
+    apiVersion: "2025-03-31.basil",
   }
+);
+&nbsp;
+export const getPayments = async (
+  req: Request,
+  res: Response
+): Promise&lt;void&gt; =&gt; {
+  const { userId } = req.params;
+&nbsp;
+  const getUserPayments = await selectUserPayments(userId);
+  res.send(getUserPayments);
 };
 &nbsp;
-export const getDraftEvents = async (
+export const createCheckoutSession = async (
   req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  try {
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user) {
-<span class="cstat-no" title="statement not covered" >      return res.status(401).send({</span>
-        status: "error",
-        msg: "Unauthorized - Authentication required",
-      });
-    }
+  res: Response
+): Promise&lt;void&gt; =&gt; {
+  const sessionData: CheckoutSessionData = req.body;
+  const { eventId, userId } = sessionData;
 &nbsp;
-    const events = await selectDraftEvents(req.user.id);
-    res.status(200).send({ events });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-export const getEventById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const { id } = req.params;
-  try {
-    const event = await selectEventById(Number(id));
-    res.status(200).send({ event });
-  } catch (err) {
-    next(err);
-  }
-};
-&nbsp;
-export const getDraftEventById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const { id } = req.params;
-&nbsp;
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user) {
-<span class="cstat-no" title="statement not covered" >    return res.status(401).send({</span>
-      status: "error",
-      msg: "Unauthorized - Authentication required",
+  // Check if Stripe is properly configured
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!stripeSecretKey) {
+<span class="cstat-no" title="statement not covered" >    res.status(503).send({</span>
+      message: "Stripe payment service unavailable - API key not configured",
+      details:
+        "The server administrator needs to set the STRIPE_SECRET_KEY environment variable",
     });
+<span class="cstat-no" title="statement not covered" >    return;</span>
   }
 &nbsp;
   try {
-    const event = await selectDraftEventById(Number(id), req.user.id);
-    res.status(200).send({ event });
-  } catch (err) {
-    next(err);
-  }
-};
+    // Get event details from database
+    const event = await selectEventById(Number(eventId));
 &nbsp;
-export const createEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const {
-    status,
-    title,
-    description,
-    location,
-    start_time,
-    end_time,
-    max_attendees,
-    price,
-    event_type,
-    is_public,
-    team_id,
-    created_by,
-  } = req.body;
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!event) {
+<span class="cstat-no" title="statement not covered" >      res.status(404).send({ message: "Event not found" });</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+    }
 &nbsp;
-  // Check user authorization
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user) {
-<span class="cstat-no" title="statement not covered" >    return res.status(401).send({</span>
-      status: "error",
-      msg: "Unauthorized - Authentication required",
+    // Create or get Stripe customer for this user
+    const user = await selectUserById(Number(userId));
+&nbsp;
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!user) {
+<span class="cstat-no" title="statement not covered" >      res.status(404).send({ message: "User not found" });</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+    }
+&nbsp;
+    let stripeCustomerId = user.stripe_customer_id;
+&nbsp;
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { userId },
+      });
+      stripeCustomerId = customer.id;
+      await updateUserStripeCustomerId(userId, stripeCustomerId);
+    }
+&nbsp;
+    // Create the checkout session
+    const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "gbp", // Match the currency in your schema
+            product_data: {
+              name: `Ticket for ${event.title}`,
+              description: event.description || <span class="branch-1 cbranch-no" title="branch not covered" >"Event ticket",</span>
+            },
+            unit_amount: Math.round(event.price * 100), // Convert to pence
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${
+        process.env.FRONTEND_URL || <span class="branch-1 cbranch-no" title="branch not covered" >"http://localhost:3000"</span>
+      }/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${
+        process.env.FRONTEND_URL || <span class="branch-1 cbranch-no" title="branch not covered" >"http://localhost:3000"</span>
+      }/events/${eventId}`,
+      metadata: {
+        eventId,
+        userId,
+      },
     });
-  }
 &nbsp;
-  try {
-    // Get the user's team membership
-    const teamMember = (await selectTeamMemberByUserId(
-      req.user.id
-    )) as ExtendedTeamMember | null;
-&nbsp;
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!teamMember) {
-<span class="cstat-no" title="statement not covered" >      return res.status(403).send({</span>
-        status: "error",
-        msg: "Forbidden - You are not a member of any team",
-      });
-    }
-&nbsp;
-    // Use team_id from request if provided, otherwise use the user's team
-    const eventTeamId = team_id ? parseInt(team_id) : teamMember.team_id;
-&nbsp;
-    // Check if the user is authorized to create events for this team
-    if (
-      teamMember.team_id !== eventTeamId ||
-      (teamMember.role !== "team_admin" &amp;&amp; teamMember.role !== "event_manager")
-    ) {
-      return res.status(403).send({
-        status: "error",
-        msg: "Forbidden - You don't have permission to create events for this team",
-      });
-    }
-&nbsp;
-    // Required fields and validation are now handled by express-validator middleware
-&nbsp;
-    const eventStatus = status || "draft"; // Default to draft if not provided
-    const eventIsPublic = is_public !== undefined ? is_public : true; // Default to public if not provided
-&nbsp;
-    // Use the authenticated user's team member ID as created_by if not provided
-    let createdBy: number | null = created_by ? <span class="branch-0 cbranch-no" title="branch not covered" >Number(created_by) </span>: null;
-    if (!createdBy &amp;&amp; teamMember.id) {
-      createdBy = teamMember.id;
-    }
-&nbsp;
-    const newEvent = await insertEvent(
-      eventStatus,
-      title,
-      description || null,
-      location || null,
-      new Date(start_time),
-      new Date(end_time),
-      max_attendees ? Number(max_attendees) : null,
-      price ? <span class="branch-0 cbranch-no" title="branch not covered" >Number(price) </span>: null,
-      event_type || null,
-      eventIsPublic,
-      eventTeamId,
-      createdBy
-    );
-&nbsp;
-    res.status(201).send({ event: newEvent });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-export const updateEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const { id } = req.params;
-  const updateData: EventUpdateData = req.body;
-&nbsp;
-  // Check user authorization
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user) {
-<span class="cstat-no" title="statement not covered" >    return res.status(401).send({</span>
-      status: "error",
-      msg: "Unauthorized - Authentication required",
-    });
-  }
-&nbsp;
-  try {
-    // Get the event to check which team it belongs to
-    let eventCheck;
-    try {
-      eventCheck = await getEventByIdForAdmin(Number(id));
-    } catch (error: any) {
-      if (error.status === 404) {
-        return res.status(404).send({
-          status: "error",
-          msg: "Event not found",
-        });
-      }
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
-    }
-&nbsp;
-    // Check if the user is authorized to update this event
-    const teamMember = (await selectTeamMemberByUserId(
-      req.user.id
-    )) as ExtendedTeamMember | null;
-&nbsp;
-    if (
-      !teamMember ||
-      teamMember.team_id !== Number(eventCheck.team_id) ||
-      (teamMember.role !== "team_admin" &amp;&amp; teamMember.role !== "event_manager")
-    ) {
-      return res.status(403).send({
-        status: "error",
-        msg: "Forbidden - You don't have permission to update this event",
-      });
-    }
-&nbsp;
-    // Validation is now handled by express-validator middleware
-&nbsp;
-    // Convert numeric values
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (updateData.team_id) <span class="cstat-no" title="statement not covered" >updateData.team_id = Number(updateData.team_id);</span>
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (updateData.created_by)
-<span class="cstat-no" title="statement not covered" >      updateData.created_by = Number(updateData.created_by);</span>
-    if (updateData.max_attendees)
-      updateData.max_attendees = Number(updateData.max_attendees);
-    if (updateData.price) updateData.price = Number(updateData.price);
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (updateData.start_time)
-<span class="cstat-no" title="statement not covered" >      updateData.start_time = new Date(updateData.start_time);</span>
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (updateData.end_time)
-<span class="cstat-no" title="statement not covered" >      updateData.end_time = new Date(updateData.end_time);</span>
-&nbsp;
-    // Cast updateData to Partial&lt;Event&gt; to match what updateEventById expects
-    const updatedEvent = await updateEventById(
-      Number(id),
-      updateData as Partial&lt;Event&gt;
-    );
-    res.status(200).send({ updatedEvent });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-export const deleteEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const { id } = req.params;
-&nbsp;
-  // Check user authorization
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user) {
-<span class="cstat-no" title="statement not covered" >    return res.status(401).send({</span>
-      status: "error",
-      msg: "Unauthorized - Authentication required",
-    });
-  }
-&nbsp;
-  try {
-    // Get the event to check which team it belongs to
-    let eventCheck;
-    try {
-      eventCheck = await getEventByIdForAdmin(Number(id));
-    } catch (error: any) {
-      if (error.status === 404) {
-        return res.status(404).send({
-          status: "error",
-          msg: "Event not found",
-        });
-      }
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
-    }
-&nbsp;
-    // Check if the user is authorized to delete this event
-    const teamMember = (await selectTeamMemberByUserId(
-      req.user.id
-    )) as ExtendedTeamMember | null;
-&nbsp;
-    if (
-      !teamMember ||
-      teamMember.team_id !== Number(eventCheck.team_id) ||
-      (teamMember.role !== "team_admin" &amp;&amp; <span class="branch-3 cbranch-no" title="branch not covered" >teamMember.role !== "event_manager")</span>
-    ) {
-      return res.status(403).send({
-        status: "error",
-        msg: "Forbidden - You don't have permission to delete this event",
-      });
-    }
-&nbsp;
-    await deleteEventById(Number(id));
-    res.status(204).send();
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-export const getEventRegistrations = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const { id } = req.params;
-  try {
-    let eventCheck;
-&nbsp;
-    try {
-      // First try to get the event regardless of status for team members
-      if (req.user) {
-        const teamMember = await selectTeamMemberByUserId(req.user.id);
-&nbsp;
-        if (teamMember) {
-          try {
-            // Try to get the event regardless of status
-            eventCheck = await getEventByIdForAdmin(Number(id));
-&nbsp;
-            // Check if the user is part of the team that owns this event
-            <span class="missing-if-branch" title="if path not taken" >I</span>if (teamMember.team_id !== eventCheck.team_id) {
-              // If the event is not published and user is not on the team, act like it doesn't exist
-<span class="cstat-no" title="statement not covered" >              <span class="missing-if-branch" title="if path not taken" >I</span>if (eventCheck.status !== "published") {</span>
-<span class="cstat-no" title="statement not covered" >                return res.status(404).send({</span>
-                  status: "error",
-                  msg: "Event not found",
-                });
-              }
-            }
-          } catch (error) {
-            // If no event found, return 404
-<span class="cstat-no" title="statement not covered" >            return res.status(404).send({</span>
-              status: "error",
-              msg: "Event not found",
-            });
-          }
-        } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-          // User has no team membership, only allow access to published events
-<span class="cstat-no" title="statement not covered" >          try {</span>
-<span class="cstat-no" title="statement not covered" >            eventCheck = await selectEventById(Number(id));</span>
-          } catch (error) {
-<span class="cstat-no" title="statement not covered" >            return res.status(404).send({</span>
-              status: "error",
-              msg: "Event not found",
-            });
-          }
-        }
-      } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-        // Non-authenticated users can only access published events
-<span class="cstat-no" title="statement not covered" >        try {</span>
-<span class="cstat-no" title="statement not covered" >          eventCheck = await selectEventById(Number(id));</span>
-        } catch (error) {
-<span class="cstat-no" title="statement not covered" >          return res.status(404).send({</span>
-            status: "error",
-            msg: "Event not found",
-          });
-        }
-      }
-    } catch (error) {
-      // Any other errors
-<span class="cstat-no" title="statement not covered" >      return res.status(404).send({</span>
-        status: "error",
-        msg: "Event not found",
-      });
-    }
-&nbsp;
-    // If we got here, we have an event (either published or draft)
-    // Get the registrations for this event
-    const registrations = await selectEventRegistrationsByEventId(Number(id));
-    res.status(200).send({ registrations });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-export const getUpcomingEvents = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  try {
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
-    const events = await selectUpcomingEvents(limit);
-    res.status(200).send({ events });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-export const getEventsByTeamId = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const { teamId } = req.params;
-  try {
-    const events = await selectEventsByTeamId(Number(teamId));
-    res.status(200).send({ events });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-export const getDraftEventsByTeamId = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  const { teamId } = req.params;
-&nbsp;
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user) {
-<span class="cstat-no" title="statement not covered" >    return res.status(401).send({</span>
-      status: "error",
-      msg: "Unauthorized - Authentication required",
-    });
-  }
-&nbsp;
-  try {
-    const events = await selectDraftEventsByTeamId(Number(teamId), req.user.id);
-    res.status(200).send({ events });
-  } catch (err) {
-<span class="cstat-no" title="statement not covered" >    next(err);</span>
-  }
-};
-&nbsp;
-// Register a user for an event
-export const registerForEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  try {
-    const { eventId } = req.params;
-&nbsp;
-    // Authentication is required
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user || !req.user.id) {
-<span class="cstat-no" title="statement not covered" >      return res.status(401).send({ msg: "Authentication required" });</span>
-    }
-&nbsp;
-    // Check for empty request body or undefined userId
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).send({ msg: "User ID is required" });
-    }
-&nbsp;
-    // Use the authenticated user's ID by default
-    let userId = req.user.id;
-&nbsp;
-    // If userId is provided in body and different from authenticated user,
-    // this could be an admin registering someone else - use that ID
-    if (req.body.userId !== undefined) {
-      // In a real app, we would check if the user has admin permissions here
-      // For example: if (req.user.role === 'admin') { ... }
-      userId = Number(req.body.userId);
-    }
-&nbsp;
-    // console.log(`Registering user ${userId} for event ${eventId}`);
-    const registration = (await registerUserForEvent(
-      Number(eventId),
-      userId
-    )) as ExtendedEventRegistration;
-&nbsp;
-    // Send confirmation email if registration was successful
-    if (registration.ticket_info) {
-      try {
-        // console.log(
-        //   `Attempting to send email to ${registration.ticket_info.user_email}`
-        // );
-        // console.log(
-        //   `SENDGRID_API_KEY is ${
-        //     process.env.SENDGRID_API_KEY ? "set" : "not set"
-        //   }`
-        // );
-        // console.log(
-        //   `SENDGRID_FROM_EMAIL is ${
-        //     process.env.SENDGRID_FROM_EMAIL
-        //       ? process.env.SENDGRID_FROM_EMAIL
-        //       : "not set"
-        //   }`
-        // );
-&nbsp;
-        const emailInfo: EmailInfo = {
-          to: registration.ticket_info.user_email,
-          name: registration.ticket_info.user_name,
-          eventTitle: registration.ticket_info.event_title,
-          eventDate: registration.ticket_info.event_date,
-          eventLocation: registration.ticket_info.event_location,
-          ticketCode: registration.ticket_info.ticket_code,
-        };
-&nbsp;
-        const emailResult = await sendRegistrationConfirmation(emailInfo);
-&nbsp;
-        // console.log(
-        //   `Email sending result: ${emailResult.success ? "success" : "failed"}`
-        // );
-        // if (!emailResult.success) {
-        //   console.error("Email error details:", emailResult.error);
-        // } else {
-        //   console.log(
-        //     `Confirmation email sent for registration ID: ${registration.id}`
-        //   );
-        // }
-      } catch (emailError) {
-        // Log the error but don't fail the registration process
-        /* eslint-disable */<span class="cstat-no" title="statement not covered" >console.error(...oo_tx(`4104968029_515_8_515_71_11`,"Failed to send confirmation email:", emailError));</span>
-      }
+    const sessionInfo: StripeSessionInfo = {
+      url: session.url as string,
+      sessionId: session.id,
+    };
+    res.send(sessionInfo);
+  } catch (error) {
+    /* eslint-disable */console.error(...oo_tx(`2270769355_126_4_126_60_11`,"Error creating checkout session:", error));
+    // Check if this is a known error type we're handling
+    if ((error as any).status === 404 &amp;&amp; (error as any).msg) {
+      res.status(404).send({ message: (error as any).msg });
     } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-<span class="cstat-no" title="statement not covered" >      console.warn("No ticket_info available for sending confirmation email");</span>
+<span class="cstat-no" title="statement not covered" >      res.status(500).send({ message: (error as Error).message });</span>
     }
-&nbsp;
-    // If registration was reactivated, return 200 instead of 201
-    const statusCode = registration.reactivated ? 200 : 201;
-&nbsp;
-    res.status(statusCode).send({
-      msg: registration.reactivated
-        ? "Registration reactivated successfully"
-        : "Registration successful",
-      registration,
-    });
-  } catch (error) {
-    /* eslint-disable */console.error(...oo_tx(`4104968029_531_4_531_47_11`,"Registration error:", error));
-    next(error);
   }
 };
 &nbsp;
-// Cancel a registration
-export const cancelEventRegistration = async (
+export const syncPaymentStatus = async (
   req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
+  res: Response
+): Promise&lt;void&gt; =&gt; {
+  const { sessionId } = req.params;
+&nbsp;
+  // Check if Stripe is properly configured
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!stripeSecretKey) {
+<span class="cstat-no" title="statement not covered" >    res.status(503).send({</span>
+      message: "Stripe payment service unavailable - API key not configured",
+      details:
+        "The server administrator needs to set the STRIPE_SECRET_KEY environment variable",
+    });
+<span class="cstat-no" title="statement not covered" >    return;</span>
+  }
+&nbsp;
   try {
-    const { registrationId } = req.params;
+    // Retrieve the session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 &nbsp;
-    // Authentication is required
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user || !req.user.id) {
-<span class="cstat-no" title="statement not covered" >      return res.status(401).send({ msg: "Authentication required" });</span>
-    }
+    // Check if payment was successful
+    if (session.payment_status === "paid") {
+      const { eventId, userId } = session.metadata as {
+        eventId: string;
+        userId: string;
+      };
 &nbsp;
-    // Get the registration
-    const registration = (await getRegistrationById(
-      Number(registrationId)
-    )) as EventRegistrationResponse | null;
+      // Check if a payment record already exists
+      const existingPayment = await findPaymentBySessionId(sessionId);
 &nbsp;
-    if (!registration) {
-      return res.status(404).send({ msg: "Registration not found" });
-    }
-&nbsp;
-    // Check if the registration belongs to the authenticated user
-    // In a real app, we would also allow admins to cancel any registration
-    // For example: if (req.user.role === 'admin' || registration.user_id === req.user.id) { ... }
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (registration.user_id !== req.user.id) {
-<span class="cstat-no" title="statement not covered" >      return res</span>
-        .status(403)
-        .send({ msg: "You can only cancel your own registrations" });
-    }
-&nbsp;
-    try {
-      const cancelledRegistration = (await cancelRegistration(
-        Number(registrationId)
-      )) as EventRegistrationResponse;
-&nbsp;
-      res.status(200).send({
-        msg: "Registration cancelled successfully",
-        registration: cancelledRegistration,
-      });
-    } catch (error: any) {
-      // Handle specific error for already cancelled registration
-      if (
-        error.status === 400 &amp;&amp;
-        error.msg === "Registration is already cancelled"
-      ) {
-        return res.status(400).send({
-          msg: "Registration is already cancelled",
+      if (existingPayment) {
+        res.send({
+          success: true,
+          message: "Payment already processed",
+          paymentId: existingPayment.id,
         });
+        return;
       }
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
+&nbsp;
+      // Get or create registration
+      let registrationId;
+      const registration = await findRegistrationByEventAndUser(
+        eventId,
+        userId
+      );
+&nbsp;
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (registration) {
+<span class="cstat-no" title="statement not covered" >        registrationId = registration.id;</span>
+      } else {
+        const newRegistration = await createRegistration(eventId, userId);
+        registrationId = newRegistration.id;
+      }
+&nbsp;
+      // Create a new ticket
+      const ticketCode = generateUniqueCode();
+      const ticket = await createTicket(
+        eventId,
+        userId,
+        registrationId,
+        ticketCode
+      );
+      const ticketId = ticket.id;
+&nbsp;
+      // Create payment record
+      const payment = await createPaymentRecord(
+        userId,
+        eventId,
+        sessionId,
+        session.payment_intent as string,
+        session.amount_total ? session.amount_total / 100 : <span class="branch-1 cbranch-no" title="branch not covered" >0 </span>// Convert from pence to pounds
+      );
+&nbsp;
+      const paymentId = payment.id;
+&nbsp;
+      // Update ticket with payment ID
+      await updateTicket(ticketId, paymentId);
+&nbsp;
+      res.send({
+        success: true,
+        ticketId,
+        paymentId,
+      });
+      return;
     }
-  } catch (error) {
-<span class="cstat-no" title="statement not covered" >    next(error);</span>
-  }
-};
 &nbsp;
-// Check event availability
-export const checkEventRegistrationAvailability = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) =&gt; {
-  try {
-    const { eventId } = req.params;
-&nbsp;
-    const availability = await checkEventAvailability(Number(eventId));
-&nbsp;
-    res.status(200).send({
-      available: availability.available,
-      ...(!availability.available &amp;&amp; { reason: availability.reason }),
+<span class="cstat-no" title="statement not covered" >    res.status(400).send({</span>
+      success: false,
+      message: "Payment not completed",
     });
   } catch (error) {
-    next(error);
+    /* eslint-disable */<span class="cstat-no" title="statement not covered" >console.error(...oo_tx(`2270769355_226_4_226_50_11`,"Error syncing payment:", error));</span>
+<span class="cstat-no" title="statement not covered" >    res.status(500).send({ message: (error as Error).message });</span>
   }
 };
+&nbsp;
+export const handleWebhook = async (
+  req: Request,
+  res: Response
+): Promise&lt;void&gt; =&gt; {
+  const sig = req.headers["stripe-signature"] as string;
+&nbsp;
+  // Check if Stripe is properly configured
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!stripeSecretKey || !process.env.STRIPE_WEBHOOK_SECRET) {
+<span class="cstat-no" title="statement not covered" >    res.status(503).send({</span>
+      message: "Stripe webhook service unavailable - API keys not configured",
+      details:
+        "The server administrator needs to set the STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET environment variables",
+    });
+<span class="cstat-no" title="statement not covered" >    return;</span>
+  }
+&nbsp;
+  let event: WebhookEvent;
+&nbsp;
+  try {
+    // Verify webhook signature
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET || <span class="branch-1 cbranch-no" title="branch not covered" >""</span>
+    ) as WebhookEvent;
+  } catch (err) {
+    /* eslint-disable */<span class="cstat-no" title="statement not covered" >console.error(</span>
+      ...oo_tx(`2270769355_257_4_260_5_11`,"Webhook signature verification failed:",
+      (err as Error).message)
+    );
+<span class="cstat-no" title="statement not covered" >    res.status(400).send(`Webhook Error: ${(err as Error).message}`);</span>
+<span class="cstat-no" title="statement not covered" >    return;</span>
+  }
+&nbsp;
+  // Handle specific events
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      await processSuccessfulPayment(session);
+      break;
+    }
+<span class="branch-1 cbranch-no" title="branch not covered" >    case "payment_intent.payment_failed": {</span>
+      const paymentIntent = <span class="cstat-no" title="statement not covered" >event.data.object as Stripe.PaymentIntent;</span>
+<span class="cstat-no" title="statement not covered" >      await handleFailedPayment(paymentIntent);</span>
+<span class="cstat-no" title="statement not covered" >      break;</span>
+    }
+    // Handle other event types as needed
+  }
+&nbsp;
+  res.send({ received: true });
+};
+&nbsp;
+// Helper functions
+async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
+  const { eventId, userId } = session.metadata as {
+    eventId: string;
+    userId: string;
+  };
+&nbsp;
+  try {
+    // Check if payment already processed
+    const existingPayment = await findPaymentBySessionId(session.id);
+&nbsp;
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (existingPayment) {
+<span class="cstat-no" title="statement not covered" >      return; </span>// Already processed
+    }
+&nbsp;
+    // Similar logic to syncPaymentStatus
+    // This function handles webhook events which might come before the frontend redirect
+    const registration = await findRegistrationByEventAndUser(eventId, userId);
+&nbsp;
+    let registrationId;
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (registration) {
+<span class="cstat-no" title="statement not covered" >      registrationId = registration.id;</span>
+    } else {
+      const newRegistration = await createRegistration(eventId, userId);
+      registrationId = newRegistration.id;
+    }
+&nbsp;
+    const ticketCode = generateUniqueCode();
+    const ticket = await createTicket(
+      eventId,
+      userId,
+      registrationId,
+      ticketCode
+    );
+    const ticketId = ticket.id;
+&nbsp;
+    const payment = await createPaymentRecord(
+      userId,
+      eventId,
+      session.id,
+      session.payment_intent as string,
+      session.amount_total ? session.amount_total / 100 : <span class="branch-1 cbranch-no" title="branch not covered" >0</span>
+    );
+&nbsp;
+    await updateTicket(ticketId, payment.id);
+  } catch (error) {
+    /* eslint-disable */<span class="cstat-no" title="statement not covered" >console.error(...oo_tx(`2270769355_329_4_329_64_11`,"Error processing successful payment:", error));</span>
+  }
+}
+&nbsp;
+async function <span class="fstat-no" title="function not covered" >handleFailedPayment(</span>paymentIntent: Stripe.PaymentIntent) {
+<span class="cstat-no" title="statement not covered" >  try {</span>
+    // Update payment status to failed if it exists
+<span class="cstat-no" title="statement not covered" >    await updatePaymentStatus(paymentIntent.id, "failed");</span>
+  } catch (error) {
+    /* eslint-disable */<span class="cstat-no" title="statement not covered" >console.error(...oo_tx(`2270769355_338_4_338_58_11`,"Error handling failed payment:", error));</span>
+  }
+}
 &nbsp;
 &nbsp;
 &nbsp;

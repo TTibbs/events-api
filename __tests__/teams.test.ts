@@ -53,7 +53,6 @@ describe("Teams API Endpoints", () => {
         });
       }
     });
-
     test("Should return the total number of teams", async () => {
       const token = await getAuthToken();
 

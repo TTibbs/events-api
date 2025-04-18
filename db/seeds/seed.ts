@@ -36,7 +36,7 @@ const seed = async ({
       CREATE TYPE team_role AS ENUM ('team_admin', 'event_manager', 'team_member');
     `);
     await db.query(`
-      CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
+      CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled', 'past');
     `);
     await db.query(`
       CREATE TYPE event_registration_status AS ENUM ('registered', 'cancelled', 'waitlisted', 'attended');

@@ -29,6 +29,73 @@ jest.mock("../utils/email", () => ({
   sendRegistrationConfirmation: jest.fn().mockResolvedValue({ success: true }),
 }));
 
+// Test utility functions
+const createTestEvent = async (options: {
+  token: string;
+  status?: string;
+  title: string;
+  description?: string;
+  isInPast?: boolean;
+  maxAttendees?: number;
+  teamId?: number;
+  otherFields?: Record<string, any>;
+}): Promise<EventResponse> => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const dayAfterTomorrow = new Date();
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+
+  let startTime = tomorrow.toISOString();
+  let endTime = dayAfterTomorrow.toISOString();
+
+  if (options.isInPast) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const lastWeek = new Date();
+    lastWeek.setDate(lastWeek.getDate() - 7);
+
+    startTime = lastWeek.toISOString();
+    endTime = yesterday.toISOString();
+  }
+
+  const eventData = {
+    status: options.status || "published",
+    title: options.title,
+    description: options.description || `Description for ${options.title}`,
+    location: "Test Location",
+    start_time: startTime,
+    end_time: endTime,
+    max_attendees: options.maxAttendees,
+    is_public: true,
+    team_id: options.teamId || 1,
+    ...options.otherFields,
+  };
+
+  const response = await request(app)
+    .post("/api/events")
+    .set("Authorization", `Bearer ${options.token}`)
+    .send(eventData);
+
+  return response.body.event;
+};
+
+// Helper for checking event existence in an array
+const eventExistsInArray = (eventArray: any[], eventId: number): boolean => {
+  return eventArray.some((event: any) => event.id === eventId);
+};
+
+// Helper for checking event properties
+const checkEventProperties = (
+  event: any,
+  expectedProperties: Record<string, any>
+): void => {
+  Object.entries(expectedProperties).forEach(([key, value]) => {
+    expect(event[key]).toEqual(value);
+  });
+};
+
 beforeEach(() =>
   seed({
     events,
@@ -52,10 +119,11 @@ describe("Event Registration API", () => {
   let pastEvent: EventResponse;
   let fullEvent: EventResponse;
   let draftEvent: EventResponse;
+  let adminToken: string;
 
   beforeEach(async () => {
     // Get an auth token for creating events
-    const adminToken = await getTokenForRole("team_admin");
+    adminToken = await getTokenForRole("team_admin");
 
     // Create a test user
     const userResponse = await request(app).post("/api/users").send({
@@ -65,82 +133,38 @@ describe("Event Registration API", () => {
     });
     testUser = userResponse.body.newUser;
 
-    // Create a standard future event
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const dayAfterTomorrow = new Date();
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-
-    const eventResponse = await request(app)
-      .post("/api/events")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({
-        status: "published",
-        title: "Test Registration Event",
-        description: "An event for testing registrations",
-        location: "Test Location",
-        start_time: tomorrow.toISOString(),
-        end_time: dayAfterTomorrow.toISOString(),
-        max_attendees: 10,
+    // Create test events using utility function
+    testEvent = await createTestEvent({
+      token: adminToken,
+      title: "Test Registration Event",
+      description: "An event for testing registrations",
+      maxAttendees: 10,
+      otherFields: {
         price: 0,
         event_type: "workshop",
-        is_public: true,
-        team_id: 1, // Add team_id to ensure the event is associated with a team
-      });
-    testEvent = eventResponse.body.event;
+      },
+    });
 
-    // Create a past event
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    pastEvent = await createTestEvent({
+      token: adminToken,
+      title: "Past Test Event",
+      description: "An event that's already happened",
+      isInPast: true,
+    });
 
-    const lastWeek = new Date();
-    lastWeek.setDate(lastWeek.getDate() - 7);
+    fullEvent = await createTestEvent({
+      token: adminToken,
+      title: "Full Test Event",
+      description: "An event with limited capacity",
+      maxAttendees: 1,
+    });
 
-    const pastEventResponse = await request(app)
-      .post("/api/events")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({
-        status: "published",
-        title: "Past Test Event",
-        description: "An event that's already happened",
-        start_time: lastWeek.toISOString(),
-        end_time: yesterday.toISOString(),
-        is_public: true,
-        team_id: 1, // Add team_id to ensure the event is associated with a team
-      });
-    pastEvent = pastEventResponse.body.event;
-
-    // Create a full event (max_attendees = 1)
-    const fullEventResponse = await request(app)
-      .post("/api/events")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({
-        status: "published",
-        title: "Full Test Event",
-        description: "An event with limited capacity",
-        start_time: tomorrow.toISOString(),
-        end_time: dayAfterTomorrow.toISOString(),
-        max_attendees: 1,
-        is_public: true,
-        team_id: 1, // Add team_id to ensure the event is associated with a team
-      });
-    fullEvent = fullEventResponse.body.event;
-
-    // Create a draft event
-    const draftEventResponse = await request(app)
-      .post("/api/events")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({
-        status: "draft",
-        title: "Draft Test Event",
-        description: "An event that's not published yet",
-        start_time: tomorrow.toISOString(),
-        end_time: dayAfterTomorrow.toISOString(),
-        is_public: true,
-        team_id: 1, // Add team_id to ensure the event is associated with a team
-      });
-    draftEvent = draftEventResponse.body.event;
+    draftEvent = await createTestEvent({
+      token: adminToken,
+      status: "draft",
+      title: "Draft Test Event",
+      description: "An event that's not published yet",
+    });
 
     // Register another user for the full event to reach capacity
     const otherUserResponse = await request(app).post("/api/users").send({
@@ -183,46 +207,53 @@ describe("Event Registration API", () => {
 
       expect(body.available).toBe(true);
     });
-    test("Event should be unavailable when it has already started", async () => {
-      const { body }: { body: EventAvailabilityResponse } = await request(
-        app
-      ).get(`/api/events/${pastEvent.id}/availability`);
+    test("Event should be unavailable for various reasons (past, draft, full)", async () => {
+      // Check past event
+      const pastEventResponse = await request(app).get(
+        `/api/events/${pastEvent.id}/availability`
+      );
 
-      expect(body.available).toBe(false);
-      expect(body.reason).toBe("Event has already started");
-    });
-    test("Event should be unavailable when it is not published", async () => {
-      const { body }: { body: EventAvailabilityResponse } = await request(
-        app
-      ).get(`/api/events/${draftEvent.id}/availability`);
+      expect(pastEventResponse.body.available).toBe(false);
+      expect(pastEventResponse.body.reason).toBe("Event has already started");
 
-      expect(body.available).toBe(false);
-      expect(body.reason).toBe("Event is draft, not published");
-    });
-    test("Event should be unavailable when it has reached max capacity", async () => {
-      const { body }: { body: EventAvailabilityResponse } = await request(
-        app
-      ).get(`/api/events/${fullEvent.id}/availability`);
+      // Check draft event
+      const draftEventResponse = await request(app).get(
+        `/api/events/${draftEvent.id}/availability`
+      );
 
-      expect(body.available).toBe(false);
-      expect(body.reason).toBe("Event has reached maximum attendee capacity");
+      expect(draftEventResponse.body.available).toBe(false);
+      expect(draftEventResponse.body.reason).toBe(
+        "Event is draft, not published"
+      );
+
+      // Check full event
+      const fullEventResponse = await request(app).get(
+        `/api/events/${fullEvent.id}/availability`
+      );
+
+      expect(fullEventResponse.body.available).toBe(false);
+      expect(fullEventResponse.body.reason).toBe(
+        "Event has reached maximum attendee capacity"
+      );
     });
-    test("Should properly handle errors when checking non-existent event availability", async () => {
-      const response = await request(app)
+
+    test("Should properly handle error cases when checking availability", async () => {
+      // Test non-existent event
+      const nonExistentResponse = await request(app)
         .get("/api/events/9999/availability")
         .expect(404);
 
-      expect(response.body.status).toBe("error");
-      expect(response.body.msg).toBe("Event not found");
-    });
-    test("Should handle malformed event IDs in availability checks", async () => {
-      const response = await request(app)
+      expect(nonExistentResponse.body.status).toBe("error");
+      expect(nonExistentResponse.body.msg).toBe("Event not found");
+
+      // Test malformed event ID
+      const malformedResponse = await request(app)
         .get(`/api/events/${testEvent.id}abc/availability`)
         .expect(400);
 
-      expect(response.body).toHaveProperty("msg");
+      expect(malformedResponse.body).toHaveProperty("msg");
 
-      // Also test non-numeric ID
+      // Test non-numeric ID
       const nonNumericResponse = await request(app)
         .get("/api/events/NaN/availability")
         .expect(400);
@@ -493,7 +524,6 @@ describe("Events API Endpoints", () => {
         expect(event).toHaveProperty("status", expect.any(String));
       });
     });
-
     test("Should return the total number of published events", async () => {
       const {
         body: { total_events },
@@ -503,7 +533,7 @@ describe("Events API Endpoints", () => {
     });
   });
   describe("GET /api/events/:id - Event Lookup by ID", () => {
-    test("Should successfully retrieve an event when provided a valid ID", async () => {
+    test("Should retrieve an event with valid ID and handle errors for invalid IDs", async () => {
       // First create a test event
       const token = await getTokenForRole("team_admin");
       const newEvent = {
@@ -531,11 +561,12 @@ describe("Events API Endpoints", () => {
       expect(event).toHaveProperty("id", eventId);
       expect(event).toHaveProperty("title", newEvent.title);
       expect(event).toHaveProperty("status", newEvent.status);
-    });
-    test("Should return appropriate error when event ID does not exist", async () => {
+
+      // Test error case with non-existent event ID
       const {
         body: { msg },
       } = await request(app).get("/api/events/9999").expect(404);
+
       expect(msg).toBe("Event not found");
     });
   });
@@ -603,8 +634,10 @@ describe("Events API Endpoints", () => {
     });
   });
   describe("POST /api/events - Event Creation", () => {
-    test("Should successfully create a new event with valid details", async () => {
+    test("Should successfully create events with various configurations", async () => {
       const token = await getTokenForRole("team_admin");
+
+      // Test standard event with team_id
       const newEvent = {
         status: "published",
         title: "Test Event",
@@ -612,50 +645,73 @@ describe("Events API Endpoints", () => {
         location: "Test Location",
         start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
         end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
-        team_id: 1, // Add team_id
+        team_id: 1,
         is_public: true,
       };
 
       const response = await request(app)
         .post("/api/events")
         .set("Authorization", `Bearer ${token}`)
-        .send(newEvent);
+        .send(newEvent)
+        .expect(201);
 
-      expect(response.status).toBe(201);
-      const event: EventResponse = response.body.event;
-      expect(event.title).toBe(newEvent.title);
-      expect(event.status).toBe(newEvent.status);
-      expect(event.description).toBe(newEvent.description);
-      expect(event.is_public).toBe(true);
-    });
-    test("Should successfully create a new event without specifying team_id", async () => {
-      const token = await getTokenForRole("team_admin");
-      const newEvent = {
+      checkEventProperties(response.body.event, {
+        title: newEvent.title,
+        status: newEvent.status,
+        description: newEvent.description,
+        is_public: true,
+      });
+
+      // Test without specifying team_id (should default to user's team)
+      const eventWithoutTeam = {
         status: "published",
         title: "Auto Team Event",
         description: "This event should use the user's team automatically",
         location: "Auto Team Location",
-        start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-        end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
+        start_time: new Date(Date.now() + 86400000).toISOString(),
+        end_time: new Date(Date.now() + 172800000).toISOString(),
         is_public: true,
       };
 
-      const response = await request(app)
+      const autoTeamResponse = await request(app)
         .post("/api/events")
         .set("Authorization", `Bearer ${token}`)
-        .send(newEvent);
+        .send(eventWithoutTeam)
+        .expect(201);
 
-      expect(response.status).toBe(201);
-      const event: EventResponse = response.body.event;
-      expect(event.title).toBe(newEvent.title);
-      expect(event.status).toBe(newEvent.status);
-      expect(event.description).toBe(newEvent.description);
-      // Admin user in test data belongs to team 1
-      expect(event.team_id).toBe(1);
-      expect(event.is_public).toBe(true);
+      checkEventProperties(autoTeamResponse.body.event, {
+        title: eventWithoutTeam.title,
+        status: eventWithoutTeam.status,
+        description: eventWithoutTeam.description,
+        team_id: 1, // Admin user in test data belongs to team 1
+        is_public: true,
+      });
+
+      // Test with minimal required fields (should use defaults)
+      const minimalEvent = {
+        title: "Minimal Event",
+        start_time: new Date(Date.now() + 86400000).toISOString(),
+        end_time: new Date(Date.now() + 172800000).toISOString(),
+        team_id: 1,
+      };
+
+      const minimalResponse = await request(app)
+        .post("/api/events")
+        .set("Authorization", `Bearer ${token}`)
+        .send(minimalEvent)
+        .expect(201);
+
+      checkEventProperties(minimalResponse.body.event, {
+        title: minimalEvent.title,
+        status: "draft", // Default status
+        is_public: true, // Default is_public
+      });
     });
-    test("Should reject event creation when required fields are missing", async () => {
+
+    test("Should reject event creation with invalid inputs", async () => {
       const token = await getTokenForRole("team_admin");
+
+      // Missing required fields
       const missingFieldsEvent = {
         status: "published",
         // title is missing
@@ -663,23 +719,22 @@ describe("Events API Endpoints", () => {
         team_id: 1,
       };
 
-      const response = await request(app)
+      const missingFieldsResponse = await request(app)
         .post("/api/events")
         .set("Authorization", `Bearer ${token}`)
-        .send(missingFieldsEvent);
+        .send(missingFieldsEvent)
+        .expect(400);
 
-      expect(response.status).toBe(400);
-      expect(response.body.status).toBe("error");
-      expect(response.body.errors).toEqual(
+      expect(missingFieldsResponse.body.status).toBe("error");
+      expect(missingFieldsResponse.body.errors).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             message: "Event title is required",
           }),
         ])
       );
-    });
-    test("Should reject event creation when end time is before start time", async () => {
-      const token = await getTokenForRole("team_admin");
+
+      // Invalid times (end before start)
       const invalidTimesEvent = {
         status: "published",
         title: "Invalid Times Event",
@@ -690,14 +745,14 @@ describe("Events API Endpoints", () => {
         end_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };
 
-      const response = await request(app)
+      const invalidTimesResponse = await request(app)
         .post("/api/events")
         .set("Authorization", `Bearer ${token}`)
-        .send(invalidTimesEvent);
+        .send(invalidTimesEvent)
+        .expect(400);
 
-      expect(response.status).toBe(400);
-      expect(response.body.status).toBe("error");
-      expect(response.body.errors).toEqual(
+      expect(invalidTimesResponse.body.status).toBe("error");
+      expect(invalidTimesResponse.body.errors).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             message: "End time must be after start time",
@@ -705,227 +760,160 @@ describe("Events API Endpoints", () => {
         ])
       );
     });
-    test("Should handle default values and optional fields correctly", async () => {
-      const token = await getTokenForRole("team_admin");
-      const minimalEvent = {
-        title: "Minimal Event",
-        start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-        end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
-        team_id: 1, // Add team_id
-      };
 
-      const response = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${token}`)
-        .send(minimalEvent);
-
-      expect(response.status).toBe(201);
-      expect(response.body.event.title).toBe("Minimal Event");
-      expect(response.body.event.status).toBe("draft"); // Default status
-      expect(response.body.event.is_public).toBe(true); // Default is_public
-    });
-    test("Should reject event creation when user is not an admin or event_manager", async () => {
+    test("Should enforce permission checks for event creation", async () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
 
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
 
-      // Try to create an event for Team 1 (where charlie123 is not a member at all)
-      const newEvent = {
+      // Try to create an event for Team 1 (where charlie123 is not a member)
+      const unauthorizedEvent = {
         title: "Unauthorized Event",
         start_time: tomorrow.toISOString(),
         end_time: nextWeek.toISOString(),
         team_id: 1, // Team 1 where charlie123 is not a member
       };
 
-      // Use the authorizeRequest helper with team_member role (charlie123)
-      const response = await authorizeRequest(
-        request(app).post("/api/events").send(newEvent),
+      // Use authorizeRequest helper with team_member role (charlie123)
+      const unauthorizedResponse = await authorizeRequest(
+        request(app).post("/api/events").send(unauthorizedEvent),
         "team_member"
       );
 
-      expect(response.status).toBe(403);
-      expect((response.body as any).status).toBe("error");
-      expect((response.body as any).msg).toBe(
+      expect(unauthorizedResponse.status).toBe(403);
+      expect((unauthorizedResponse.body as any).status).toBe("error");
+      expect((unauthorizedResponse.body as any).msg).toBe(
         "Forbidden - You don't have permission to create events for this team"
       );
 
-      // Try to create an event for Team 2 (where charlie123 is admin, so this should work)
-      const validEvent = {
+      // Create an event for Team 2 (where charlie123 is admin)
+      const authorizedEvent = {
         title: "Authorized Event",
         start_time: tomorrow.toISOString(),
         end_time: nextWeek.toISOString(),
         team_id: 2, // Team 2 where charlie123 is admin
       };
 
-      // Use the authorizeRequest helper with team_member role (charlie123 who is Team 2 admin)
-      const validResponse = await authorizeRequest(
-        request(app).post("/api/events").send(validEvent),
+      const authorizedResponse = await authorizeRequest(
+        request(app).post("/api/events").send(authorizedEvent),
         "team_member"
       );
 
-      expect(validResponse.status).toBe(201);
-      expect((validResponse.body as any).event.title).toBe("Authorized Event");
+      expect(authorizedResponse.status).toBe(201);
+      expect((authorizedResponse.body as any).event.title).toBe(
+        "Authorized Event"
+      );
     });
   });
   describe("PATCH /api/events/:id - Event Update", () => {
-    test("Should successfully update an event with valid details", async () => {
+    test("Should successfully update events with various changes", async () => {
       const token = await getTokenForRole("team_admin");
-      // First create an event
-      const newEvent = {
+
+      // Create an event to update
+      const createdEvent = await createTestEvent({
+        token,
         status: "draft",
         title: "Event to Update",
         description: "This event will be updated",
-        start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-        end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
-        team_id: 1,
-      };
+      });
 
-      const createResponse = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${token}`)
-        .send(newEvent);
-
-      expect(createResponse.status).toBe(201);
-      const eventId = createResponse.body.event.id;
-
-      // Now update the event
-      const updateData = {
+      // Test basic field updates
+      const basicUpdateData = {
         title: "Updated Event Title",
         description: "Updated description",
         status: "published",
       };
 
-      const response = await request(app)
-        .patch(`/api/events/${eventId}`)
+      const basicUpdateResponse = await request(app)
+        .patch(`/api/events/${createdEvent.id}`)
         .set("Authorization", `Bearer ${token}`)
-        .send(updateData);
+        .send(basicUpdateData)
+        .expect(200);
 
-      expect(response.status).toBe(200);
-      expect(response.body.updatedEvent.title).toBe(updateData.title);
-      expect(response.body.updatedEvent.description).toBe(
-        updateData.description
+      checkEventProperties(
+        basicUpdateResponse.body.updatedEvent,
+        basicUpdateData
       );
-      expect(response.body.updatedEvent.status).toBe(updateData.status);
-    });
-    test("Should return appropriate error when updating non-existent event", async () => {
-      const token = await getTokenForRole("team_admin");
-      const updateData = {
-        title: "Updated Title",
-        description: "Updated Description",
+
+      // Test type conversions during update
+      const typeConversionEvent = await createTestEvent({
+        token,
+        title: "Event for Type Conversion",
+        maxAttendees: 50,
+      });
+
+      const updateWithConversions = {
+        max_attendees: "100", // String → number
+        price: "15.99", // String → decimal
+        is_public: "true", // String → boolean
       };
 
-      const response = await request(app)
+      const conversionResponse = await request(app)
+        .patch(`/api/events/${typeConversionEvent.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(updateWithConversions)
+        .expect(200);
+
+      checkEventProperties(conversionResponse.body.updatedEvent, {
+        max_attendees: 100,
+        price: 15.99,
+        is_public: true,
+      });
+    });
+
+    test("Should reject updates with invalid data", async () => {
+      const token = await getTokenForRole("team_admin");
+
+      // Test updating non-existent event
+      const nonExistentResponse = await request(app)
         .patch("/api/events/9999")
         .set("Authorization", `Bearer ${token}`)
-        .send(updateData);
+        .send({ title: "Update Non-existent Event" })
+        .expect(404);
 
-      expect(response.status).toBe(404);
-      expect(response.body.msg).toBe("Event not found");
-    });
-    test("Should reject update when end time is before start time", async () => {
-      const token = await getTokenForRole("team_admin");
+      expect(nonExistentResponse.body.msg).toBe("Event not found");
 
-      // First create an event
-      const newEvent = {
-        status: "draft",
-        title: "Event for Time Test",
-        description: "This event will be tested for time validation",
-        start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-        end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
-        team_id: 1,
-      };
+      // Test invalid time update
+      const eventForTimeTest = await createTestEvent({
+        token,
+        title: "Event for Time Validation",
+      });
 
-      const createResponse = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${token}`)
-        .send(newEvent);
-
-      const eventId = createResponse.body.event.id;
-
-      // Try to update with invalid times
       const invalidTimeUpdate = {
         start_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
         end_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };
 
-      const response = await request(app)
-        .patch(`/api/events/${eventId}`)
+      const timeUpdateResponse = await request(app)
+        .patch(`/api/events/${eventForTimeTest.id}`)
         .set("Authorization", `Bearer ${token}`)
-        .send(invalidTimeUpdate);
+        .send(invalidTimeUpdate)
+        .expect(400);
 
-      expect(response.status).toBe(400);
-      expect(response.body.status).toBe("error");
-      expect(response.body.msg).toBe("End time must be after start time");
+      expect(timeUpdateResponse.body.status).toBe("error");
+      expect(timeUpdateResponse.body.msg).toBe(
+        "End time must be after start time"
+      );
     });
-    test("Should handle different field types and conversions during update", async () => {
-      const token = await getTokenForRole("team_admin");
-      // First create an event
-      const newEvent = {
-        status: "draft",
-        title: "Event for Type Test",
-        description: "Testing field type conversions",
-        start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-        end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
-        max_attendees: "50", // String that should be converted to number
-        team_id: 1,
-      };
 
-      const createResponse = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${token}`)
-        .send(newEvent)
-        .expect(201);
-
-      const eventId = createResponse.body.event.id;
-
-      // Update with mixed types
-      const updateData = {
-        max_attendees: "100", // String that should be converted to number
-        price: "15.99", // String that should be converted to decimal
-        is_public: "true", // String that should be converted to boolean
-      };
-
-      const response = await request(app)
-        .patch(`/api/events/${eventId}`)
-        .set("Authorization", `Bearer ${token}`)
-        .send(updateData);
-
-      expect(response.status).toBe(200);
-      expect(response.body.updatedEvent.max_attendees).toBe(100);
-      expect(response.body.updatedEvent.price).toBe(15.99);
-      expect(response.body.updatedEvent.is_public).toBe(true);
-    });
-    test("Should reject update when user is not authorized for the team", async () => {
-      // We need tokens for different roles
+    test("Should enforce permissions for event updates", async () => {
       const adminToken = await getTokenForRole("team_admin");
       const regularToken = await getTokenForRole("team_member");
 
-      // First create an event as admin
-      const newEvent = {
+      // Create an event as admin
+      const adminEvent = await createTestEvent({
+        token: adminToken,
         title: "Admin-Only Event",
         description: "This event can only be updated by admins",
-        start_time: new Date(Date.now() + 86400000).toISOString(),
-        end_time: new Date(Date.now() + 172800000).toISOString(),
-        team_id: 1,
-      };
-
-      const createResponse = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${adminToken}`)
-        .send(newEvent)
-        .expect(201);
-
-      const eventId = createResponse.body.event.id;
+      });
 
       // Try to update as regular user
-      const updateData = {
-        title: "Unauthorized Update Attempt",
-      };
+      const updateData = { title: "Unauthorized Update Attempt" };
 
       const response = await request(app)
-        .patch(`/api/events/${eventId}`)
+        .patch(`/api/events/${adminEvent.id}`)
         .set("Authorization", `Bearer ${regularToken}`)
         .send(updateData)
         .expect(403);
@@ -937,79 +925,58 @@ describe("Events API Endpoints", () => {
     });
   });
   describe("DELETE /api/events/:id - Event Deletion", () => {
-    test("Should successfully delete an event with valid ID", async () => {
-      const token = await getTokenForRole("team_admin");
-
-      // First create an event to delete
-      const newEvent = {
-        title: "Event to Delete",
-        description: "This event will be deleted",
-        start_time: new Date(Date.now() + 86400000).toISOString(),
-        end_time: new Date(Date.now() + 172800000).toISOString(),
-        team_id: 1,
-      };
-
-      const createResponse = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${token}`)
-        .send(newEvent);
-
-      expect(createResponse.status).toBe(201);
-      const eventId = createResponse.body.event.id;
-
-      // Now delete the event as admin
-      const deleteResponse = await request(app)
-        .delete(`/api/events/${eventId}`)
-        .set("Authorization", `Bearer ${token}`)
-        .expect(204);
-
-      // Verify event was deleted
-      const checkResponse = await request(app)
-        .get(`/api/events/${eventId}`)
-        .expect(404);
-    });
-    test("Should return appropriate error when deleting non-existent event", async () => {
-      const token = await getTokenForRole("team_admin");
-
-      const response = await request(app)
-        .delete("/api/events/9999")
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(response.status).toBe(404);
-      expect(response.body.msg).toBe("Event not found");
-    });
-    test("Should reject deletion when user is not authorized", async () => {
-      // We need tokens for different roles
+    test("Should handle event deletion with proper success cases and errors", async () => {
       const adminToken = await getTokenForRole("team_admin");
       const regularToken = await getTokenForRole("team_member");
 
-      // Create event as admin
-      const newEvent = {
+      // Create events to test deletion
+      const eventToDelete = await createTestEvent({
+        token: adminToken,
+        title: "Event to Delete",
+        description: "This event will be deleted",
+      });
+
+      // Create a protected event
+      const protectedEvent = await createTestEvent({
+        token: adminToken,
         title: "Protected Event",
         description: "This event should be protected from deletion",
-        start_time: new Date(Date.now() + 86400000).toISOString(),
-        end_time: new Date(Date.now() + 172800000).toISOString(),
-        team_id: 1,
-      };
+      });
 
-      const createResponse = await request(app)
-        .post("/api/events")
+      // Test successful deletion
+      await request(app)
+        .delete(`/api/events/${eventToDelete.id}`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .send(newEvent)
-        .expect(201);
+        .expect(204);
 
-      const eventId = createResponse.body.event.id;
+      // Verify event was deleted
+      await request(app).get(`/api/events/${eventToDelete.id}`).expect(404);
 
-      // Try to delete as regular user
-      const response = await request(app)
-        .delete(`/api/events/${eventId}`)
+      // Test deleting non-existent event
+      const nonExistentResponse = await request(app)
+        .delete("/api/events/9999")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(404);
+
+      expect(nonExistentResponse.body.msg).toBe("Event not found");
+
+      // Test permission enforcement
+      const unauthorizedResponse = await request(app)
+        .delete(`/api/events/${protectedEvent.id}`)
         .set("Authorization", `Bearer ${regularToken}`)
         .expect(403);
 
-      expect(response.body.status).toBe("error");
-      expect(response.body.msg).toBe(
+      expect(unauthorizedResponse.body.status).toBe("error");
+      expect(unauthorizedResponse.body.msg).toBe(
         "Forbidden - You don't have permission to delete this event"
       );
+
+      // Verify protected event still exists
+      const verifyResponse = await request(app)
+        .get(`/api/events/${protectedEvent.id}`)
+        .expect(200);
+
+      expect(verifyResponse.body.event.id).toBe(protectedEvent.id);
     });
   });
 });
@@ -1043,55 +1010,30 @@ describe("Event Visibility", () => {
     });
     nonTeamMemberToken = loginResponse.body.data.accessToken;
 
-    // Create events with different statuses for different teams
-    // Create a draft event for team 1
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date();
-    dayAfter.setDate(dayAfter.getDate() + 2);
+    // Create events using utility functions
+    team1DraftEvent = await createTestEvent({
+      token: adminToken,
+      status: "draft",
+      title: "Team 1 Draft Event",
+      description: "This is a draft event for team 1",
+      teamId: 1,
+    });
 
-    const team1DraftEventResponse = await request(app)
-      .post("/api/events")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({
-        status: "draft",
-        title: "Team 1 Draft Event",
-        description: "This is a draft event for team 1",
-        start_time: tomorrow.toISOString(),
-        end_time: dayAfter.toISOString(),
-        team_id: 1,
-      });
-    team1DraftEvent = team1DraftEventResponse.body.event;
+    team1PublishedEvent = await createTestEvent({
+      token: adminToken,
+      title: "Team 1 Published Event",
+      description: "This is a published event for team 1",
+      teamId: 1,
+    });
 
-    // Create a published event for team 1
-    const team1PublishedEventResponse = await request(app)
-      .post("/api/events")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({
-        status: "published",
-        title: "Team 1 Published Event",
-        description: "This is a published event for team 1",
-        start_time: tomorrow.toISOString(),
-        end_time: dayAfter.toISOString(),
-        team_id: 1,
-      });
-    team1PublishedEvent = team1PublishedEventResponse.body.event;
-
-    // Create a draft event for team 2
-    const team2DraftEventResponse = await request(app)
-      .post("/api/events")
-      .set("Authorization", `Bearer ${team2MemberToken}`)
-      .send({
-        status: "draft",
-        title: "Team 2 Draft Event",
-        description: "This is a draft event for team 2",
-        start_time: tomorrow.toISOString(),
-        end_time: dayAfter.toISOString(),
-        team_id: 2,
-      });
-    team2DraftEvent = team2DraftEventResponse.body.event;
+    team2DraftEvent = await createTestEvent({
+      token: team2MemberToken,
+      status: "draft",
+      title: "Team 2 Draft Event",
+      description: "This is a draft event for team 2",
+      teamId: 2,
+    });
   });
-
   test("Team 1 member should see team 1 draft events in GET /api/events", async () => {
     // For published events
     const publishedResponse = await request(app)
@@ -1102,16 +1044,12 @@ describe("Event Visibility", () => {
     const publishedEvents = publishedResponse.body.events;
 
     // Should NOT include the team 1 draft event in published events
-    const foundTeam1DraftInPublished = publishedEvents.some(
-      (event: any) => event.id === team1DraftEvent.id
-    );
-    expect(foundTeam1DraftInPublished).toBe(false);
+    expect(eventExistsInArray(publishedEvents, team1DraftEvent.id)).toBe(false);
 
     // Should include the team 1 published event
-    const foundTeam1Published = publishedEvents.some(
-      (event: any) => event.id === team1PublishedEvent.id
+    expect(eventExistsInArray(publishedEvents, team1PublishedEvent.id)).toBe(
+      true
     );
-    expect(foundTeam1Published).toBe(true);
 
     // For draft events, get from the /draft endpoint
     const draftResponse = await request(app)
@@ -1122,61 +1060,25 @@ describe("Event Visibility", () => {
     const draftEvents = draftResponse.body.events;
 
     // Should include the team 1 draft event in draft events
-    const foundTeam1DraftInDrafts = draftEvents.some(
-      (event: any) => event.id === team1DraftEvent.id
-    );
-    expect(foundTeam1DraftInDrafts).toBe(true);
+    expect(eventExistsInArray(draftEvents, team1DraftEvent.id)).toBe(true);
 
     // Should NOT include the team 2 draft event in draft events
-    const foundTeam2DraftInDrafts = draftEvents.some(
-      (event: any) => event.id === team2DraftEvent.id
-    );
-    expect(foundTeam2DraftInDrafts).toBe(false);
-  });
+    expect(eventExistsInArray(draftEvents, team2DraftEvent.id)).toBe(false);
 
-  test("Team 2 member should see team 2 draft events in GET /api/events", async () => {
-    // For published events
-    const publishedResponse = await request(app)
-      .get("/api/events")
-      .set("Authorization", `Bearer ${team2MemberToken}`);
-
-    expect(publishedResponse.status).toBe(200);
-    const publishedEvents = publishedResponse.body.events;
-
-    // Should NOT include the team 1 draft event
-    const foundTeam1DraftInPublished = publishedEvents.some(
-      (event: any) => event.id === team1DraftEvent.id
-    );
-    expect(foundTeam1DraftInPublished).toBe(false);
-
-    // Should include the team 1 published event
-    const foundTeam1Published = publishedEvents.some(
-      (event: any) => event.id === team1PublishedEvent.id
-    );
-    expect(foundTeam1Published).toBe(true);
-
-    // Should NOT include team 2 draft events in published events
-    const foundTeam2DraftInPublished = publishedEvents.some(
-      (event: any) => event.id === team2DraftEvent.id
-    );
-    expect(foundTeam2DraftInPublished).toBe(false);
-
-    // For draft events, get from the /draft endpoint
-    const draftResponse = await request(app)
+    // Also verify Team 2 member sees their drafts
+    const team2DraftResponse = await request(app)
       .get("/api/events/draft")
       .set("Authorization", `Bearer ${team2MemberToken}`);
 
-    expect(draftResponse.status).toBe(200);
-    const draftEvents = draftResponse.body.events;
+    expect(team2DraftResponse.status).toBe(200);
+    const team2DraftEvents = team2DraftResponse.body.events;
 
-    // Should include the team 2 draft event in draft events
-    const foundTeam2DraftInDrafts = draftEvents.some(
-      (event: any) => event.id === team2DraftEvent.id
-    );
-    expect(foundTeam2DraftInDrafts).toBe(true);
+    // Should include the team 2 draft event in draft events for team 2 member
+    expect(eventExistsInArray(team2DraftEvents, team2DraftEvent.id)).toBe(true);
   });
 
-  test("Non-team member should only see published events in GET /api/events", async () => {
+  test("Non-team member and unauthenticated users should only see published events in GET /api/events", async () => {
+    // Test authenticated non-team member
     const response = await request(app)
       .get("/api/events")
       .set("Authorization", `Bearer ${nonTeamMemberToken}`);
@@ -1185,49 +1087,25 @@ describe("Event Visibility", () => {
     const events = response.body.events;
 
     // Should NOT include the team 1 draft event
-    const foundTeam1Draft = events.some(
-      (event: any) => event.id === team1DraftEvent.id
-    );
-    expect(foundTeam1Draft).toBe(false);
+    expect(eventExistsInArray(events, team1DraftEvent.id)).toBe(false);
 
     // Should include the team 1 published event
-    const foundTeam1Published = events.some(
-      (event: any) => event.id === team1PublishedEvent.id
-    );
-    expect(foundTeam1Published).toBe(true);
+    expect(eventExistsInArray(events, team1PublishedEvent.id)).toBe(true);
 
     // Should NOT include the team 2 draft event
-    const foundTeam2Draft = events.some(
-      (event: any) => event.id === team2DraftEvent.id
-    );
-    expect(foundTeam2Draft).toBe(false);
+    expect(eventExistsInArray(events, team2DraftEvent.id)).toBe(false);
+
+    // Test unauthenticated user
+    const unauthResponse = await request(app).get("/api/events");
+    expect(unauthResponse.status).toBe(200);
+    const unauthEvents = unauthResponse.body.events;
+
+    // Should only see published events
+    expect(eventExistsInArray(unauthEvents, team1DraftEvent.id)).toBe(false);
+
+    // Should see published events
+    expect(eventExistsInArray(unauthEvents, team1PublishedEvent.id)).toBe(true);
   });
-
-  test("Unauthenticated user should only see published events in GET /api/events", async () => {
-    const response = await request(app).get("/api/events");
-
-    expect(response.status).toBe(200);
-    const events = response.body.events;
-
-    // Should NOT include the team 1 draft event
-    const foundTeam1Draft = events.some(
-      (event: any) => event.id === team1DraftEvent.id
-    );
-    expect(foundTeam1Draft).toBe(false);
-
-    // Should include the team 1 published event
-    const foundTeam1Published = events.some(
-      (event: any) => event.id === team1PublishedEvent.id
-    );
-    expect(foundTeam1Published).toBe(true);
-
-    // Should NOT include the team 2 draft event
-    const foundTeam2Draft = events.some(
-      (event: any) => event.id === team2DraftEvent.id
-    );
-    expect(foundTeam2Draft).toBe(false);
-  });
-
   test("Team member should see their team's draft event by ID", async () => {
     // Try to get draft event using the regular endpoint (should fail)
     const regularResponse = await request(app)
@@ -1244,7 +1122,6 @@ describe("Event Visibility", () => {
     expect(draftResponse.status).toBe(200);
     expect(draftResponse.body.event.id).toBe(team1DraftEvent.id);
   });
-
   test("Non-team member should not see draft event by ID", async () => {
     // Regular endpoint should return 404
     const regularResponse = await request(app)
@@ -1264,7 +1141,6 @@ describe("Event Visibility", () => {
       "Draft event not found or you don't have access to it"
     );
   });
-
   test("Team member should see only their team's draft events in team listing", async () => {
     // Get Team 1 published events as Team 1 member
     const team1PublishedResponse = await request(app)
@@ -1275,10 +1151,9 @@ describe("Event Visibility", () => {
     const team1PublishedEvents = team1PublishedResponse.body.events;
 
     // Should NOT include the team 1 draft event in published events
-    const foundTeam1DraftInPublished = team1PublishedEvents.some(
-      (event: any) => event.id === team1DraftEvent.id
+    expect(eventExistsInArray(team1PublishedEvents, team1DraftEvent.id)).toBe(
+      false
     );
-    expect(foundTeam1DraftInPublished).toBe(false);
 
     // Get Team 1 draft events as Team 1 member
     const team1DraftResponse = await request(app)
@@ -1289,10 +1164,7 @@ describe("Event Visibility", () => {
     const team1DraftEvents = team1DraftResponse.body.events;
 
     // Should include the team 1 draft event in draft events
-    const foundTeam1DraftInDrafts = team1DraftEvents.some(
-      (event: any) => event.id === team1DraftEvent.id
-    );
-    expect(foundTeam1DraftInDrafts).toBe(true);
+    expect(eventExistsInArray(team1DraftEvents, team1DraftEvent.id)).toBe(true);
 
     // Get Team 2 draft events as Team 1 member (should be empty)
     const team2DraftResponse = await request(app)
@@ -1303,9 +1175,8 @@ describe("Event Visibility", () => {
     const team2DraftEvents = team2DraftResponse.body.events;
 
     // Should NOT include the team 2 draft event in team 2 draft events for team 1 member
-    const foundTeam2Draft = team2DraftEvents.some(
-      (event: any) => event.id === team2DraftEvent.id
+    expect(eventExistsInArray(team2DraftEvents, team2DraftEvent.id)).toBe(
+      false
     );
-    expect(foundTeam2Draft).toBe(false);
   });
 });

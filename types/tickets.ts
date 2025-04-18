@@ -13,7 +13,9 @@ export type Ticket = {
 
 // Extended API response interfaces
 export interface TicketResponse extends Ticket {
-  id: number; // Ensure id is required in response
+  id: number;
+  payment_id: string | null;
+  is_paid: boolean;
 }
 
 export interface TicketWithEventInfo extends TicketResponse {
