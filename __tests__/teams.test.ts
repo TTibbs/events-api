@@ -10,6 +10,7 @@ import {
   userSessions,
   teams,
   tickets,
+  stripePayments,
 } from "../db/data/test-data/index";
 import { TeamMember, TeamResponse } from "../types";
 require("jest-sorted");
@@ -24,6 +25,7 @@ beforeEach(() =>
     userSessions,
     teams,
     tickets,
+    stripePayments,
   })
 );
 

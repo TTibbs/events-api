@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Stripe from "stripe";
 import db from "../db/connection";
 import { generateUniqueCode } from "../utils/codeGenerator";
+import { selectUserPayments } from "../models/stripe-models";
 
 // Check if Stripe API key is available
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -19,6 +20,16 @@ const stripe = new Stripe(
   }
 );
 
+export const getPayments = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { userId } = req.params;
+
+  const getUserPayments = await selectUserPayments(userId);
+  res.send(getUserPayments);
+};
+
 export const createCheckoutSession = async (
   req: Request,
   res: Response
@@ -27,7 +38,7 @@ export const createCheckoutSession = async (
 
   // Check if Stripe is properly configured
   if (!stripeSecretKey) {
-    res.status(503).json({
+    res.status(503).send({
       message: "Stripe payment service unavailable - API key not configured",
       details:
         "The server administrator needs to set the STRIPE_SECRET_KEY environment variable",
@@ -43,7 +54,7 @@ export const createCheckoutSession = async (
     );
 
     if (!events.length) {
-      res.status(404).json({ message: "Event not found" });
+      res.status(404).send({ message: "Event not found" });
       return;
     }
 
@@ -56,7 +67,7 @@ export const createCheckoutSession = async (
     );
 
     if (!users.length) {
-      res.status(404).json({ message: "User not found" });
+      res.status(404).send({ message: "User not found" });
       return;
     }
 
@@ -105,10 +116,10 @@ export const createCheckoutSession = async (
       },
     });
 
-    res.json({ url: session.url, sessionId: session.id });
+    res.send({ url: session.url, sessionId: session.id });
   } catch (error) {
     console.error("Error creating checkout session:", error);
-    res.status(500).json({ message: (error as Error).message });
+    res.status(500).send({ message: (error as Error).message });
   }
 };
 

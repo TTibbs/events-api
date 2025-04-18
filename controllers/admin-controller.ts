@@ -9,8 +9,9 @@ import { fetchAllTickets } from "../models/tickets-models";
 import { checkIsUserSiteAdmin } from "./users-controller";
 import db from "../db/connection";
 import { updateUserToAdmin } from "../models/admin-models";
+import { User } from "../types";
 
-const sanitizeUser = (user: any) => {
+const sanitizeUser = (user: User) => {
   if (!user) return user;
 
   const { password_hash, ...sanitizedUser } = user;
@@ -18,7 +19,7 @@ const sanitizeUser = (user: any) => {
 };
 
 // Helper function to sanitize an array of users
-const sanitizeUsers = (users: any[]) => {
+const sanitizeUsers = (users: User[]) => {
   return users.map((user) => sanitizeUser(user));
 };
 
@@ -30,7 +31,7 @@ export const getAdminDashboard = async (
   try {
     // Check if the user is authenticated
     if (!req.user) {
-      return res.status(401).json({
+      return res.status(401).send({
         status: "error",
         msg: "Unauthorized - Authentication required",
       });
@@ -39,7 +40,7 @@ export const getAdminDashboard = async (
     // Check if the user is a site admin
     const is_site_admin = await checkIsUserSiteAdmin(req.user.id);
     if (!is_site_admin) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - Site admin access required",
       });
@@ -92,7 +93,7 @@ export const getAdminDashboard = async (
     const sanitizedUsers = sanitizeUsers(users);
 
     // Return all data
-    res.status(200).json({
+    res.status(200).send({
       status: "success",
       data: {
         users: sanitizedUsers,
@@ -119,7 +120,7 @@ export const promoteUserById = async (
   try {
     // Check if the user is authenticated
     if (!req.user) {
-      return res.status(401).json({
+      return res.status(401).send({
         status: "error",
         msg: "Unauthorized - Authentication required",
       });
@@ -128,7 +129,7 @@ export const promoteUserById = async (
     // Check if the user is a site admin
     const is_site_admin = await checkIsUserSiteAdmin(req.user.id);
     if (!is_site_admin) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - Site admin access required",
       });
@@ -138,7 +139,7 @@ export const promoteUserById = async (
     const { is_site_admin: newAdminStatus } = req.body;
 
     if (typeof newAdminStatus !== "boolean") {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Invalid request - is_site_admin must be a boolean value",
       });
@@ -146,7 +147,7 @@ export const promoteUserById = async (
 
     const user = await selectUserById(Number(id));
     if (!user) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "User not found",
       });
@@ -155,7 +156,7 @@ export const promoteUserById = async (
     const updatedUser = await updateUserToAdmin(Number(id), newAdminStatus);
     const sanitizedUser = sanitizeUser(updatedUser);
 
-    res.status(200).json({
+    res.status(200).send({
       status: "success",
       data: sanitizedUser,
     });

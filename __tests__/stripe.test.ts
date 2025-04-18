@@ -10,6 +10,7 @@ import {
   userSessions,
   teams,
   tickets,
+  stripePayments,
 } from "../db/data/test-data/index";
 import { getAuthToken } from "../utils/testHelpers";
 import Stripe from "stripe";
@@ -75,6 +76,7 @@ beforeEach(() =>
     userSessions,
     teams,
     tickets,
+    stripePayments,
   })
 );
 
@@ -84,6 +86,29 @@ afterAll(async () => {
 });
 
 describe("Stripe Payment Integration", () => {
+  describe("GET /api/stripe/payments/:userId", () => {
+    test("Should return user's payments", async () => {
+      const token = await getAuthToken();
+      const response = await request(app)
+        .get("/api/stripe/payments/1")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      // Check the response contains the test payment for user 1
+      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body.length).toBeGreaterThan(0);
+
+      const userPayment = response.body.find(
+        (payment: any) => payment.stripe_session_id === "cs_test_success_123456"
+      );
+
+      expect(userPayment).toBeDefined();
+      expect(userPayment.user_id).toBe(1);
+      expect(userPayment.event_id).toBe(1);
+      expect(userPayment.status).toBe("succeeded");
+      expect(userPayment.amount).toBe("49.99");
+    });
+  });
   describe("POST /api/stripe/create-checkout-session", () => {
     test("Should create a checkout session for a valid event and user", async () => {
       // Get auth token
@@ -102,7 +127,6 @@ describe("Stripe Payment Integration", () => {
       expect(response.body.url).toBe("https://checkout.stripe.com/test");
       expect(response.body.sessionId).toBe("cs_test_123456789");
     });
-
     test("Should return 404 if event does not exist", async () => {
       // Get auth token
       const token = await getAuthToken();
@@ -116,7 +140,6 @@ describe("Stripe Payment Integration", () => {
 
       expect(response.body).toHaveProperty("message", "Event not found");
     });
-
     test("Should return 404 if user does not exist", async () => {
       // Get auth token
       const token = await getAuthToken();
@@ -130,7 +153,6 @@ describe("Stripe Payment Integration", () => {
 
       expect(response.body).toHaveProperty("message", "User not found");
     });
-
     test("Should return 401 if not authenticated", async () => {
       // Try to create checkout session without auth
       const response = await request(app)
@@ -141,7 +163,6 @@ describe("Stripe Payment Integration", () => {
       expect(response.body.status).toBe("error");
     });
   });
-
   describe("POST /api/stripe/sync-payment/:sessionId", () => {
     test("Should successfully process a successful payment", async () => {
       // Get auth token
@@ -168,7 +189,6 @@ describe("Stripe Payment Integration", () => {
       expect(ticketResponse.body.ticket).toHaveProperty("event_id", 1);
       expect(ticketResponse.body.ticket).toHaveProperty("user_id", 1);
     });
-
     test("Should handle idempotency correctly by not creating duplicate payments", async () => {
       // Get auth token
       const token = await getAuthToken();
@@ -194,7 +214,6 @@ describe("Stripe Payment Integration", () => {
         "Payment already processed"
       );
     });
-
     test("Should return 401 if not authenticated", async () => {
       // Try to sync payment without auth
       const response = await request(app)
@@ -204,7 +223,6 @@ describe("Stripe Payment Integration", () => {
       expect(response.body.status).toBe("error");
     });
   });
-
   describe("POST /api/stripe/webhook", () => {
     test("Should process webhook events correctly", async () => {
       // Mock the webhook request
@@ -241,7 +259,6 @@ describe("Stripe Payment Integration", () => {
       // In a real scenario, we'd check for the webhook's session ID
     });
   });
-
   describe("End-to-End Payment Flow", () => {
     test("Should complete full payment flow from checkout to ticket creation", async () => {
       // Get auth token

@@ -10,6 +10,7 @@ import {
   teamMembers,
   userSessions,
   tickets,
+  stripePayments,
 } from "../db/data/test-data/index";
 import {
   EventResponse,
@@ -37,6 +38,7 @@ beforeEach(() =>
     teamMembers,
     userSessions,
     tickets,
+    stripePayments,
   })
 );
 

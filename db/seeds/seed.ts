@@ -10,6 +10,7 @@ const seed = async ({
   teamMembers,
   userSessions,
   tickets,
+  stripePayments,
 }: SeedData) => {
   try {
     // Drop tables in the correct order with CASCADE to handle dependencies
@@ -329,7 +330,29 @@ const seed = async ({
       await db.query(insertEventRegistrationsQueryString);
     }
 
-    // 7. Create tickets for each event registration if we have test data
+    // 7. Insert stripe payments if provided
+    if (stripePayments && stripePayments.length > 0) {
+      const insertStripePaymentsQueryString = format(
+        `INSERT INTO stripe_payments 
+         (user_id, event_id, stripe_session_id, stripe_payment_intent_id, amount, currency, status, created_at, updated_at) 
+         VALUES %L 
+         RETURNING id`,
+        stripePayments.map((payment) => [
+          payment.user_id,
+          payment.event_id,
+          payment.stripe_session_id,
+          payment.stripe_payment_intent_id,
+          payment.amount,
+          payment.currency,
+          payment.status,
+          payment.created_at || new Date(),
+          payment.updated_at || new Date(),
+        ])
+      );
+      await db.query(insertStripePaymentsQueryString);
+    }
+
+    // 8. Create tickets for each event registration if we have test data
     if (tickets && tickets.length > 0) {
       // Insert the ticket
       const insertTicketQueryString = format(

@@ -10,6 +10,7 @@ import {
   userSessions,
   teams,
   tickets,
+  stripePayments,
 } from "../db/data/test-data/index";
 import { TicketResponse, TicketWithEventInfo } from "../types";
 import * as ticketModels from "../models/tickets-models";
@@ -25,6 +26,7 @@ beforeEach(() =>
     userSessions,
     teams,
     tickets,
+    stripePayments,
   })
 );
 

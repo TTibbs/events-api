@@ -115,6 +115,18 @@ export interface TeamResponse extends Team {
   id: number;
 }
 
+export type StripePayment = {
+  user_id: number;
+  event_id: number;
+  stripe_session_id: string;
+  stripe_payment_intent_id: string;
+  amount: number;
+  currency: string;
+  status: "pending" | "succeeded" | "failed";
+  created_at?: Date;
+  updated_at?: Date;
+};
+
 export interface SeedData {
   users: User[];
   events: Event[];
@@ -123,4 +135,5 @@ export interface SeedData {
   teamMembers: TeamMember[];
   userSessions: UserSession[];
   tickets: Ticket[];
+  stripePayments?: StripePayment[];
 }

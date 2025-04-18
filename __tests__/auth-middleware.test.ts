@@ -10,6 +10,7 @@ import {
   userSessions,
   teams,
   tickets,
+  stripePayments,
 } from "../db/data/test-data/index";
 import {
   getAuthToken,
@@ -27,6 +28,7 @@ beforeEach(() =>
     userSessions,
     teams,
     tickets,
+    stripePayments,
   })
 );
 

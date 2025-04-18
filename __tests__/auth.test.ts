@@ -10,6 +10,7 @@ import {
   userSessions,
   teams,
   tickets,
+  stripePayments,
 } from "../db/data/test-data/index";
 import jwt from "jsonwebtoken";
 
@@ -22,6 +23,7 @@ beforeEach(() =>
     userSessions,
     teams,
     tickets,
+    stripePayments,
   })
 );
 

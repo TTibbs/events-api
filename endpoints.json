@@ -209,6 +209,12 @@
       ]
     }
   },
+  "GET /api/tickets/user/:userId/event/:eventId": {
+    "description": "Checks if a user has paid for a specific event",
+    "exampleResponse": {
+      "hasPaid": true
+    }
+  },
   "GET /api/tickets/event/:eventId": {
     "description": "Returns tickets for a specific event",
     "exampleResponse": {
@@ -313,5 +319,338 @@
   "DELETE /api/tickets/:id": {
     "description": "Deletes a ticket",
     "exampleResponse": {}
+  },
+  "GET /api/events": {
+    "description": "Returns an array of all published events",
+    "exampleResponse": {
+      "events": [
+        {
+          "id": 1,
+          "status": "published",
+          "title": "Tech Conference 2025",
+          "description": "A conference for tech enthusiasts",
+          "location": "New York",
+          "start_time": "2025-06-01T10:00:00Z",
+          "end_time": "2025-06-01T18:00:00Z",
+          "max_attendees": 200,
+          "price": 49.99,
+          "event_type": "conference",
+          "is_public": true,
+          "team_id": 1,
+          "created_by": 1,
+          "team_name": "Tech Events Team",
+          "creator_username": "alice123"
+        }
+      ]
+    }
+  },
+  "GET /api/events/upcoming": {
+    "description": "Returns an array of upcoming published events",
+    "exampleResponse": {
+      "events": [
+        {
+          "id": 1,
+          "status": "published",
+          "title": "Tech Conference 2025",
+          "description": "A conference for tech enthusiasts",
+          "location": "New York",
+          "start_time": "2025-06-01T10:00:00Z",
+          "end_time": "2025-06-01T18:00:00Z",
+          "max_attendees": 200,
+          "price": 49.99,
+          "event_type": "conference",
+          "is_public": true,
+          "team_id": 1,
+          "created_by": 1,
+          "team_name": "Tech Events Team"
+        }
+      ]
+    }
+  },
+  "GET /api/events/team/:teamId": {
+    "description": "Returns events associated with a specific team",
+    "exampleResponse": {
+      "events": [
+        {
+          "id": 1,
+          "status": "published",
+          "title": "Tech Conference 2025",
+          "description": "A conference for tech enthusiasts",
+          "location": "New York",
+          "start_time": "2025-06-01T10:00:00Z",
+          "end_time": "2025-06-01T18:00:00Z",
+          "max_attendees": 200,
+          "price": 49.99,
+          "event_type": "conference",
+          "is_public": true,
+          "team_id": 1,
+          "created_by": 1,
+          "team_name": "Tech Events Team"
+        }
+      ]
+    }
+  },
+  "GET /api/events/:id": {
+    "description": "Returns a specific event by ID",
+    "exampleResponse": {
+      "event": {
+        "id": 1,
+        "status": "published",
+        "title": "Tech Conference 2025",
+        "description": "A conference for tech enthusiasts",
+        "location": "New York",
+        "start_time": "2025-06-01T10:00:00Z",
+        "end_time": "2025-06-01T18:00:00Z",
+        "max_attendees": 200,
+        "price": 49.99,
+        "event_type": "conference",
+        "is_public": true,
+        "team_id": 1,
+        "created_by": 1,
+        "team_name": "Tech Events Team",
+        "creator_username": "alice123"
+      }
+    }
+  },
+  "GET /api/events/:id/registrations": {
+    "description": "Returns all registrations for a specific event (requires authentication)",
+    "exampleResponse": {
+      "registrations": [
+        {
+          "id": 1,
+          "event_id": 1,
+          "user_id": 3,
+          "registration_time": "2025-05-01T12:00:00Z",
+          "status": "registered",
+          "username": "charlie123",
+          "email": "charlie@example.com"
+        }
+      ]
+    }
+  },
+  "GET /api/events/:eventId/availability": {
+    "description": "Checks if an event has availability for registration",
+    "exampleResponse": {
+      "available": true
+    }
+  },
+  "POST /api/events": {
+    "description": "Creates a new event (requires team admin or event_manager role)",
+    "exampleRequest": {
+      "title": "New Tech Workshop",
+      "description": "A workshop on new technologies",
+      "location": "Online",
+      "start_time": "2025-08-15T09:00:00Z",
+      "end_time": "2025-08-15T17:00:00Z",
+      "max_attendees": 50,
+      "price": 29.99,
+      "event_type": "workshop",
+      "is_public": true,
+      "team_id": 1
+    },
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Event created successfully",
+      "event": {
+        "id": 3,
+        "status": "draft",
+        "title": "New Tech Workshop",
+        "description": "A workshop on new technologies",
+        "location": "Online",
+        "start_time": "2025-08-15T09:00:00Z",
+        "end_time": "2025-08-15T17:00:00Z",
+        "max_attendees": 50,
+        "price": 29.99,
+        "event_type": "workshop",
+        "is_public": true,
+        "team_id": 1,
+        "created_by": 1
+      }
+    }
+  },
+  "PUT /api/events/:id": {
+    "description": "Updates an event (requires team admin or event_manager role)",
+    "exampleRequest": {
+      "title": "Updated Workshop Title",
+      "description": "Updated description",
+      "location": "New Location",
+      "max_attendees": 75
+    },
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Event updated successfully",
+      "event": {
+        "id": 2,
+        "status": "draft",
+        "title": "Updated Workshop Title",
+        "description": "Updated description",
+        "location": "New Location",
+        "start_time": "2025-07-15T09:00:00Z",
+        "end_time": "2025-07-15T17:00:00Z",
+        "max_attendees": 75,
+        "price": 29.99,
+        "event_type": "workshop",
+        "is_public": false,
+        "team_id": 2,
+        "created_by": 2
+      }
+    }
+  },
+  "DELETE /api/events/:id": {
+    "description": "Deletes an event (requires team admin or event_manager role)",
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Event deleted successfully"
+    }
+  },
+  "POST /api/events/:eventId/register": {
+    "description": "Registers a user for an event (requires authentication)",
+    "exampleRequest": {
+      "userId": 3
+    },
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Registration successful",
+      "registration": {
+        "id": 3,
+        "event_id": 1,
+        "user_id": 3,
+        "registration_time": "2025-05-15T14:30:00Z",
+        "status": "registered"
+      }
+    }
+  },
+  "GET /api/auth/register": {
+    "description": "Registers a new user",
+    "exampleRequest": {
+      "username": "newuser",
+      "email": "newuser@example.com",
+      "password": "password123"
+    },
+    "exampleResponse": {
+      "status": "success",
+      "msg": "User registered successfully",
+      "user": {
+        "id": 6,
+        "username": "newuser",
+        "email": "newuser@example.com"
+      }
+    }
+  },
+  "POST /api/auth/login": {
+    "description": "Logs in a user",
+    "exampleRequest": {
+      "username": "alice123",
+      "password": "password123"
+    },
+    "exampleResponse": {
+      "status": "success",
+      "data": {
+        "user": {
+          "id": 1,
+          "username": "alice123",
+          "email": "alice@example.com"
+        },
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      }
+    }
+  },
+  "POST /api/auth/refresh-token": {
+    "description": "Refreshes access token using refresh token",
+    "exampleRequest": {
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    "exampleResponse": {
+      "status": "success",
+      "data": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      }
+    }
+  },
+  "POST /api/auth/logout": {
+    "description": "Logs out a user",
+    "exampleRequest": {
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    "exampleResponse": {
+      "status": "success",
+      "msg": "Logged out successfully"
+    }
+  },
+  "GET /api/admin/dashboard": {
+    "description": "Gets admin dashboard data (requires admin privileges)",
+    "exampleResponse": {
+      "totalUsers": 5,
+      "totalEvents": 2,
+      "totalTeams": 3,
+      "recentRegistrations": [
+        {
+          "id": 1,
+          "event_id": 1,
+          "user_id": 3,
+          "registration_time": "2025-05-01T12:00:00Z",
+          "status": "registered",
+          "event_title": "Tech Conference 2025",
+          "username": "charlie123"
+        }
+      ]
+    }
+  },
+  "PATCH /api/admin/users/:id": {
+    "description": "Promotes a user to site admin (requires admin privileges)",
+    "exampleResponse": {
+      "status": "success",
+      "msg": "User promoted to site admin",
+      "user": {
+        "id": 3,
+        "username": "charlie123",
+        "is_site_admin": true
+      }
+    }
+  },
+  "GET /api/stripe/payments/:userId": {
+    "description": "Returns payment history for a specific user (requires authentication)",
+    "exampleResponse": [
+      {
+        "id": 1,
+        "user_id": 1,
+        "event_id": 1,
+        "stripe_session_id": "cs_test_success_123456",
+        "stripe_payment_intent_id": "pi_test_success_123456",
+        "amount": "49.99",
+        "currency": "gbp",
+        "status": "succeeded",
+        "created_at": "2025-05-10T15:30:00Z",
+        "updated_at": "2025-05-10T15:30:00Z",
+        "event_title": "Tech Conference 2025"
+      }
+    ]
+  },
+  "POST /api/stripe/create-checkout-session": {
+    "description": "Creates a Stripe checkout session for event payment (requires authentication)",
+    "exampleRequest": {
+      "eventId": 1,
+      "userId": 1
+    },
+    "exampleResponse": {
+      "sessionId": "cs_test_123456789",
+      "url": "https://checkout.stripe.com/test"
+    }
+  },
+  "POST /api/stripe/sync-payment/:sessionId": {
+    "description": "Syncs payment status from Stripe after successful payment (requires authentication)",
+    "exampleResponse": {
+      "success": true,
+      "ticketId": 5,
+      "paymentId": 3
+    }
+  },
+  "POST /api/stripe/webhook": {
+    "description": "Webhook endpoint for Stripe to send payment status updates",
+    "exampleResponse": {
+      "received": true
+    }
   }
 }

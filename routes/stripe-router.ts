@@ -1,8 +1,9 @@
-import express, { Router, RequestHandler } from "express";
+import { Router, RequestHandler } from "express";
 import {
   createCheckoutSession,
   syncPaymentStatus,
   handleWebhook,
+  getPayments,
 } from "../controllers/stripe-controller";
 import { authenticate } from "../middlewares/auth-middleware";
 
@@ -13,7 +14,10 @@ const createCheckoutSessionHandler =
   createCheckoutSession as unknown as RequestHandler;
 const syncPaymentStatusHandler = syncPaymentStatus as unknown as RequestHandler;
 const handleWebhookHandler = handleWebhook as unknown as RequestHandler;
+const getPaymentsHandler = getPayments as unknown as RequestHandler;
 const authenticateHandler = authenticate as RequestHandler;
+
+router.get("/payments/:userId", authenticateHandler, getPaymentsHandler);
 
 // Route for creating a new checkout session
 router.post(
