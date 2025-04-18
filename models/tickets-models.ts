@@ -193,14 +193,13 @@ export const hasUserPaid = async (
   }
 
   // Check if user has a valid paid ticket for this event
-  // We check for either paid=true OR is_paid=true since the database has both fields
   const result = await db.query(
     `
     SELECT * FROM tickets 
     WHERE user_id = $1 
     AND event_id = $2 
     AND status = 'valid' 
-    AND (paid = true OR is_paid = true);
+    AND paid = true;
     `,
     [userId, eventId]
   );

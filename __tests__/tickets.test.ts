@@ -53,7 +53,6 @@ describe("Tickets API Endpoints", () => {
         expect(ticket.used_at).toBeNull();
         expect(ticket).toHaveProperty("status", expect.any(String));
         expect(ticket.payment_id).toBeNull();
-        expect(ticket).toHaveProperty("is_paid", expect.any(Boolean));
         expect(ticket).toHaveProperty("created_at", expect.any(String));
         expect(ticket).toHaveProperty("updated_at", expect.any(String));
       });
@@ -74,7 +73,6 @@ describe("Tickets API Endpoints", () => {
       expect(ticket.used_at).toBeNull();
       expect(ticket).toHaveProperty("status", expect.any(String));
       expect(ticket.payment_id).toBeNull();
-      expect(ticket).toHaveProperty("is_paid", expect.any(Boolean));
       expect(ticket).toHaveProperty("created_at", expect.any(String));
       expect(ticket).toHaveProperty("updated_at", expect.any(String));
     });
@@ -108,7 +106,6 @@ describe("Tickets API Endpoints", () => {
           expect(ticket.used_at).toBeNull();
           expect(ticket).toHaveProperty("status", expect.any(String));
           expect(ticket.payment_id).toBeNull();
-          expect(ticket).toHaveProperty("is_paid", expect.any(Boolean));
           expect(ticket).toHaveProperty("created_at", expect.any(String));
           expect(ticket).toHaveProperty("updated_at", expect.any(String));
           expect(ticket).toHaveProperty("event_title", expect.any(String));

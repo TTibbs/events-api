@@ -53,7 +53,7 @@ export const createTicket = async (
   ticketCode: string
 ) => {
   const { rows } = await db.query(
-    "INSERT INTO tickets (event_id, user_id, registration_id, ticket_code, status, is_paid) VALUES ($1, $2, $3, $4, 'valid', true) RETURNING id",
+    "INSERT INTO tickets (event_id, user_id, registration_id, ticket_code, status, paid) VALUES ($1, $2, $3, $4, 'valid', true) RETURNING id",
     [eventId, userId, registrationId, ticketCode]
   );
   return rows[0];

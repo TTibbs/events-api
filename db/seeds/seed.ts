@@ -154,7 +154,6 @@ const seed = async ({
         used_at TIMESTAMP WITH TIME ZONE,
         status ticket_status NOT NULL DEFAULT 'valid',
         payment_id BIGINT REFERENCES stripe_payments(id) ON DELETE SET NULL,
-        is_paid BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );

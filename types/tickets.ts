@@ -15,7 +15,7 @@ export type Ticket = {
 export interface TicketResponse extends Ticket {
   id: number;
   payment_id: string | null;
-  is_paid: boolean;
+  paid: boolean;
 }
 
 export interface TicketWithEventInfo extends TicketResponse {

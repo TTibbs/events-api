@@ -184,7 +184,7 @@ describe("Stripe Payment Integration", () => {
         .get(`/api/tickets/${response.body.ticketId}`)
         .expect(200);
 
-      expect(ticketResponse.body.ticket).toHaveProperty("is_paid", true);
+      expect(ticketResponse.body.ticket).toHaveProperty("paid", true);
       expect(ticketResponse.body.ticket).toHaveProperty("status", "valid");
       expect(ticketResponse.body.ticket).toHaveProperty("event_id", 1);
       expect(ticketResponse.body.ticket).toHaveProperty("user_id", 1);
@@ -288,7 +288,7 @@ describe("Stripe Payment Integration", () => {
 
       const ticket = ticketResponse.body.ticket;
       expect(ticket).toHaveProperty("status", "valid");
-      expect(ticket).toHaveProperty("is_paid", true);
+      expect(ticket).toHaveProperty("paid", true);
       expect(ticket).toHaveProperty("event_id", 1);
       expect(ticket).toHaveProperty("user_id", 1);
 
