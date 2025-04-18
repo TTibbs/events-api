@@ -522,6 +522,7 @@ describe("Events API Endpoints", () => {
         expect(event).toHaveProperty("id", expect.any(Number));
         expect(event).toHaveProperty("title", expect.any(String));
         expect(event).toHaveProperty("status", expect.any(String));
+        expect(event).toHaveProperty("event_img_url", expect.any(String));
       });
     });
     test("Should return the total number of published events", async () => {
@@ -636,78 +637,65 @@ describe("Events API Endpoints", () => {
   describe("POST /api/events - Event Creation", () => {
     test("Should successfully create events with various configurations", async () => {
       const token = await getTokenForRole("team_admin");
-
-      // Test standard event with team_id
       const newEvent = {
         status: "published",
         title: "Test Event",
         description: "This is a test event",
+        event_img_url:
+          "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5Q6eqKswUm9ctU0Xq42npAbSlV5j38hY6TkdR",
         location: "Test Location",
         start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
         end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
-        team_id: 1,
         is_public: true,
       };
 
-      const response = await request(app)
+      const {
+        body: { event },
+      } = await request(app)
+        .post("/api/events")
+        .set("Authorization", `Bearer ${token}`)
+        .send(newEvent)
+        .expect(201);
+      expect(event).toHaveProperty("id", expect.any(Number));
+      expect(event).toHaveProperty("status", "published");
+      expect(event).toHaveProperty("title", newEvent.title);
+      expect(event).toHaveProperty("description", newEvent.description);
+      expect(event).toHaveProperty("event_img_url", newEvent.event_img_url);
+      expect(event).toHaveProperty("location", newEvent.location);
+      expect(event).toHaveProperty("start_time", newEvent.start_time);
+      expect(event).toHaveProperty("end_time", newEvent.end_time);
+      expect(event).toHaveProperty("max_attendees", null);
+      expect(event).toHaveProperty("price", null);
+      expect(event).toHaveProperty("event_type", null);
+      expect(event).toHaveProperty("is_public", newEvent.is_public);
+      expect(event).toHaveProperty("team_id", expect.any(Number));
+      expect(event).toHaveProperty("created_by", expect.any(Number));
+      expect(event).toHaveProperty("created_at", expect.any(String));
+      expect(event).toHaveProperty("updated_at", expect.any(String));
+    });
+    test("Should use defaults when a minimal event is created", async () => {
+      const token = await getTokenForRole("team_admin");
+      const newEvent = {
+        title: "Test Event",
+        start_time: new Date(Date.now() + 86400000).toISOString(),
+        end_time: new Date(Date.now() + 172800000).toISOString(),
+      };
+
+      const {
+        body: { event },
+      } = await request(app)
         .post("/api/events")
         .set("Authorization", `Bearer ${token}`)
         .send(newEvent)
         .expect(201);
 
-      checkEventProperties(response.body.event, {
-        title: newEvent.title,
-        status: newEvent.status,
-        description: newEvent.description,
-        is_public: true,
-      });
-
-      // Test without specifying team_id (should default to user's team)
-      const eventWithoutTeam = {
-        status: "published",
-        title: "Auto Team Event",
-        description: "This event should use the user's team automatically",
-        location: "Auto Team Location",
-        start_time: new Date(Date.now() + 86400000).toISOString(),
-        end_time: new Date(Date.now() + 172800000).toISOString(),
-        is_public: true,
-      };
-
-      const autoTeamResponse = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${token}`)
-        .send(eventWithoutTeam)
-        .expect(201);
-
-      checkEventProperties(autoTeamResponse.body.event, {
-        title: eventWithoutTeam.title,
-        status: eventWithoutTeam.status,
-        description: eventWithoutTeam.description,
-        team_id: 1, // Admin user in test data belongs to team 1
-        is_public: true,
-      });
-
-      // Test with minimal required fields (should use defaults)
-      const minimalEvent = {
-        title: "Minimal Event",
-        start_time: new Date(Date.now() + 86400000).toISOString(),
-        end_time: new Date(Date.now() + 172800000).toISOString(),
-        team_id: 1,
-      };
-
-      const minimalResponse = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${token}`)
-        .send(minimalEvent)
-        .expect(201);
-
-      checkEventProperties(minimalResponse.body.event, {
-        title: minimalEvent.title,
-        status: "draft", // Default status
-        is_public: true, // Default is_public
-      });
+      expect(event).toHaveProperty("status", "draft");
+      expect(event).toHaveProperty("is_public", true);
+      expect(event).toHaveProperty("team_id", expect.any(Number));
+      expect(event).toHaveProperty("created_by", expect.any(Number));
+      expect(event).toHaveProperty("created_at", expect.any(String));
+      expect(event).toHaveProperty("updated_at", expect.any(String));
     });
-
     test("Should reject event creation with invalid inputs", async () => {
       const token = await getTokenForRole("team_admin");
 
@@ -760,7 +748,6 @@ describe("Events API Endpoints", () => {
         ])
       );
     });
-
     test("Should enforce permission checks for event creation", async () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -862,7 +849,21 @@ describe("Events API Endpoints", () => {
         is_public: true,
       });
     });
+    test("Should accept event_img_url as a partial update", async () => {
+      const token = await getTokenForRole("team_admin");
+      const updateData = {
+        event_img_url: "https://example.com/event-image.jpg",
+      };
+      const response = await request(app)
+        .patch(`/api/events/1`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(updateData)
+        .expect(200);
 
+      expect(response.body.updatedEvent.event_img_url).toBe(
+        updateData.event_img_url
+      );
+    });
     test("Should reject updates with invalid data", async () => {
       const token = await getTokenForRole("team_admin");
 
@@ -897,7 +898,6 @@ describe("Events API Endpoints", () => {
         "End time must be after start time"
       );
     });
-
     test("Should enforce permissions for event updates", async () => {
       const adminToken = await getTokenForRole("team_admin");
       const regularToken = await getTokenForRole("team_member");

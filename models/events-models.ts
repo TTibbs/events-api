@@ -204,6 +204,7 @@ export const insertEvent = async (
   status: string,
   title: string,
   description: string | null,
+  event_img_url: string | null,
   location: string | null,
   start_time: Date,
   end_time: Date,
@@ -217,15 +218,16 @@ export const insertEvent = async (
   const result = await db.query(
     `
     INSERT INTO events
-      (status, title, description, location, start_time, end_time, max_attendees, price, event_type, is_public, team_id, created_by)
+      (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, event_type, is_public, team_id, created_by)
     VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     RETURNING *
     `,
     [
       status,
       title,
       description,
+      event_img_url,
       location,
       start_time,
       end_time,
@@ -266,6 +268,7 @@ export const updateEventById = async (
     "status",
     "title",
     "description",
+    "event_img_url",
     "location",
     "start_time",
     "end_time",

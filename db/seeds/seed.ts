@@ -101,6 +101,7 @@ const seed = async ({
         status event_status NOT NULL DEFAULT 'draft',
         title TEXT NOT NULL,
         description TEXT,
+        event_img_url TEXT,
         location TEXT,
         start_time TIMESTAMP WITH TIME ZONE NOT NULL,
         end_time TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -282,11 +283,12 @@ const seed = async ({
 
     // 4. Insert events fourth as they depend on teams and team_members
     const insertEventsQueryString = format(
-      `INSERT INTO events (status, title, description, location, start_time, end_time, max_attendees, price, event_type, is_public, team_id, created_by, created_at, updated_at) VALUES %L RETURNING id`,
+      `INSERT INTO events (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, event_type, is_public, team_id, created_by, created_at, updated_at) VALUES %L RETURNING id`,
       events.map((event) => [
         event.status,
         event.title,
         event.description,
+        event.event_img_url,
         event.location,
         event.start_time,
         event.end_time,

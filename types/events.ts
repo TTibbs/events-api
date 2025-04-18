@@ -4,6 +4,7 @@ export type Event = {
   status: string;
   title: string;
   team_id: number;
+  event_img_url: string;
   description: string;
   location: string;
   start_time: Date;

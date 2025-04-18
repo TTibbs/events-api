@@ -5,6 +5,8 @@ export const events: Event[] = [
     status: "published",
     title: "Tech Conference 2025",
     description: "A conference for tech enthusiasts.",
+    event_img_url:
+      "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5Q6eqKswUm9ctU0Xq42npAbSlV5j38hY6TkdR",
     location: "New York",
     start_time: new Date("2025-06-01T10:00:00Z"),
     end_time: new Date("2025-06-01T18:00:00Z"),
@@ -21,6 +23,8 @@ export const events: Event[] = [
     status: "draft",
     title: "JavaScript Workshop",
     description: "An intensive workshop on modern JavaScript.",
+    event_img_url:
+      "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5d2KYufHRhzqcLXre3uUvYEFBdwjOx0Mms9ip",
     location: "San Francisco",
     start_time: new Date("2025-07-15T09:00:00Z"),
     end_time: new Date("2025-07-15T17:00:00Z"),
@@ -37,6 +41,8 @@ export const events: Event[] = [
     status: "past",
     title: "Past Event",
     description: "An event that finished.",
+    event_img_url:
+      "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5wdpWBM1NLibK72MsHShzWI9auoEfJ3vAZtPp",
     location: "London",
     start_time: new Date("2025-02-15T09:00:00Z"),
     end_time: new Date("2025-02-15T17:00:00Z"),
