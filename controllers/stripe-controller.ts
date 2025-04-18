@@ -131,7 +131,7 @@ export const syncPaymentStatus = async (
 
   // Check if Stripe is properly configured
   if (!stripeSecretKey) {
-    res.status(503).json({
+    res.status(503).send({
       message: "Stripe payment service unavailable - API key not configured",
       details:
         "The server administrator needs to set the STRIPE_SECRET_KEY environment variable",
@@ -157,7 +157,7 @@ export const syncPaymentStatus = async (
       );
 
       if (existingPayments.length > 0) {
-        res.json({
+        res.send({
           success: true,
           message: "Payment already processed",
           paymentId: existingPayments[0].id,
@@ -215,7 +215,7 @@ export const syncPaymentStatus = async (
         [paymentId, ticketId]
       );
 
-      res.json({
+      res.send({
         success: true,
         ticketId,
         paymentId,
@@ -223,13 +223,13 @@ export const syncPaymentStatus = async (
       return;
     }
 
-    res.status(400).json({
+    res.status(400).send({
       success: false,
       message: "Payment not completed",
     });
   } catch (error) {
     console.error("Error syncing payment:", error);
-    res.status(500).json({ message: (error as Error).message });
+    res.status(500).send({ message: (error as Error).message });
   }
 };
 
@@ -241,7 +241,7 @@ export const handleWebhook = async (
 
   // Check if Stripe is properly configured
   if (!stripeSecretKey || !process.env.STRIPE_WEBHOOK_SECRET) {
-    res.status(503).json({
+    res.status(503).send({
       message: "Stripe webhook service unavailable - API keys not configured",
       details:
         "The server administrator needs to set the STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET environment variables",
@@ -282,7 +282,7 @@ export const handleWebhook = async (
     // Handle other event types as needed
   }
 
-  res.json({ received: true });
+  res.send({ received: true });
 };
 
 // Helper functions

@@ -14,7 +14,7 @@ export const getAllTickets = async (
 ) => {
   try {
     const tickets = await ticketModels.fetchAllTickets();
-    res.status(200).json({ tickets });
+    res.status(200).send({ tickets });
   } catch (err) {
     next(err);
   }
@@ -29,7 +29,7 @@ export const getTicketById = async (
   try {
     const ticketId = Number(req.params.id);
     const ticket = await ticketModels.fetchTicketById(ticketId);
-    res.status(200).json({ ticket });
+    res.status(200).send({ ticket });
   } catch (err) {
     next(err);
   }
@@ -46,7 +46,7 @@ export const getTicketsByUserId = async (
 
     // Check if user is authenticated
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Authentication required" });
+      return res.status(401).send({ msg: "Authentication required" });
     }
 
     // Check if the user exists
@@ -54,7 +54,7 @@ export const getTicketsByUserId = async (
       await userModels.selectUserById(userId);
     } catch (error: any) {
       if (error.status === 404) {
-        return res.status(404).json({ msg: "User not found" });
+        return res.status(404).send({ msg: "User not found" });
       }
       throw error;
     }
@@ -63,11 +63,11 @@ export const getTicketsByUserId = async (
     if (req.user.id !== userId) {
       return res
         .status(403)
-        .json({ msg: "You can only view your own tickets" });
+        .send({ msg: "You can only view your own tickets" });
     }
 
     const tickets = await ticketModels.fetchTicketsByUserId(userId);
-    res.status(200).json({ tickets });
+    res.status(200).send({ tickets });
   } catch (err) {
     next(err);
   }
@@ -82,7 +82,7 @@ export const getTicketsByEventId = async (
   try {
     const eventId = Number(req.params.eventId);
     const tickets = await ticketModels.fetchTicketsByEventId(eventId);
-    res.status(200).json({ tickets });
+    res.status(200).send({ tickets });
   } catch (err) {
     next(err);
   }
@@ -98,7 +98,7 @@ export const getHasUserPaid = async (
 
     // Validate that userId and eventId are numbers
     if (isNaN(Number(userId)) || isNaN(Number(eventId))) {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "User ID and Event ID must be valid numbers",
       });
@@ -109,10 +109,10 @@ export const getHasUserPaid = async (
       Number(eventId)
     );
 
-    res.status(200).json({ hasUserPaid });
+    res.status(200).send({ hasUserPaid });
   } catch (err: any) {
     if (err.status && err.msg) {
-      return res.status(err.status).json({
+      return res.status(err.status).send({
         status: "error",
         msg: err.msg,
       });
@@ -131,7 +131,7 @@ export const verifyTicket = async (
     const { ticketCode } = req.params;
 
     if (!ticketCode || ticketCode.trim() === "") {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Ticket code is required",
       });
@@ -141,7 +141,7 @@ export const verifyTicket = async (
 
     // Check ticket validity
     if (ticket.status !== "valid") {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: `Ticket is ${ticket.status}`,
         ticket,
@@ -151,14 +151,14 @@ export const verifyTicket = async (
     // Check if event has already passed
     const eventEndTime = new Date(ticket.end_time);
     if (eventEndTime < new Date()) {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Event has already ended",
         ticket,
       });
     }
 
-    res.status(200).json({
+    res.status(200).send({
       status: "success",
       msg: "Ticket is valid",
       ticket,
@@ -185,7 +185,7 @@ export const createNewTicket = async (
     });
 
     if (validationError) {
-      return res.status(validationError.status).json({
+      return res.status(validationError.status).send({
         status: "error",
         msg: validationError.msg,
         errors: validationError.errors,
@@ -198,7 +198,7 @@ export const createNewTicket = async (
       validateId(user_id, "User");
       validateId(registration_id, "Registration");
     } catch (error: any) {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: error.msg,
       });
@@ -224,7 +224,7 @@ export const createNewTicket = async (
 
     const createdTicket = await ticketModels.createTicket(newTicket);
 
-    res.status(201).json({
+    res.status(201).send({
       status: "success",
       msg: "Ticket created successfully",
       ticket: createdTicket,
@@ -247,7 +247,7 @@ export const updateTicket = async (
     // Validate status
     const validStatuses = ["valid", "used", "cancelled", "expired"];
     if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Invalid ticket status",
         validOptions: validStatuses,
@@ -260,7 +260,7 @@ export const updateTicket = async (
       status
     );
 
-    res.status(200).json({
+    res.status(200).send({
       status: "success",
       msg: "Ticket updated successfully",
       ticket: updatedTicket,
@@ -281,7 +281,7 @@ export const useTicket = async (
 
     // Check if user is authenticated
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Authentication required" });
+      return res.status(401).send({ msg: "Authentication required" });
     }
 
     const userId = req.user.id;
@@ -290,7 +290,7 @@ export const useTicket = async (
     const ticket = await ticketModels.fetchTicketByCode(ticketCode);
 
     if (!ticket) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Ticket not found",
       });
@@ -298,7 +298,7 @@ export const useTicket = async (
 
     // Verify that the ticket belongs to the authenticated user
     if (ticket.user_id !== userId) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "You can only use your own tickets",
       });
@@ -306,7 +306,7 @@ export const useTicket = async (
 
     // Check if ticket is already used
     if (ticket.status === "used") {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Ticket has already been used",
         usedAt: ticket.used_at,
@@ -315,7 +315,7 @@ export const useTicket = async (
 
     // Check if ticket is valid
     if (ticket.status !== "valid") {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: `Cannot use ticket with status: ${ticket.status}`,
       });
@@ -327,7 +327,7 @@ export const useTicket = async (
       "used"
     );
 
-    res.status(200).json({
+    res.status(200).send({
       status: "success",
       msg: "Ticket marked as used",
       ticket: updatedTicket,
@@ -348,7 +348,7 @@ export const deleteTicketById = async (
 
     // Check if user is authenticated
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Authentication required" });
+      return res.status(401).send({ msg: "Authentication required" });
     }
 
     const userId = req.user.id;
@@ -357,7 +357,7 @@ export const deleteTicketById = async (
     const ticket = await ticketModels.fetchTicketById(ticketId);
 
     if (!ticket) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Ticket not found",
       });
@@ -365,7 +365,7 @@ export const deleteTicketById = async (
 
     // Verify that the ticket belongs to the authenticated user
     if (ticket.user_id !== userId) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "You can only delete your own tickets",
       });
@@ -374,7 +374,7 @@ export const deleteTicketById = async (
     const deletedTicket = await ticketModels.deleteTicket(ticketId);
 
     if (!deletedTicket) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Ticket not found",
       });

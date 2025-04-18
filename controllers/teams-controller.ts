@@ -15,7 +15,7 @@ import {
 
 import { selectUserById, insertUser } from "../models/users-models";
 import bcryptjs from "bcryptjs";
-import { Team, TeamMember, User, TeamResponse } from "../types";
+import { User, TeamResponse } from "../types";
 import { withTransaction } from "../utils/db-transaction";
 
 export const getTeams = async (
@@ -42,7 +42,7 @@ export const getTeamById = async (
     res.status(200).send({ team });
   } catch (err: any) {
     if (err.status === 404) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Team not found",
       });
@@ -60,7 +60,7 @@ export const getTeamByName = async (
   try {
     const team = await selectTeamByName(name);
     if (!team) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Team not found",
       });
@@ -80,7 +80,7 @@ export const createTeam = async (
 
   // Check if user is authenticated
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -92,7 +92,7 @@ export const createTeam = async (
     // Check if team name already exists
     const existingTeam = await selectTeamByName(name);
     if (existingTeam) {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Team name already exists",
       });
@@ -118,7 +118,7 @@ export const createTeam = async (
       return { newTeam, newTeamMember };
     });
 
-    res.status(201).json({
+    res.status(201).send({
       status: "success",
       message: "Team created successfully and you were added as an admin",
       team: result.newTeam,
@@ -139,7 +139,7 @@ export const updateTeam = async (
 
   // Check if user is authenticated
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -177,7 +177,7 @@ export const deleteTeam = async (
 
   // Check if user is authenticated
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -192,13 +192,13 @@ export const deleteTeam = async (
         teamMember.role !== "team_admin") ||
       (teamMember.team_id === parseInt(id) && teamMember.role !== "team_admin")
     ) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - Admin privileges required",
       });
     }
   } catch (error) {
-    return res.status(403).json({
+    return res.status(403).send({
       status: "error",
       msg: "Forbidden - Admin privileges required",
     });
@@ -209,7 +209,7 @@ export const deleteTeam = async (
     res.status(204).send();
   } catch (err: any) {
     if (err.status === 404) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Team not found",
       });
@@ -320,7 +320,7 @@ export const createTeamMember = async (
 
   // Check if user is authenticated
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -336,13 +336,13 @@ export const createTeamMember = async (
       (teamMember.team_id === parseInt(team_id) &&
         teamMember.role !== "team_admin")
     ) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - Admin privileges required to add team members",
       });
     }
   } catch (error) {
-    return res.status(403).json({
+    return res.status(403).send({
       status: "error",
       msg: "Forbidden - Admin privileges required to add team members",
     });

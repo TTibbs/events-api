@@ -116,7 +116,7 @@ export const register = async (
     try {
       const existingUsername = await selectUserByUsername(username);
       // If we get here, the username exists
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Username already exists",
       });
@@ -130,7 +130,7 @@ export const register = async (
     try {
       const existingEmail = await selectUserByEmail(email);
       // If we get here, the email exists
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Email already exists",
       });
@@ -183,7 +183,7 @@ export const register = async (
       return { sanitizedUser, accessToken, refreshToken, team, teamMember };
     });
 
-    res.status(201).json({
+    res.status(201).send({
       status: "success",
       data: {
         user: {
@@ -217,7 +217,7 @@ export const login = async (
 
       // Ensure user is not null before proceeding
       if (!user) {
-        return res.status(401).json({
+        return res.status(401).send({
           status: "error",
           msg: "Invalid credentials",
         });
@@ -229,7 +229,7 @@ export const login = async (
         user.password_hash
       );
       if (!isPasswordValid) {
-        return res.status(401).json({
+        return res.status(401).send({
           status: "error",
           msg: "Invalid credentials",
         });
@@ -244,7 +244,7 @@ export const login = async (
       // Sanitize user object for response (remove password_hash)
       const { password_hash, ...sanitizedUser } = dbUser;
 
-      res.status(200).json({
+      res.status(200).send({
         status: "success",
         data: {
           user: {
@@ -259,7 +259,7 @@ export const login = async (
     } catch (error: any) {
       // Handle the 404 user not found error
       if (error.status === 404) {
-        return res.status(401).json({
+        return res.status(401).send({
           status: "error",
           msg: "Invalid credentials",
         });
@@ -281,7 +281,7 @@ export const refreshToken = async (
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(401).json({
+      return res.status(401).send({
         status: "error",
         msg: "Refresh token is required",
       });
@@ -290,7 +290,7 @@ export const refreshToken = async (
     // Verify if refresh token exists in database
     const session = await getSessionByRefreshToken(refreshToken);
     if (!session) {
-      return res.status(401).json({
+      return res.status(401).send({
         status: "error",
         msg: "Invalid refresh token",
       });
@@ -323,7 +323,7 @@ export const refreshToken = async (
       // Delete old refresh token
       await deleteSessionByRefreshToken(refreshToken);
 
-      res.status(200).json({
+      res.status(200).send({
         status: "success",
         data: tokens,
       });
@@ -331,7 +331,7 @@ export const refreshToken = async (
       // Delete invalid refresh token
       await deleteSessionByRefreshToken(refreshToken);
 
-      return res.status(401).json({
+      return res.status(401).send({
         status: "error",
         msg: "Invalid refresh token",
       });
@@ -351,7 +351,7 @@ export const logout = async (
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({
+      return res.status(400).send({
         status: "error",
         msg: "Refresh token is required",
       });
@@ -360,7 +360,7 @@ export const logout = async (
     // Delete session
     await deleteSessionByRefreshToken(refreshToken);
 
-    res.status(200).json({
+    res.status(200).send({
       status: "success",
       msg: "Logged out successfully",
     });

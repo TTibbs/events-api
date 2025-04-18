@@ -9,19 +9,7 @@ import { fetchAllTickets } from "../models/tickets-models";
 import { checkIsUserSiteAdmin } from "./users-controller";
 import db from "../db/connection";
 import { updateUserToAdmin } from "../models/admin-models";
-import { User } from "../types";
-
-const sanitizeUser = (user: User) => {
-  if (!user) return user;
-
-  const { password_hash, ...sanitizedUser } = user;
-  return sanitizedUser;
-};
-
-// Helper function to sanitize an array of users
-const sanitizeUsers = (users: User[]) => {
-  return users.map((user) => sanitizeUser(user));
-};
+import { sanitizeUser, sanitizeUsers } from "../utils/databaseHelpers";
 
 export const getAdminDashboard = async (
   req: Request,

@@ -40,7 +40,7 @@ export const getDraftEvents = async (
 ) => {
   try {
     if (!req.user) {
-      return res.status(401).json({
+      return res.status(401).send({
         status: "error",
         msg: "Unauthorized - Authentication required",
       });
@@ -75,7 +75,7 @@ export const getDraftEventById = async (
   const { id } = req.params;
 
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -111,7 +111,7 @@ export const createEvent = async (
 
   // Check user authorization
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -122,7 +122,7 @@ export const createEvent = async (
     const teamMember = await selectTeamMemberByUserId(req.user.id);
 
     if (!teamMember) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - You are not a member of any team",
       });
@@ -136,7 +136,7 @@ export const createEvent = async (
       teamMember.team_id !== eventTeamId ||
       (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - You don't have permission to create events for this team",
       });
@@ -184,7 +184,7 @@ export const updateEvent = async (
 
   // Check user authorization
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -197,7 +197,7 @@ export const updateEvent = async (
     ]);
 
     if (eventQuery.rows.length === 0) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Event not found",
       });
@@ -213,7 +213,7 @@ export const updateEvent = async (
       teamMember.team_id !== Number(event.team_id) ||
       (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - You don't have permission to update this event",
       });
@@ -249,7 +249,7 @@ export const deleteEvent = async (
 
   // Check user authorization
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -262,7 +262,7 @@ export const deleteEvent = async (
     ]);
 
     if (eventQuery.rows.length === 0) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Event not found",
       });
@@ -278,7 +278,7 @@ export const deleteEvent = async (
       teamMember.team_id !== Number(event.team_id) ||
       (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
-      return res.status(403).json({
+      return res.status(403).send({
         status: "error",
         msg: "Forbidden - You don't have permission to delete this event",
       });
@@ -304,7 +304,7 @@ export const getEventRegistrations = async (
     ]);
 
     if (eventQuery.rows.length === 0) {
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Event not found",
       });
@@ -315,7 +315,7 @@ export const getEventRegistrations = async (
     // If the event is a draft, check if the user is authorized to view it
     if (event.status === "draft") {
       if (!req.user) {
-        return res.status(404).json({
+        return res.status(404).send({
           status: "error",
           msg: "Event not found",
         });
@@ -325,14 +325,14 @@ export const getEventRegistrations = async (
       try {
         await selectDraftEventById(Number(id), req.user.id);
       } catch (error) {
-        return res.status(404).json({
+        return res.status(404).send({
           status: "error",
           msg: "Event not found",
         });
       }
     } else if (event.status !== "published") {
       // If the event exists but isn't published or draft, return 404
-      return res.status(404).json({
+      return res.status(404).send({
         status: "error",
         msg: "Event not found",
       });
@@ -384,7 +384,7 @@ export const getDraftEventsByTeamId = async (
   const { teamId } = req.params;
 
   if (!req.user) {
-    return res.status(401).json({
+    return res.status(401).send({
       status: "error",
       msg: "Unauthorized - Authentication required",
     });
@@ -409,12 +409,12 @@ export const registerForEvent = async (
 
     // Authentication is required
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Authentication required" });
+      return res.status(401).send({ msg: "Authentication required" });
     }
 
     // Check for empty request body or undefined userId
     if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({ msg: "User ID is required" });
+      return res.status(400).send({ msg: "User ID is required" });
     }
 
     // Use the authenticated user's ID by default
@@ -480,7 +480,7 @@ export const registerForEvent = async (
     // If registration was reactivated, return 200 instead of 201
     const statusCode = registration.reactivated ? 200 : 201;
 
-    res.status(statusCode).json({
+    res.status(statusCode).send({
       msg: registration.reactivated
         ? "Registration reactivated successfully"
         : "Registration successful",
@@ -503,14 +503,14 @@ export const cancelEventRegistration = async (
 
     // Authentication is required
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Authentication required" });
+      return res.status(401).send({ msg: "Authentication required" });
     }
 
     // Get the registration
     const registration = await getRegistrationById(Number(registrationId));
 
     if (!registration) {
-      return res.status(404).json({ msg: "Registration not found" });
+      return res.status(404).send({ msg: "Registration not found" });
     }
 
     // Check if the registration belongs to the authenticated user
@@ -519,7 +519,7 @@ export const cancelEventRegistration = async (
     if (registration.user_id !== req.user.id) {
       return res
         .status(403)
-        .json({ msg: "You can only cancel your own registrations" });
+        .send({ msg: "You can only cancel your own registrations" });
     }
 
     try {
@@ -527,7 +527,7 @@ export const cancelEventRegistration = async (
         Number(registrationId)
       );
 
-      res.status(200).json({
+      res.status(200).send({
         msg: "Registration cancelled successfully",
         registration: cancelledRegistration,
       });
@@ -537,7 +537,7 @@ export const cancelEventRegistration = async (
         error.status === 400 &&
         error.msg === "Registration is already cancelled"
       ) {
-        return res.status(400).json({
+        return res.status(400).send({
           msg: "Registration is already cancelled",
         });
       }
@@ -559,7 +559,7 @@ export const checkEventRegistrationAvailability = async (
 
     const availability = await checkEventAvailability(Number(eventId));
 
-    res.status(200).json({
+    res.status(200).send({
       available: availability.available,
       ...(!availability.available && { reason: availability.reason }),
     });
