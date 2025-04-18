@@ -19,12 +19,14 @@ import {
 } from "../models/events-models";
 import { selectTeamMemberByUserId } from "../models/teams-models";
 import { sendRegistrationConfirmation } from "../utils/email";
-import { Event, EventRegistrationResponse, TeamMember } from "../types";
-
-// Extended TeamMember to include ID which is returned from our team model
-interface ExtendedTeamMember extends TeamMember {
-  id: number;
-}
+import {
+  EmailInfo,
+  Event,
+  EventRegistrationResponse,
+  EventUpdateData,
+  ExtendedEventRegistration,
+  ExtendedTeamMember,
+} from "../types";
 
 export const getEvents = async (
   req: Request,
@@ -181,21 +183,6 @@ export const createEvent = async (
     next(err);
   }
 };
-
-interface EventUpdateData {
-  status?: string;
-  title?: string;
-  description?: string | null;
-  location?: string | null;
-  start_time?: Date;
-  end_time?: Date;
-  max_attendees?: number | null;
-  price?: number | null;
-  event_type?: string | null;
-  is_public?: boolean;
-  team_id?: number;
-  created_by?: number | null;
-}
 
 export const updateEvent = async (
   req: Request,
@@ -446,30 +433,6 @@ export const getDraftEventsByTeamId = async (
     next(err);
   }
 };
-
-interface EmailInfo {
-  to: string;
-  name: string;
-  eventTitle: string;
-  eventDate: string;
-  eventLocation: string;
-  ticketCode: string;
-}
-
-interface TicketInfo {
-  user_email: string;
-  user_name: string;
-  event_title: string;
-  event_date: string;
-  event_location: string;
-  ticket_code: string;
-}
-
-// Extended EventRegistrationResponse to include the ticket_info property
-interface ExtendedEventRegistration extends EventRegistrationResponse {
-  ticket_info?: TicketInfo;
-  reactivated?: boolean;
-}
 
 // Register a user for an event
 export const registerForEvent = async (

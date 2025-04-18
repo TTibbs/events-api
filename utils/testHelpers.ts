@@ -1,20 +1,7 @@
 import jwt from "jsonwebtoken";
 import app from "../app";
 import request from "supertest";
-
-// Test User Types
-export type TestUserRole =
-  | "team_admin"
-  | "event_manager"
-  | "team_member"
-  | "user";
-export interface TestUser {
-  id: number;
-  username: string;
-  email: string;
-  teamId: number;
-  role: TestUserRole;
-}
+import { TestUser, TestUserRole } from "../types";
 
 // Test User map
 export const TEST_USERS: Record<string, TestUser> = {

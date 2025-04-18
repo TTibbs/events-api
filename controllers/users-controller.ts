@@ -11,7 +11,7 @@ import {
   selectUserEventRegistrations,
 } from "../models/users-models";
 import { sanitizeUser, sanitizeUsers } from "../utils/databaseHelpers";
-import { User, EventRegistrationResponse } from "../types";
+import { User, EventRegistrationResponse, UserUpdates } from "../types";
 
 // Helper function to check if a user is a site admin
 export const checkIsUserSiteAdmin = async (
@@ -142,12 +142,6 @@ export const createUser = async (
     next(err);
   }
 };
-
-interface UserUpdates {
-  username?: string;
-  email?: string;
-  password_hash?: string;
-}
 
 export const updateUserById = async (
   req: Request,

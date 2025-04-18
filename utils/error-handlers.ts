@@ -1,11 +1,4 @@
-/**
- * Interface for API errors with status code, message, and optional errors array
- */
-export interface ApiError {
-  status: number;
-  msg: string;
-  errors?: string[];
-}
+import { ApiError } from "../types";
 
 /**
  * Helper function to handle missing required fields

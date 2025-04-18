@@ -1,6 +1,6 @@
 import format from "pg-format";
 import db from "../connection";
-import { SeedData } from "../../types";
+import { SeedData } from "../../types/db";
 
 const seed = async ({
   users,
