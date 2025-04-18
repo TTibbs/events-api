@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import bcryptjs from "bcryptjs";
-import db from "../db/connection";
 import {
   selectUsers,
   selectUserById,

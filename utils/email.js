@@ -1,10 +1,10 @@
 const sgMail = require("@sendgrid/mail");
 
 // Set the API key from environment variable
-console.log(
-  "Setting up SendGrid with API key:",
-  process.env.SENDGRID_API_KEY ? "API key exists" : "API key is missing"
-);
+// console.log(
+//   "Setting up SendGrid with API key:",
+//   process.env.SENDGRID_API_KEY ? "API key exists" : "API key is missing"
+// );
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /**
@@ -19,12 +19,12 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
  * @returns {Promise} Promise resolving to SendGrid response
  */
 const sendRegistrationConfirmation = async (params) => {
-  console.log(`Preparing to send email to ${params.to}`);
-  console.log(
-    `Using from address: ${
-      process.env.SENDGRID_FROM_EMAIL || "noreply@events-platform.com"
-    }`
-  );
+  // console.log(`Preparing to send email to ${params.to}`);
+  // console.log(
+  //   `Using from address: ${
+  //     process.env.SENDGRID_FROM_EMAIL || "noreply@events-platform.com"
+  //   }`
+  // );
 
   try {
     const msg = {
@@ -71,7 +71,7 @@ const sendRegistrationConfirmation = async (params) => {
       `,
     };
 
-    console.log("Calling SendGrid API...");
+    // console.log("Calling SendGrid API...");
     const response = await sgMail.send(msg);
     console.log("SendGrid API response status:", response[0].statusCode);
     return { success: true, response };

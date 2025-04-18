@@ -122,6 +122,40 @@ export const selectEventById = async (id: number): Promise<Event> => {
   };
 };
 
+// Get any event by ID regardless of status - for admin operations
+export const getEventByIdForAdmin = async (id: number): Promise<Event> => {
+  const query = `
+    SELECT 
+      e.*,
+      t.name as team_name,
+      tm.username as creator_username
+    FROM events e
+    LEFT JOIN teams t ON e.team_id = t.id
+    LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
+    LEFT JOIN users tm ON tm_link.user_id = tm.id
+    WHERE e.id = $1
+  `;
+
+  const result = await db.query(query, [id]);
+
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Event not found",
+    });
+  }
+
+  const event = result.rows[0];
+  return {
+    ...event,
+    id: Number(event.id),
+    team_id: event.team_id ? Number(event.team_id) : null,
+    created_by: event.created_by ? Number(event.created_by) : null,
+    price: event.price ? Number(event.price) : null,
+    max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+  };
+};
+
 // Get draft event by ID for a specific user's team
 export const selectDraftEventById = async (
   id: number,
@@ -304,6 +338,10 @@ export const selectEventRegistrationsByEventId = async (
     `,
     [eventId]
   );
+
+  if (result.rows.length === 0) {
+    return [];
+  }
 
   return result.rows.map((registration) => ({
     ...registration,

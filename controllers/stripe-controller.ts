@@ -1,14 +1,20 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
-import db from "../db/connection";
 import { generateUniqueCode } from "../utils/codeGenerator";
-import { selectUserPayments } from "../models/stripe-models";
 import {
-  CheckoutSessionData,
-  StripeSessionInfo,
-  WebhookEvent,
-  StripePayment,
-} from "../types";
+  selectUserPayments,
+  updateUserStripeCustomerId,
+  findRegistrationByEventAndUser,
+  createRegistration,
+  createTicket,
+  createPaymentRecord,
+  updateTicket,
+  updatePaymentStatus,
+  findPaymentBySessionId,
+} from "../models/stripe-models";
+import { CheckoutSessionData, StripeSessionInfo, WebhookEvent } from "../types";
+import { selectEventById } from "../models/events-models";
+import { selectUserById } from "../models/users-models";
 
 // Check if Stripe API key is available
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -55,30 +61,21 @@ export const createCheckoutSession = async (
 
   try {
     // Get event details from database
-    const { rows: events } = await db.query(
-      "SELECT * FROM events WHERE id = $1",
-      [eventId]
-    );
+    const event = await selectEventById(Number(eventId));
 
-    if (!events.length) {
+    if (!event) {
       res.status(404).send({ message: "Event not found" });
       return;
     }
 
-    const event = events[0];
-
     // Create or get Stripe customer for this user
-    const { rows: users } = await db.query(
-      "SELECT * FROM users WHERE id = $1",
-      [userId]
-    );
+    const user = await selectUserById(Number(userId));
 
-    if (!users.length) {
+    if (!user) {
       res.status(404).send({ message: "User not found" });
       return;
     }
 
-    const user = users[0];
     let stripeCustomerId = user.stripe_customer_id;
 
     if (!stripeCustomerId) {
@@ -87,10 +84,7 @@ export const createCheckoutSession = async (
         metadata: { userId },
       });
       stripeCustomerId = customer.id;
-      await db.query("UPDATE users SET stripe_customer_id = $1 WHERE id = $2", [
-        stripeCustomerId,
-        userId,
-      ]);
+      await updateUserStripeCustomerId(userId, stripeCustomerId);
     }
 
     // Create the checkout session
@@ -130,7 +124,12 @@ export const createCheckoutSession = async (
     res.send(sessionInfo);
   } catch (error) {
     console.error("Error creating checkout session:", error);
-    res.status(500).send({ message: (error as Error).message });
+    // Check if this is a known error type we're handling
+    if ((error as any).status === 404 && (error as any).msg) {
+      res.status(404).send({ message: (error as any).msg });
+    } else {
+      res.status(500).send({ message: (error as Error).message });
+    }
   }
 };
 
@@ -162,69 +161,54 @@ export const syncPaymentStatus = async (
       };
 
       // Check if a payment record already exists
-      const { rows: existingPayments } = await db.query(
-        "SELECT * FROM stripe_payments WHERE stripe_session_id = $1",
-        [sessionId]
-      );
+      const existingPayment = await findPaymentBySessionId(sessionId);
 
-      if (existingPayments.length > 0) {
+      if (existingPayment) {
         res.send({
           success: true,
           message: "Payment already processed",
-          paymentId: existingPayments[0].id,
+          paymentId: existingPayment.id,
         });
         return;
       }
 
       // Get or create registration
       let registrationId;
-      const { rows: registrations } = await db.query(
-        "SELECT id FROM event_registrations WHERE event_id = $1 AND user_id = $2",
-        [eventId, userId]
+      const registration = await findRegistrationByEventAndUser(
+        eventId,
+        userId
       );
 
-      if (registrations.length > 0) {
-        registrationId = registrations[0].id;
+      if (registration) {
+        registrationId = registration.id;
       } else {
-        const { rows: newRegistration } = await db.query(
-          "INSERT INTO event_registrations (event_id, user_id, status) VALUES ($1, $2, 'registered') RETURNING id",
-          [eventId, userId]
-        );
-        registrationId = newRegistration[0].id;
+        const newRegistration = await createRegistration(eventId, userId);
+        registrationId = newRegistration.id;
       }
 
       // Create a new ticket
       const ticketCode = generateUniqueCode();
-      const { rows: ticket } = await db.query(
-        "INSERT INTO tickets (event_id, user_id, registration_id, ticket_code, status, is_paid) VALUES ($1, $2, $3, $4, 'valid', true) RETURNING id",
-        [eventId, userId, registrationId, ticketCode]
+      const ticket = await createTicket(
+        eventId,
+        userId,
+        registrationId,
+        ticketCode
       );
-
-      const ticketId = ticket[0].id;
+      const ticketId = ticket.id;
 
       // Create payment record
-      const { rows: payment } = await db.query(
-        `INSERT INTO stripe_payments 
-         (user_id, event_id, stripe_session_id, stripe_payment_intent_id, amount, currency, status) 
-         VALUES ($1, $2, $3, $4, $5, $6, 'succeeded') 
-         RETURNING id`,
-        [
-          userId,
-          eventId,
-          sessionId,
-          session.payment_intent as string,
-          session.amount_total ? session.amount_total / 100 : 0, // Convert from pence to pounds
-          "gbp",
-        ]
+      const payment = await createPaymentRecord(
+        userId,
+        eventId,
+        sessionId,
+        session.payment_intent as string,
+        session.amount_total ? session.amount_total / 100 : 0 // Convert from pence to pounds
       );
 
-      const paymentId = payment[0].id;
+      const paymentId = payment.id;
 
       // Update ticket with payment ID
-      await db.query(
-        "UPDATE tickets SET payment_id = $1, paid = true WHERE id = $2",
-        [paymentId, ticketId]
-      );
+      await updateTicket(ticketId, paymentId);
 
       res.send({
         success: true,
@@ -305,60 +289,42 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
 
   try {
     // Check if payment already processed
-    const { rows: existingPayments } = await db.query(
-      "SELECT * FROM stripe_payments WHERE stripe_session_id = $1",
-      [session.id]
-    );
+    const existingPayment = await findPaymentBySessionId(session.id);
 
-    if (existingPayments.length > 0) {
+    if (existingPayment) {
       return; // Already processed
     }
 
     // Similar logic to syncPaymentStatus
     // This function handles webhook events which might come before the frontend redirect
-    const { rows: registrations } = await db.query(
-      "SELECT id FROM event_registrations WHERE event_id = $1 AND user_id = $2",
-      [eventId, userId]
-    );
+    const registration = await findRegistrationByEventAndUser(eventId, userId);
 
     let registrationId;
-    if (registrations.length > 0) {
-      registrationId = registrations[0].id;
+    if (registration) {
+      registrationId = registration.id;
     } else {
-      const { rows: newRegistration } = await db.query(
-        "INSERT INTO event_registrations (event_id, user_id, status) VALUES ($1, $2, 'registered') RETURNING id",
-        [eventId, userId]
-      );
-      registrationId = newRegistration[0].id;
+      const newRegistration = await createRegistration(eventId, userId);
+      registrationId = newRegistration.id;
     }
 
     const ticketCode = generateUniqueCode();
-    const { rows: ticket } = await db.query(
-      "INSERT INTO tickets (event_id, user_id, registration_id, ticket_code, status, is_paid) VALUES ($1, $2, $3, $4, 'valid', true) RETURNING id",
-      [eventId, userId, registrationId, ticketCode]
+    const ticket = await createTicket(
+      eventId,
+      userId,
+      registrationId,
+      ticketCode
+    );
+    const ticketId = ticket.id;
+
+    const payment = await createPaymentRecord(
+      userId,
+      eventId,
+      session.id,
+      session.payment_intent as string,
+      session.amount_total ? session.amount_total / 100 : 0
     );
 
-    const ticketId = ticket[0].id;
-
-    const { rows: payment } = await db.query(
-      `INSERT INTO stripe_payments 
-       (user_id, event_id, stripe_session_id, stripe_payment_intent_id, amount, currency, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, 'succeeded') 
-       RETURNING id`,
-      [
-        userId,
-        eventId,
-        session.id,
-        session.payment_intent as string,
-        session.amount_total ? session.amount_total / 100 : 0,
-        "gbp",
-      ]
-    );
-
-    await db.query(
-      "UPDATE tickets SET payment_id = $1, paid = true WHERE id = $2",
-      [payment[0].id, ticketId]
-    );
+    await updateTicket(ticketId, payment.id);
   } catch (error) {
     console.error("Error processing successful payment:", error);
   }
@@ -367,10 +333,7 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
 async function handleFailedPayment(paymentIntent: Stripe.PaymentIntent) {
   try {
     // Update payment status to failed if it exists
-    await db.query(
-      "UPDATE stripe_payments SET status = 'failed' WHERE stripe_payment_intent_id = $1",
-      [paymentIntent.id]
-    );
+    await updatePaymentStatus(paymentIntent.id, "failed");
   } catch (error) {
     console.error("Error handling failed payment:", error);
   }

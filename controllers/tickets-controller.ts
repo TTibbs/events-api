@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as ticketModels from "../models/tickets-models";
 import * as userModels from "../models/users-models";
-import { Ticket, TicketResponse, TicketWithEventInfo } from "../types";
+import { Ticket, TicketResponse } from "../types";
 import crypto from "crypto";
 import { toNumber } from "../utils/converters";
 import { validateRequiredFields, validateId } from "../utils/error-handlers";

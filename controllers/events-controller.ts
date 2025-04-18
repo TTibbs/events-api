@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import db from "../db/connection";
 import {
   selectEvents,
   selectEventById,
@@ -16,16 +15,11 @@ import {
   selectDraftEvents,
   selectDraftEventById,
   selectDraftEventsByTeamId,
+  getEventByIdForAdmin,
 } from "../models/events-models";
 import { selectTeamMemberByUserId } from "../models/teams-models";
 import { sendRegistrationConfirmation } from "../utils/email";
-import {
-  Event,
-  EventResponse,
-  EventRegistrationResponse,
-  TeamMember,
-  EventAvailabilityResponse,
-} from "../types";
+import { Event, EventRegistrationResponse, TeamMember } from "../types";
 
 // Extended TeamMember to include ID which is returned from our team model
 interface ExtendedTeamMember extends TeamMember {
@@ -220,19 +214,19 @@ export const updateEvent = async (
   }
 
   try {
-    // Get the event to check which team it belongs to - query directly
-    const eventQuery = await db.query(`SELECT * FROM events WHERE id = $1`, [
-      id,
-    ]);
-
-    if (eventQuery.rows.length === 0) {
-      return res.status(404).send({
-        status: "error",
-        msg: "Event not found",
-      });
+    // Get the event to check which team it belongs to
+    let eventCheck;
+    try {
+      eventCheck = await getEventByIdForAdmin(Number(id));
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).send({
+          status: "error",
+          msg: "Event not found",
+        });
+      }
+      throw error;
     }
-
-    const event = eventQuery.rows[0];
 
     // Check if the user is authorized to update this event
     const teamMember = (await selectTeamMemberByUserId(
@@ -241,7 +235,7 @@ export const updateEvent = async (
 
     if (
       !teamMember ||
-      teamMember.team_id !== Number(event.team_id) ||
+      teamMember.team_id !== Number(eventCheck.team_id) ||
       (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).send({
@@ -291,19 +285,19 @@ export const deleteEvent = async (
   }
 
   try {
-    // Get the event to check which team it belongs to - query directly
-    const eventQuery = await db.query(`SELECT * FROM events WHERE id = $1`, [
-      id,
-    ]);
-
-    if (eventQuery.rows.length === 0) {
-      return res.status(404).send({
-        status: "error",
-        msg: "Event not found",
-      });
+    // Get the event to check which team it belongs to
+    let eventCheck;
+    try {
+      eventCheck = await getEventByIdForAdmin(Number(id));
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).send({
+          status: "error",
+          msg: "Event not found",
+        });
+      }
+      throw error;
     }
-
-    const event = eventQuery.rows[0];
 
     // Check if the user is authorized to delete this event
     const teamMember = (await selectTeamMemberByUserId(
@@ -312,7 +306,7 @@ export const deleteEvent = async (
 
     if (
       !teamMember ||
-      teamMember.team_id !== Number(event.team_id) ||
+      teamMember.team_id !== Number(eventCheck.team_id) ||
       (teamMember.role !== "team_admin" && teamMember.role !== "event_manager")
     ) {
       return res.status(403).send({
@@ -335,49 +329,67 @@ export const getEventRegistrations = async (
 ) => {
   const { id } = req.params;
   try {
-    // First query the event directly to see if it exists
-    const eventQuery = await db.query(`SELECT * FROM events WHERE id = $1`, [
-      id,
-    ]);
+    let eventCheck;
 
-    if (eventQuery.rows.length === 0) {
+    try {
+      // First try to get the event regardless of status for team members
+      if (req.user) {
+        const teamMember = await selectTeamMemberByUserId(req.user.id);
+
+        if (teamMember) {
+          try {
+            // Try to get the event regardless of status
+            eventCheck = await getEventByIdForAdmin(Number(id));
+
+            // Check if the user is part of the team that owns this event
+            if (teamMember.team_id !== eventCheck.team_id) {
+              // If the event is not published and user is not on the team, act like it doesn't exist
+              if (eventCheck.status !== "published") {
+                return res.status(404).send({
+                  status: "error",
+                  msg: "Event not found",
+                });
+              }
+            }
+          } catch (error) {
+            // If no event found, return 404
+            return res.status(404).send({
+              status: "error",
+              msg: "Event not found",
+            });
+          }
+        } else {
+          // User has no team membership, only allow access to published events
+          try {
+            eventCheck = await selectEventById(Number(id));
+          } catch (error) {
+            return res.status(404).send({
+              status: "error",
+              msg: "Event not found",
+            });
+          }
+        }
+      } else {
+        // Non-authenticated users can only access published events
+        try {
+          eventCheck = await selectEventById(Number(id));
+        } catch (error) {
+          return res.status(404).send({
+            status: "error",
+            msg: "Event not found",
+          });
+        }
+      }
+    } catch (error) {
+      // Any other errors
       return res.status(404).send({
         status: "error",
         msg: "Event not found",
       });
     }
 
-    const event = eventQuery.rows[0];
-
-    // If the event is a draft, check if the user is authorized to view it
-    if (event.status === "draft") {
-      if (!req.user) {
-        return res.status(404).send({
-          status: "error",
-          msg: "Event not found",
-        });
-      }
-
-      // Try to find the draft event with the user's ID to confirm access
-      try {
-        await selectDraftEventById(Number(id), req.user.id);
-      } catch (error) {
-        return res.status(404).send({
-          status: "error",
-          msg: "Event not found",
-        });
-      }
-    } else if (event.status !== "published") {
-      // If the event exists but isn't published or draft, return 404
-      return res.status(404).send({
-        status: "error",
-        msg: "Event not found",
-      });
-    }
-
-    // If we got here, either:
-    // 1. The event is published, or
-    // 2. The event is draft and the user has access to it
+    // If we got here, we have an event (either published or draft)
+    // Get the registrations for this event
     const registrations = await selectEventRegistrationsByEventId(Number(id));
     res.status(200).send({ registrations });
   } catch (err) {
@@ -489,7 +501,7 @@ export const registerForEvent = async (
       userId = Number(req.body.userId);
     }
 
-    console.log(`Registering user ${userId} for event ${eventId}`);
+    // console.log(`Registering user ${userId} for event ${eventId}`);
     const registration = (await registerUserForEvent(
       Number(eventId),
       userId
@@ -498,21 +510,21 @@ export const registerForEvent = async (
     // Send confirmation email if registration was successful
     if (registration.ticket_info) {
       try {
-        console.log(
-          `Attempting to send email to ${registration.ticket_info.user_email}`
-        );
-        console.log(
-          `SENDGRID_API_KEY is ${
-            process.env.SENDGRID_API_KEY ? "set" : "not set"
-          }`
-        );
-        console.log(
-          `SENDGRID_FROM_EMAIL is ${
-            process.env.SENDGRID_FROM_EMAIL
-              ? process.env.SENDGRID_FROM_EMAIL
-              : "not set"
-          }`
-        );
+        // console.log(
+        //   `Attempting to send email to ${registration.ticket_info.user_email}`
+        // );
+        // console.log(
+        //   `SENDGRID_API_KEY is ${
+        //     process.env.SENDGRID_API_KEY ? "set" : "not set"
+        //   }`
+        // );
+        // console.log(
+        //   `SENDGRID_FROM_EMAIL is ${
+        //     process.env.SENDGRID_FROM_EMAIL
+        //       ? process.env.SENDGRID_FROM_EMAIL
+        //       : "not set"
+        //   }`
+        // );
 
         const emailInfo: EmailInfo = {
           to: registration.ticket_info.user_email,
@@ -525,16 +537,16 @@ export const registerForEvent = async (
 
         const emailResult = await sendRegistrationConfirmation(emailInfo);
 
-        console.log(
-          `Email sending result: ${emailResult.success ? "success" : "failed"}`
-        );
-        if (!emailResult.success) {
-          console.error("Email error details:", emailResult.error);
-        } else {
-          console.log(
-            `Confirmation email sent for registration ID: ${registration.id}`
-          );
-        }
+        // console.log(
+        //   `Email sending result: ${emailResult.success ? "success" : "failed"}`
+        // );
+        // if (!emailResult.success) {
+        //   console.error("Email error details:", emailResult.error);
+        // } else {
+        //   console.log(
+        //     `Confirmation email sent for registration ID: ${registration.id}`
+        //   );
+        // }
       } catch (emailError) {
         // Log the error but don't fail the registration process
         console.error("Failed to send confirmation email:", emailError);

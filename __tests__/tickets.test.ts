@@ -457,7 +457,6 @@ describe("Tickets API Endpoints", () => {
         .get("/api/tickets/user/3/event/1")
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
-      console.log(response.body);
       expect(response.body).toHaveProperty("hasUserPaid", true);
     });
 
