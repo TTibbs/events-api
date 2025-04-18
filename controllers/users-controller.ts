@@ -11,25 +11,8 @@ import {
   deleteUser,
   selectUserEventRegistrations,
 } from "../models/users-models";
-import {
-  selectEvents,
-  selectEventRegistrationsByEventId,
-} from "../models/events-models";
-import { selectTeams } from "../models/teams-models";
-import { fetchAllTickets } from "../models/tickets-models";
-
-// Helper function to sanitize user objects (remove password_hash)
-const sanitizeUser = (user: any) => {
-  if (!user) return user;
-
-  const { password_hash, ...sanitizedUser } = user;
-  return sanitizedUser;
-};
-
-// Helper function to sanitize an array of users
-const sanitizeUsers = (users: any[]) => {
-  return users.map((user) => sanitizeUser(user));
-};
+import { sanitizeUser, sanitizeUsers } from "../utils/databaseHelpers";
+import { User, EventRegistrationResponse } from "../types";
 
 // Helper function to check if a user is a site admin
 export const checkIsUserSiteAdmin = async (
@@ -63,7 +46,7 @@ export const getUserById = async (
   try {
     const user = await selectUserById(Number(id));
     // Sanitize user
-    const sanitizedUser = sanitizeUser(user);
+    const sanitizedUser = sanitizeUser(user as User);
     res.status(200).send({ user: sanitizedUser });
   } catch (err) {
     next(err);
@@ -93,7 +76,7 @@ export const getUserByUsername = async (
   try {
     const user = await selectUserByUsername(username);
     // Sanitize user
-    const sanitizedUser = sanitizeUser(user);
+    const sanitizedUser = sanitizeUser(user as User);
     res.status(200).send({ user: sanitizedUser });
   } catch (err) {
     next(err);
@@ -109,7 +92,7 @@ export const getUserByEmail = async (
   try {
     const user = await selectUserByEmail(email);
     // Sanitize user
-    const sanitizedUser = sanitizeUser(user);
+    const sanitizedUser = sanitizeUser(user as User);
     res.status(200).send({ user: sanitizedUser });
   } catch (err) {
     next(err);
@@ -124,7 +107,7 @@ export const createUser = async (
   const { username, email, plainPassword } = req.body;
 
   // Check for missing fields and collect all error messages
-  const errors = [];
+  const errors: string[] = [];
 
   if (!username) {
     errors.push("Username is required");
@@ -160,6 +143,12 @@ export const createUser = async (
     next(err);
   }
 };
+
+interface UserUpdates {
+  username?: string;
+  email?: string;
+  password_hash?: string;
+}
 
 export const updateUserById = async (
   req: Request,
@@ -219,7 +208,7 @@ export const updateUserById = async (
     }
 
     // Prepare updates object
-    const updates: any = {};
+    const updates: UserUpdates = {};
     if (username) updates.username = username;
     if (email) updates.email = email;
 
@@ -233,7 +222,7 @@ export const updateUserById = async (
     const updatedUser = await updateUser(Number(id), updates);
 
     // Sanitize user
-    const sanitizedUser = sanitizeUser(updatedUser);
+    const sanitizedUser = sanitizeUser(updatedUser as User);
 
     res.status(200).send({
       status: "success",
@@ -273,7 +262,8 @@ export const getUserEventRegistrations = async (
     await selectUserById(Number(id));
 
     // Get the registrations
-    const registrations = await selectUserEventRegistrations(Number(id));
+    const registrations: EventRegistrationResponse[] =
+      await selectUserEventRegistrations(Number(id));
 
     res.status(200).send({
       status: "success",

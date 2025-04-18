@@ -12,10 +12,9 @@ import {
   selectTeamMembersByTeamId,
   selectTeamByName,
 } from "../models/teams-models";
-
 import { selectUserById, insertUser } from "../models/users-models";
 import bcryptjs from "bcryptjs";
-import { User, TeamResponse } from "../types";
+import { User, TeamResponse, ExtendedTeamMember } from "../types";
 import { withTransaction } from "../utils/db-transaction";
 
 export const getTeams = async (
@@ -109,11 +108,11 @@ export const createTeam = async (
       )) as unknown as TeamResponse;
 
       // Add the creator as a team admin
-      const newTeamMember = await insertTeamMember(
+      const newTeamMember = (await insertTeamMember(
         userId,
         newTeam.id,
         "team_admin"
-      );
+      )) as ExtendedTeamMember;
 
       return { newTeam, newTeamMember };
     });
@@ -146,7 +145,7 @@ export const updateTeam = async (
   }
 
   // Check for missing fields
-  const errors = [];
+  const errors: string[] = [];
 
   if (!name) {
     errors.push("Team name is required");
@@ -185,7 +184,9 @@ export const deleteTeam = async (
 
   // Check if user is admin of this specific team or admin of any team
   try {
-    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    const teamMember = (await selectTeamMemberByUserId(
+      req.user.id
+    )) as ExtendedTeamMember | null;
     if (
       !teamMember ||
       (teamMember.team_id !== parseInt(id) &&
@@ -328,7 +329,9 @@ export const createTeamMember = async (
 
   // Check if user is admin of the target team or admin of any team
   try {
-    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    const teamMember = (await selectTeamMemberByUserId(
+      req.user.id
+    )) as ExtendedTeamMember | null;
     if (
       !teamMember ||
       (teamMember.team_id !== parseInt(team_id) &&
@@ -353,7 +356,7 @@ export const createTeamMember = async (
   // 2. Creating a new user (username, email, plainPassword provided)
 
   // Validate based on which scenario we're in
-  const errors = [];
+  const errors: string[] = [];
 
   if (user_id) {
     // Scenario 1: Adding existing user to a team
@@ -421,8 +424,8 @@ export const createTeamMember = async (
 
       // Create the user
       try {
-        newUser = await insertUser(username, email, password_hash);
-        userId = (newUser as any).id; // Cast to any to access the ID property
+        newUser = (await insertUser(username, email, password_hash)) as User;
+        userId = newUser.id as number;
       } catch (error) {
         return res.status(400).send({
           status: "error",
@@ -442,7 +445,11 @@ export const createTeamMember = async (
     }
 
     // Create the team member
-    const teamMember = await insertTeamMember(userId, team_id, role);
+    const teamMember = (await insertTeamMember(
+      userId,
+      team_id,
+      role
+    )) as ExtendedTeamMember;
 
     // Return appropriate response based on whether we created a new user
     if (newUser) {

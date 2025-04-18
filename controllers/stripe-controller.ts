@@ -3,6 +3,12 @@ import Stripe from "stripe";
 import db from "../db/connection";
 import { generateUniqueCode } from "../utils/codeGenerator";
 import { selectUserPayments } from "../models/stripe-models";
+import {
+  CheckoutSessionData,
+  StripeSessionInfo,
+  WebhookEvent,
+  StripePayment,
+} from "../types";
 
 // Check if Stripe API key is available
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -34,7 +40,8 @@ export const createCheckoutSession = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { eventId, userId } = req.body;
+  const sessionData: CheckoutSessionData = req.body;
+  const { eventId, userId } = sessionData;
 
   // Check if Stripe is properly configured
   if (!stripeSecretKey) {
@@ -116,7 +123,11 @@ export const createCheckoutSession = async (
       },
     });
 
-    res.send({ url: session.url, sessionId: session.id });
+    const sessionInfo: StripeSessionInfo = {
+      url: session.url as string,
+      sessionId: session.id,
+    };
+    res.send(sessionInfo);
   } catch (error) {
     console.error("Error creating checkout session:", error);
     res.status(500).send({ message: (error as Error).message });
@@ -249,7 +260,7 @@ export const handleWebhook = async (
     return;
   }
 
-  let event;
+  let event: WebhookEvent;
 
   try {
     // Verify webhook signature
@@ -257,7 +268,7 @@ export const handleWebhook = async (
       req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET || ""
-    );
+    ) as WebhookEvent;
   } catch (err) {
     console.error(
       "Webhook signature verification failed:",

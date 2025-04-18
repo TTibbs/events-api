@@ -19,6 +19,18 @@ import {
 } from "../models/events-models";
 import { selectTeamMemberByUserId } from "../models/teams-models";
 import { sendRegistrationConfirmation } from "../utils/email";
+import {
+  Event,
+  EventResponse,
+  EventRegistrationResponse,
+  TeamMember,
+  EventAvailabilityResponse,
+} from "../types";
+
+// Extended TeamMember to include ID which is returned from our team model
+interface ExtendedTeamMember extends TeamMember {
+  id: number;
+}
 
 export const getEvents = async (
   req: Request,
@@ -119,7 +131,9 @@ export const createEvent = async (
 
   try {
     // Get the user's team membership
-    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    const teamMember = (await selectTeamMemberByUserId(
+      req.user.id
+    )) as ExtendedTeamMember | null;
 
     if (!teamMember) {
       return res.status(403).send({
@@ -148,8 +162,8 @@ export const createEvent = async (
     const eventIsPublic = is_public !== undefined ? is_public : true; // Default to public if not provided
 
     // Use the authenticated user's team member ID as created_by if not provided
-    let createdBy = created_by;
-    if (!createdBy) {
+    let createdBy: number | null = created_by ? Number(created_by) : null;
+    if (!createdBy && teamMember.id) {
       createdBy = teamMember.id;
     }
 
@@ -165,7 +179,7 @@ export const createEvent = async (
       event_type || null,
       eventIsPublic,
       eventTeamId,
-      createdBy ? Number(createdBy) : null
+      createdBy
     );
 
     res.status(201).send({ event: newEvent });
@@ -174,13 +188,28 @@ export const createEvent = async (
   }
 };
 
+interface EventUpdateData {
+  status?: string;
+  title?: string;
+  description?: string | null;
+  location?: string | null;
+  start_time?: Date;
+  end_time?: Date;
+  max_attendees?: number | null;
+  price?: number | null;
+  event_type?: string | null;
+  is_public?: boolean;
+  team_id?: number;
+  created_by?: number | null;
+}
+
 export const updateEvent = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const { id } = req.params;
-  const updateData = req.body;
+  const updateData: EventUpdateData = req.body;
 
   // Check user authorization
   if (!req.user) {
@@ -206,7 +235,9 @@ export const updateEvent = async (
     const event = eventQuery.rows[0];
 
     // Check if the user is authorized to update this event
-    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    const teamMember = (await selectTeamMemberByUserId(
+      req.user.id
+    )) as ExtendedTeamMember | null;
 
     if (
       !teamMember ||
@@ -233,7 +264,11 @@ export const updateEvent = async (
     if (updateData.end_time)
       updateData.end_time = new Date(updateData.end_time);
 
-    const updatedEvent = await updateEventById(Number(id), updateData);
+    // Cast updateData to Partial<Event> to match what updateEventById expects
+    const updatedEvent = await updateEventById(
+      Number(id),
+      updateData as Partial<Event>
+    );
     res.status(200).send({ updatedEvent });
   } catch (err) {
     next(err);
@@ -271,7 +306,9 @@ export const deleteEvent = async (
     const event = eventQuery.rows[0];
 
     // Check if the user is authorized to delete this event
-    const teamMember = await selectTeamMemberByUserId(req.user.id);
+    const teamMember = (await selectTeamMemberByUserId(
+      req.user.id
+    )) as ExtendedTeamMember | null;
 
     if (
       !teamMember ||
@@ -398,6 +435,30 @@ export const getDraftEventsByTeamId = async (
   }
 };
 
+interface EmailInfo {
+  to: string;
+  name: string;
+  eventTitle: string;
+  eventDate: string;
+  eventLocation: string;
+  ticketCode: string;
+}
+
+interface TicketInfo {
+  user_email: string;
+  user_name: string;
+  event_title: string;
+  event_date: string;
+  event_location: string;
+  ticket_code: string;
+}
+
+// Extended EventRegistrationResponse to include the ticket_info property
+interface ExtendedEventRegistration extends EventRegistrationResponse {
+  ticket_info?: TicketInfo;
+  reactivated?: boolean;
+}
+
 // Register a user for an event
 export const registerForEvent = async (
   req: Request,
@@ -429,7 +490,10 @@ export const registerForEvent = async (
     }
 
     console.log(`Registering user ${userId} for event ${eventId}`);
-    const registration = await registerUserForEvent(Number(eventId), userId);
+    const registration = (await registerUserForEvent(
+      Number(eventId),
+      userId
+    )) as ExtendedEventRegistration;
 
     // Send confirmation email if registration was successful
     if (registration.ticket_info) {
@@ -450,14 +514,16 @@ export const registerForEvent = async (
           }`
         );
 
-        const emailResult = await sendRegistrationConfirmation({
+        const emailInfo: EmailInfo = {
           to: registration.ticket_info.user_email,
           name: registration.ticket_info.user_name,
           eventTitle: registration.ticket_info.event_title,
           eventDate: registration.ticket_info.event_date,
           eventLocation: registration.ticket_info.event_location,
           ticketCode: registration.ticket_info.ticket_code,
-        });
+        };
+
+        const emailResult = await sendRegistrationConfirmation(emailInfo);
 
         console.log(
           `Email sending result: ${emailResult.success ? "success" : "failed"}`
@@ -507,7 +573,9 @@ export const cancelEventRegistration = async (
     }
 
     // Get the registration
-    const registration = await getRegistrationById(Number(registrationId));
+    const registration = (await getRegistrationById(
+      Number(registrationId)
+    )) as EventRegistrationResponse | null;
 
     if (!registration) {
       return res.status(404).send({ msg: "Registration not found" });
@@ -523,9 +591,9 @@ export const cancelEventRegistration = async (
     }
 
     try {
-      const cancelledRegistration = await cancelRegistration(
+      const cancelledRegistration = (await cancelRegistration(
         Number(registrationId)
-      );
+      )) as EventRegistrationResponse;
 
       res.status(200).send({
         msg: "Registration cancelled successfully",

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as ticketModels from "../models/tickets-models";
 import * as userModels from "../models/users-models";
-import { Ticket } from "../types";
+import { Ticket, TicketResponse, TicketWithEventInfo } from "../types";
 import crypto from "crypto";
 import { toNumber } from "../utils/converters";
 import { validateRequiredFields, validateId } from "../utils/error-handlers";
@@ -137,7 +137,9 @@ export const verifyTicket = async (
       });
     }
 
-    const ticket = await ticketModels.fetchTicketByCode(ticketCode);
+    const ticket = (await ticketModels.fetchTicketByCode(
+      ticketCode
+    )) as TicketWithEventInfo;
 
     // Check ticket validity
     if (ticket.status !== "valid") {
@@ -287,7 +289,9 @@ export const useTicket = async (
     const userId = req.user.id;
 
     // Find the ticket
-    const ticket = await ticketModels.fetchTicketByCode(ticketCode);
+    const ticket = (await ticketModels.fetchTicketByCode(
+      ticketCode
+    )) as TicketResponse;
 
     if (!ticket) {
       return res.status(404).send({
@@ -354,7 +358,9 @@ export const deleteTicketById = async (
     const userId = req.user.id;
 
     // Get the ticket to check ownership
-    const ticket = await ticketModels.fetchTicketById(ticketId);
+    const ticket = (await ticketModels.fetchTicketById(
+      ticketId
+    )) as TicketResponse;
 
     if (!ticket) {
       return res.status(404).send({

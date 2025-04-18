@@ -16,7 +16,13 @@ import {
   insertTeam,
   insertTeamMember,
 } from "../models/teams-models";
-import { User } from "../types";
+import {
+  User,
+  AuthTokens,
+  RegistrationData,
+  TeamResponse,
+  ExtendedTeamMember,
+} from "../types";
 import { withTransaction } from "../utils/db-transaction";
 
 // Environment variables
@@ -27,7 +33,7 @@ const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "1d";
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 // Helper function to generate tokens
-const generateTokens = async (user: User) => {
+const generateTokens = async (user: User): Promise<AuthTokens> => {
   // Get staff role if exists
   const teamMember = await selectTeamMemberByUserId(user.id as number);
 
@@ -103,6 +109,7 @@ export const register = async (
   next: NextFunction
 ) => {
   try {
+    const userData: RegistrationData = req.body;
     const {
       username,
       email,
@@ -110,7 +117,7 @@ export const register = async (
       isEventOrganiser,
       teamName,
       teamDescription,
-    } = req.body;
+    } = userData;
 
     // Check if username or email already exists
     try {
@@ -151,8 +158,8 @@ export const register = async (
       const newUser = await insertUser(username, email, passwordHash);
       const dbUser = newUser as User;
 
-      let team = null;
-      let teamMember = null;
+      let team: TeamResponse | null = null;
+      let teamMember: ExtendedTeamMember | null = null;
 
       // If user wants to be an event organiser, create a team and add them as an event_manager
       if (isEventOrganiser) {
@@ -164,14 +171,17 @@ export const register = async (
         }
 
         // Create team
-        team = await insertTeam(teamName, teamDescription);
+        team = (await insertTeam(
+          teamName,
+          teamDescription
+        )) as unknown as TeamResponse;
 
         // Add user as team event_manager
-        teamMember = await insertTeamMember(
+        teamMember = (await insertTeamMember(
           dbUser.id as number,
-          (team as any).id,
+          team.id,
           "event_manager"
-        );
+        )) as unknown as ExtendedTeamMember;
       }
 
       // Generate tokens

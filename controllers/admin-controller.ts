@@ -10,6 +10,12 @@ import { checkIsUserSiteAdmin } from "./users-controller";
 import db from "../db/connection";
 import { updateUserToAdmin } from "../models/admin-models";
 import { sanitizeUser, sanitizeUsers } from "../utils/databaseHelpers";
+import {
+  AdminDashboardData,
+  EventResponse,
+  TeamResponse,
+  User,
+} from "../types";
 
 export const getAdminDashboard = async (
   req: Request,
@@ -47,9 +53,11 @@ export const getAdminDashboard = async (
     const tickets = await fetchAllTickets();
 
     // Get all registrations
-    const registrationsPromise = (events as any[]).map(async (event) => {
-      return selectEventRegistrationsByEventId(Number(event.id));
-    });
+    const registrationsPromise = (events as EventResponse[]).map(
+      async (event) => {
+        return selectEventRegistrationsByEventId(Number(event.id));
+      }
+    );
 
     const registrations = await Promise.all(registrationsPromise);
 
@@ -68,32 +76,34 @@ export const getAdminDashboard = async (
       `;
 
     const draftEventsResult = await db.query(draftEventsQuery);
-    const draftEvents = draftEventsResult.rows.map((event: any) => ({
+    const draftEvents = draftEventsResult.rows.map((event) => ({
       ...event,
       id: Number(event.id),
       team_id: event.team_id ? Number(event.team_id) : null,
       created_by: event.created_by ? Number(event.created_by) : null,
       price: event.price ? Number(event.price) : null,
       max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
-    }));
+    })) as EventResponse[];
 
     // Sanitize all users to remove password hashes
-    const sanitizedUsers = sanitizeUsers(users);
+    const sanitizedUsers = sanitizeUsers(users) as unknown as User[];
 
     // Return all data
+    const dashboardData: AdminDashboardData = {
+      users: sanitizedUsers,
+      total_users,
+      events: events as unknown as EventResponse[],
+      total_events,
+      draft_events: draftEvents,
+      teams: teams as unknown as TeamResponse[],
+      total_teams,
+      tickets,
+      registrations: registrations.flat(),
+    };
+
     res.status(200).send({
       status: "success",
-      data: {
-        users: sanitizedUsers,
-        total_users,
-        events,
-        total_events,
-        draft_events: draftEvents,
-        teams,
-        total_teams,
-        tickets,
-        registrations: registrations.flat(),
-      },
+      data: dashboardData,
     });
   } catch (err) {
     next(err);
@@ -142,7 +152,7 @@ export const promoteUserById = async (
     }
 
     const updatedUser = await updateUserToAdmin(Number(id), newAdminStatus);
-    const sanitizedUser = sanitizeUser(updatedUser);
+    const sanitizedUser = sanitizeUser(updatedUser as User);
 
     res.status(200).send({
       status: "success",

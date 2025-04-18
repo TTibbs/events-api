@@ -32,6 +32,11 @@ export type TeamMember = {
   created_at: Date;
 };
 
+// Extended TeamMember to include ID which is returned from our team model
+export interface ExtendedTeamMember extends TeamMember {
+  id: number;
+}
+
 export type Event = {
   status: string;
   title: string;
@@ -106,6 +111,55 @@ export interface EventRegistrationResponse extends EventRegistration {
   reactivated?: boolean;
 }
 
+// User Updates type for updating user information
+export interface UserUpdates {
+  username?: string;
+  email?: string;
+  password_hash?: string;
+  is_site_admin?: boolean;
+}
+
+// Event Updates
+export interface EventUpdateData {
+  status?: string;
+  title?: string;
+  description?: string | null;
+  location?: string | null;
+  start_time?: Date;
+  end_time?: Date;
+  max_attendees?: number | null;
+  price?: number | null;
+  event_type?: string | null;
+  is_public?: boolean;
+  team_id?: number;
+  created_by?: number | null;
+}
+
+// Email related types
+export interface EmailInfo {
+  to: string;
+  name: string;
+  eventTitle: string;
+  eventDate: string;
+  eventLocation: string;
+  ticketCode: string;
+}
+
+export interface TicketInfo {
+  user_email: string;
+  user_name: string;
+  event_title: string;
+  event_date: string;
+  event_location: string;
+  ticket_code: string;
+}
+
+// Extended EventRegistration with ticket info
+export interface ExtendedEventRegistration extends EventRegistrationResponse {
+  ticket_info?: TicketInfo;
+  reactivated?: boolean;
+}
+
 export interface EventAvailabilityResponse {
   available: boolean;
   reason?: string;
@@ -113,6 +167,52 @@ export interface EventAvailabilityResponse {
 
 export interface TeamResponse extends Team {
   id: number;
+}
+
+// Authentication types
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RegistrationData {
+  username: string;
+  email: string;
+  password: string;
+  isEventOrganiser?: boolean;
+  teamName?: string;
+  teamDescription?: string;
+}
+
+// Admin Dashboard types
+export interface AdminDashboardData {
+  users: User[];
+  total_users: number;
+  events: EventResponse[];
+  total_events: number;
+  draft_events: EventResponse[];
+  teams: TeamResponse[];
+  total_teams: number;
+  tickets: TicketResponse[];
+  registrations: EventRegistrationResponse[];
+}
+
+// Stripe related types
+export interface CheckoutSessionData {
+  eventId: number | string;
+  userId: number | string;
+}
+
+export interface StripeSessionInfo {
+  url: string;
+  sessionId: string;
+}
+
+export interface WebhookEvent {
+  type: string;
+  data: {
+    object: any;
+  };
 }
 
 export type StripePayment = {
