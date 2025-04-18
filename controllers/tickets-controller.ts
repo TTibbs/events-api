@@ -88,6 +88,39 @@ export const getTicketsByEventId = async (
   }
 };
 
+export const getHasUserPaid = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId, eventId } = req.params;
+
+    // Validate that userId and eventId are numbers
+    if (isNaN(Number(userId)) || isNaN(Number(eventId))) {
+      return res.status(400).json({
+        status: "error",
+        msg: "User ID and Event ID must be valid numbers",
+      });
+    }
+
+    const hasUserPaid = await ticketModels.hasUserPaid(
+      Number(userId),
+      Number(eventId)
+    );
+
+    res.status(200).json({ hasUserPaid });
+  } catch (err: any) {
+    if (err.status && err.msg) {
+      return res.status(err.status).json({
+        status: "error",
+        msg: err.msg,
+      });
+    }
+    next(err);
+  }
+};
+
 // Verify a ticket by code
 export const verifyTicket = async (
   req: Request,

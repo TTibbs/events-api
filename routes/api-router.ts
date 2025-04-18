@@ -7,6 +7,7 @@ import ticketsRouter from "./tickets-router";
 import eventsRouter from "./events-router";
 import endpoints from "../endpoints.json";
 import adminRouter from "./admin-router";
+import stripeRouter from "./stripe-router";
 
 apiRouter.get("/", (req, res) => {
   res.status(200).send({ endpoints });
@@ -18,5 +19,6 @@ apiRouter.use("/teams", teamsRouter);
 apiRouter.use("/tickets", ticketsRouter);
 apiRouter.use("/events", eventsRouter);
 apiRouter.use("/admin", adminRouter);
+apiRouter.use("/stripe", stripeRouter);
 
 export default apiRouter;

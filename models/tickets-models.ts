@@ -128,6 +128,54 @@ export const createTicketInTransaction = async (
   return convertIds(result.rows[0], idFields);
 };
 
+export const hasUserPaid = async (userId: number, eventId: number) => {
+  // Validate inputs
+  if (isNaN(userId) || isNaN(eventId)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Invalid userId or eventId",
+    });
+  }
+
+  // First verify that the user exists
+  const { rows: users } = await db.query("SELECT id FROM users WHERE id = $1", [
+    userId,
+  ]);
+  if (users.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "User not found",
+    });
+  }
+
+  // Then verify that the event exists
+  const { rows: events } = await db.query(
+    "SELECT id FROM events WHERE id = $1",
+    [eventId]
+  );
+  if (events.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Event not found",
+    });
+  }
+
+  // Check if user has a valid paid ticket for this event
+  // We check for either paid=true OR is_paid=true since the database has both fields
+  const result = await db.query(
+    `
+    SELECT * FROM tickets 
+    WHERE user_id = $1 
+    AND event_id = $2 
+    AND status = 'valid' 
+    AND (paid = true OR is_paid = true);
+    `,
+    [userId, eventId]
+  );
+
+  return result.rows.length > 0;
+};
+
 // Update a ticket's status
 export const updateTicketStatus = async (id: number, status: string) => {
   // First check if ticket exists

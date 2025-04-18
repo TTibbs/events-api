@@ -14,6 +14,7 @@ const seed = async ({
   try {
     // Drop tables in the correct order with CASCADE to handle dependencies
     await db.query("DROP TABLE IF EXISTS tickets CASCADE");
+    await db.query("DROP TABLE IF EXISTS stripe_payments CASCADE");
     await db.query("DROP TABLE IF EXISTS event_registrations CASCADE");
     await db.query("DROP TABLE IF EXISTS events CASCADE");
     await db.query("DROP TABLE IF EXISTS team_members CASCADE");
@@ -27,6 +28,7 @@ const seed = async ({
     await db.query("DROP TYPE IF EXISTS team_role CASCADE");
     await db.query("DROP TYPE IF EXISTS event_status CASCADE");
     await db.query("DROP TYPE IF EXISTS ticket_status CASCADE");
+    await db.query("DROP TYPE IF EXISTS stripe_payment_status CASCADE");
 
     // Create types
     await db.query(`
@@ -41,6 +43,9 @@ const seed = async ({
     await db.query(`
       CREATE TYPE ticket_status AS ENUM ('valid', 'used', 'cancelled', 'expired', 'pending_payment');
     `);
+    await db.query(`
+      CREATE TYPE stripe_payment_status AS ENUM ('pending', 'succeeded', 'failed');
+    `);
 
     // Create tables
     await db.query(`
@@ -51,6 +56,7 @@ const seed = async ({
         password_hash TEXT NOT NULL,
         profile_image_url TEXT,
         is_site_admin BOOLEAN NOT NULL DEFAULT FALSE,
+        stripe_customer_id VARCHAR(255),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -121,6 +127,21 @@ const seed = async ({
     `);
 
     await db.query(`
+      CREATE TABLE stripe_payments (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        stripe_session_id VARCHAR(255) NOT NULL,
+        stripe_payment_intent_id VARCHAR(255) NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        currency VARCHAR(3) NOT NULL DEFAULT 'gbp',
+        status stripe_payment_status NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
       CREATE TABLE tickets (
         id SERIAL PRIMARY KEY,
         event_id BIGINT REFERENCES events(id) ON DELETE CASCADE,
@@ -131,6 +152,8 @@ const seed = async ({
         issued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         used_at TIMESTAMP WITH TIME ZONE,
         status ticket_status NOT NULL DEFAULT 'valid',
+        payment_id BIGINT REFERENCES stripe_payments(id) ON DELETE SET NULL,
+        is_paid BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -178,6 +201,21 @@ const seed = async ({
     `);
     await db.query(`
       CREATE INDEX idx_tickets_ticket_code ON tickets (ticket_code);
+    `);
+    await db.query(`
+      CREATE INDEX idx_stripe_payments_user_id ON stripe_payments (user_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_stripe_payments_event_id ON stripe_payments (event_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_stripe_payments_status ON stripe_payments (status);
+    `);
+    await db.query(`
+      CREATE INDEX idx_stripe_payments_stripe_session_id ON stripe_payments (stripe_session_id);
+    `);
+    await db.query(`
+      CREATE INDEX idx_stripe_payments_stripe_payment_intent_id ON stripe_payments (stripe_payment_intent_id);
     `);
 
     // Create update_timestamp function

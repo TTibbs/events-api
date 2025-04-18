@@ -1,6 +1,6 @@
 import { Router, RequestHandler } from "express";
 import * as ticketsController from "../controllers/tickets-controller";
-import { authenticate, authMiddleware } from "../middlewares/auth-middleware";
+import { authMiddleware } from "../middlewares/auth-middleware";
 
 const ticketsRouter = Router();
 
@@ -18,6 +18,8 @@ const useTicketHandler = ticketsController.useTicket as RequestHandler;
 const updateTicketHandler = ticketsController.updateTicket as RequestHandler;
 const deleteTicketByIdHandler =
   ticketsController.deleteTicketById as RequestHandler;
+const getHasUserPaidHandler =
+  ticketsController.getHasUserPaid as RequestHandler;
 const authenticateHandler = authMiddleware.isAuthenticated as RequestHandler;
 
 // GET routes - specific routes first
@@ -31,6 +33,7 @@ ticketsRouter.get("/event/:eventId", getTicketsByEventIdHandler);
 ticketsRouter.get("/verify/:ticketCode", verifyTicketHandler);
 ticketsRouter.get("/:id", getTicketByIdHandler);
 ticketsRouter.get("/", getAllTicketsHandler);
+ticketsRouter.get("/user/:userId/event/:eventId", getHasUserPaidHandler);
 
 // POST routes
 // Use ticket - requires authentication

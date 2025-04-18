@@ -447,4 +447,97 @@ describe("Tickets API Endpoints", () => {
       expect(msg).toBe("Ticket not found");
     });
   });
+  describe("GET /api/tickets/user/:userId/event/:eventId - Check if User Has Paid for Event", () => {
+    test("Should return true when user has valid ticket for event", async () => {
+      const token = await getAuthToken();
+      // We know from test-data that user 3 has a valid ticket for event 1
+      const response = await request(app)
+        .get("/api/tickets/user/3/event/1")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      console.log(response.body);
+      expect(response.body).toHaveProperty("hasUserPaid", true);
+    });
+
+    test("Should return false when user doesn't have ticket for event", async () => {
+      const token = await getAuthToken();
+      // Create a new event for testing
+      const adminToken = await getAuthToken(); // Using admin token to create event
+      const newEvent = {
+        status: "published",
+        title: "Test Event for HasUserPaid",
+        description: "An event for testing hasUserPaid",
+        start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+        end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
+        team_id: 1,
+      };
+
+      const eventResponse = await request(app)
+        .post("/api/events")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send(newEvent)
+        .expect(201);
+
+      const eventId = eventResponse.body.event.id;
+
+      // Check if any user has paid for this new event (should be false)
+      const response = await request(app)
+        .get(`/api/tickets/user/1/event/${eventId}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty("hasUserPaid", false);
+    });
+
+    test("Should return false when user has a cancelled ticket for event", async () => {
+      const token = await getAuthToken();
+      // We know from test-data that user 2 has a cancelled ticket for event 1
+      const response = await request(app)
+        .get("/api/tickets/user/2/event/1")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty("hasUserPaid", false);
+    });
+
+    test("Should handle invalid user ID", async () => {
+      const token = await getAuthToken();
+      const response = await request(app)
+        .get("/api/tickets/user/invalid/event/1")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body).toHaveProperty("status", "error");
+    });
+
+    test("Should handle invalid event ID", async () => {
+      const token = await getAuthToken();
+      const response = await request(app)
+        .get("/api/tickets/user/1/event/invalid")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body).toHaveProperty("status", "error");
+    });
+
+    test("Should return 404 for non-existent user", async () => {
+      const token = await getAuthToken();
+      const response = await request(app)
+        .get("/api/tickets/user/9999/event/1")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body).toHaveProperty("msg", "User not found");
+    });
+
+    test("Should return 404 for non-existent event", async () => {
+      const token = await getAuthToken();
+      const response = await request(app)
+        .get("/api/tickets/user/1/event/9999")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body).toHaveProperty("msg", "Event not found");
+    });
+  });
 });
