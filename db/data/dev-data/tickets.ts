@@ -10,6 +10,7 @@ export const tickets: Ticket[] = [
     event_id: 1,
     user_id: 3,
     registration_id: 1,
+    paid: true,
     ticket_code: generateTicketCode(),
     issued_at: new Date(),
     used_at: null,
@@ -19,6 +20,7 @@ export const tickets: Ticket[] = [
     event_id: 1,
     user_id: 1,
     registration_id: 1,
+    paid: false,
     ticket_code: generateTicketCode(),
     issued_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
     used_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
@@ -28,6 +30,7 @@ export const tickets: Ticket[] = [
     event_id: 1,
     user_id: 2,
     registration_id: 1,
+    paid: false,
     ticket_code: generateTicketCode(),
     issued_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
     used_at: null,
