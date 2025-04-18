@@ -15,6 +15,38 @@ export const categories: Category[] = [
   },
   {
     id: 4,
-    name: "Tech ",
+    name: "Tech",
+  },
+  {
+    id: 5,
+    name: "Music",
+  },
+  {
+    id: 6,
+    name: "Gaming",
+  },
+  {
+    id: 7,
+    name: "Sports",
+  },
+  {
+    id: 8,
+    name: "Art",
+  },
+  {
+    id: 9,
+    name: "Food",
+  },
+  {
+    id: 10,
+    name: "Business",
+  },
+  {
+    id: 11,
+    name: "Health",
+  },
+  {
+    id: 12,
+    name: "Education",
   },
 ];

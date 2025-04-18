@@ -173,22 +173,6 @@ describe("Event Registration API", () => {
       description: "An event that's not published yet",
     });
 
-    // Log the created events to help with debugging
-    console.log("Created events for testing:", {
-      testEvent: testEvent
-        ? { id: testEvent.id, title: testEvent.title }
-        : "failed to create",
-      pastEvent: pastEvent
-        ? { id: pastEvent.id, title: pastEvent.title }
-        : "failed to create",
-      fullEvent: fullEvent
-        ? { id: fullEvent.id, title: fullEvent.title }
-        : "failed to create",
-      draftEvent: draftEvent
-        ? { id: draftEvent.id, title: draftEvent.title }
-        : "failed to create",
-    });
-
     // Register another user for the full event to reach capacity
     const otherUserResponse = await request(app).post("/api/users").send({
       username: "capacityuser",
@@ -218,12 +202,6 @@ describe("Event Registration API", () => {
         .post(`/api/events/${fullEvent.id}/register`)
         .set("Authorization", `Bearer ${capacityUserToken}`)
         .send({ userId: otherUser.id });
-    } else {
-      console.log("Skipping capacity user registration due to failure:", {
-        userCreated: otherUserResponse.statusCode === 201,
-        fullEventCreated: !!fullEvent,
-        fullEventId: fullEvent ? fullEvent.id : "undefined",
-      });
     }
   });
   describe("Event Availability", () => {
@@ -1370,8 +1348,6 @@ describe("GET /api/events - Filter Events", () => {
         "/api/events?category=Workshop&location=New York&min_price=50&max_price=75"
       )
       .expect(200);
-
-    console.log("response.body.events:", response.body.events);
     expect(response.body.events.length).toBeGreaterThan(0);
     response.body.events.forEach((event: any) => {
       expect(event.category).toBe("Workshop");
@@ -1393,88 +1369,63 @@ describe("GET /api/events - Filter Events", () => {
 });
 
 describe("Event Sorting", () => {
-  let adminToken: string;
-
-  beforeEach(async () => {
-    adminToken = await getTokenForRole("team_admin");
-  });
-
   test("GET /api/events - should sort events by start_time in ascending order by default", async () => {
     const { body } = await request(app).get("/api/events").expect(200);
-
     expect(body.events.length).toBeGreaterThan(0); // At least one event exists
     expect(body.events).toBeSorted({ key: "start_time" });
   });
-
   test("GET /api/events - should sort events by start_time in descending order when specified", async () => {
     const { body } = await request(app)
       .get("/api/events?order=desc")
       .expect(200);
-
     expect(body.events).toBeSorted({ key: "start_time", descending: true });
   });
-
   test("GET /api/events - should sort events by price in ascending order when specified", async () => {
     const { body } = await request(app)
       .get("/api/events?sort_by=price")
       .expect(200);
-
     expect(body.events).toBeSorted({ key: "price" });
   });
-
   test("GET /api/events - should sort events by price in descending order when specified", async () => {
     const { body } = await request(app)
       .get("/api/events?sort_by=price&order=desc")
       .expect(200);
-
     expect(body.events).toBeSorted({ key: "price", descending: true });
   });
-
   test("GET /api/events - should sort events by location in ascending order when specified", async () => {
     const { body } = await request(app)
       .get("/api/events?sort_by=location")
       .expect(200);
-
     expect(body.events).toBeSorted({ key: "location" });
   });
-
   test("GET /api/events - should sort events by location in descending order when specified", async () => {
     const { body } = await request(app)
       .get("/api/events?sort_by=location&order=desc")
       .expect(200);
-
     expect(body.events).toBeSorted({ key: "location", descending: true });
   });
-
   test("GET /api/events - should sort events by category in ascending order when specified", async () => {
     const { body } = await request(app)
       .get("/api/events?sort_by=category")
       .expect(200);
-
     expect(body.events).toBeSorted({ key: "category" });
   });
-
   test("GET /api/events - should sort events by category in descending order when specified", async () => {
     const { body } = await request(app)
       .get("/api/events?sort_by=category&order=desc")
       .expect(200);
-
     expect(body.events).toBeSorted({ key: "category", descending: true });
   });
-
   test("GET /api/events - should return 400 error for invalid sort_by parameter", async () => {
     const { body } = await request(app)
       .get("/api/events?sort_by=invalid_field")
       .expect(400);
-
     expect(body.msg).toBe("Invalid sort_by query");
   });
-
   test("GET /api/events - should return 400 error for invalid order parameter", async () => {
     const { body } = await request(app)
       .get("/api/events?order=invalid_order")
       .expect(400);
-
     expect(body.msg).toBe("Invalid order query");
   });
 });
