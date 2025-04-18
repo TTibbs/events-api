@@ -1,22 +1,27 @@
 import db from "../db/connection";
-import { Ticket, TicketResponse } from "../types";
+import {
+  Ticket,
+  TicketResponse,
+  TicketWithEventInfo,
+  TicketWithUserInfo,
+} from "../types";
 import { convertIdsInArray, convertIds } from "../utils/converters";
 
 // Common ID fields that need to be converted
 const idFields = ["id", "event_id", "user_id", "registration_id"];
 
 // Get all tickets
-export const fetchAllTickets = async () => {
+export const fetchAllTickets = async (): Promise<TicketResponse[]> => {
   const result = await db.query(`
     SELECT * FROM tickets
     ORDER BY issued_at DESC;
   `);
 
-  return convertIdsInArray(result.rows, idFields);
+  return convertIdsInArray(result.rows, idFields) as TicketResponse[];
 };
 
 // Get ticket by ID
-export const fetchTicketById = async (id: number) => {
+export const fetchTicketById = async (id: number): Promise<TicketResponse> => {
   const result = await db.query(
     `
     SELECT * FROM tickets WHERE id = $1;
@@ -30,11 +35,13 @@ export const fetchTicketById = async (id: number) => {
     });
   }
 
-  return convertIds(result.rows[0], idFields);
+  return convertIds(result.rows[0], idFields) as TicketResponse;
 };
 
 // Get tickets by user ID
-export const fetchTicketsByUserId = async (userId: number) => {
+export const fetchTicketsByUserId = async (
+  userId: number
+): Promise<TicketWithEventInfo[]> => {
   const result = await db.query(
     `
     SELECT t.*, e.title as event_title, e.start_time, e.end_time, e.location 
@@ -46,11 +53,13 @@ export const fetchTicketsByUserId = async (userId: number) => {
     [userId]
   );
 
-  return convertIdsInArray(result.rows, idFields);
+  return convertIdsInArray(result.rows, idFields) as TicketWithEventInfo[];
 };
 
 // Get tickets by event ID
-export const fetchTicketsByEventId = async (eventId: number) => {
+export const fetchTicketsByEventId = async (
+  eventId: number
+): Promise<TicketWithUserInfo[]> => {
   const result = await db.query(
     `
     SELECT t.*, u.username, u.email
@@ -62,11 +71,22 @@ export const fetchTicketsByEventId = async (eventId: number) => {
     [eventId]
   );
 
-  return convertIdsInArray(result.rows, idFields);
+  return convertIdsInArray(result.rows, idFields) as TicketWithUserInfo[];
 };
 
 // Get ticket by ticket code
-export const fetchTicketByCode = async (ticketCode: string) => {
+export const fetchTicketByCode = async (
+  ticketCode: string
+): Promise<
+  TicketResponse & {
+    event_title: string;
+    start_time: string;
+    end_time: string;
+    location: string;
+    username: string;
+    email: string;
+  }
+> => {
   const result = await db.query(
     `
     SELECT t.*, e.title as event_title, e.start_time, e.end_time, e.location, u.username, u.email
@@ -84,11 +104,20 @@ export const fetchTicketByCode = async (ticketCode: string) => {
     });
   }
 
-  return convertIds(result.rows[0], idFields);
+  return convertIds(result.rows[0], idFields) as TicketResponse & {
+    event_title: string;
+    start_time: string;
+    end_time: string;
+    location: string;
+    username: string;
+    email: string;
+  };
 };
 
 // Create a new ticket
-export const createTicket = async (ticketData: Ticket) => {
+export const createTicket = async (
+  ticketData: Ticket
+): Promise<TicketResponse> => {
   const { event_id, user_id, registration_id, ticket_code, status } =
     ticketData;
 
@@ -103,14 +132,14 @@ export const createTicket = async (ticketData: Ticket) => {
     [event_id, user_id, registration_id, ticket_code, status || "valid"]
   );
 
-  return convertIds(result.rows[0], idFields);
+  return convertIds(result.rows[0], idFields) as TicketResponse;
 };
 
 // Create a ticket within a transaction
 export const createTicketInTransaction = async (
   client: any,
   ticketData: Ticket
-) => {
+): Promise<TicketResponse> => {
   const { event_id, user_id, registration_id, ticket_code, status } =
     ticketData;
 
@@ -125,10 +154,13 @@ export const createTicketInTransaction = async (
     [event_id, user_id, registration_id, ticket_code, status || "valid"]
   );
 
-  return convertIds(result.rows[0], idFields);
+  return convertIds(result.rows[0], idFields) as TicketResponse;
 };
 
-export const hasUserPaid = async (userId: number, eventId: number) => {
+export const hasUserPaid = async (
+  userId: number,
+  eventId: number
+): Promise<boolean> => {
   // Validate inputs
   if (isNaN(userId) || isNaN(eventId)) {
     return Promise.reject({

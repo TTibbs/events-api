@@ -1,5 +1,5 @@
 import db from "../db/connection";
-import { User } from "../types";
+import { User, EventRegistrationResponse } from "../types";
 
 export const selectUsers = async (): Promise<{
   users: User[];
@@ -344,7 +344,7 @@ export const deleteUser = async (id: number): Promise<void> => {
 // Get event registrations for a user
 export const selectUserEventRegistrations = async (
   userId: number
-): Promise<any[]> => {
+): Promise<EventRegistrationResponse[]> => {
   const { rows } = await db.query(
     `
     SELECT 
@@ -370,5 +370,5 @@ export const selectUserEventRegistrations = async (
     id: Number(registration.id),
     event_id: Number(registration.event_id),
     user_id: Number(registration.user_id),
-  }));
+  })) as EventRegistrationResponse[];
 };

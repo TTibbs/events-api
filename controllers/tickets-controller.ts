@@ -137,9 +137,7 @@ export const verifyTicket = async (
       });
     }
 
-    const ticket = (await ticketModels.fetchTicketByCode(
-      ticketCode
-    )) as TicketWithEventInfo;
+    const ticket = await ticketModels.fetchTicketByCode(ticketCode);
 
     // Check ticket validity
     if (ticket.status !== "valid") {

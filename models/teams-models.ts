@@ -1,5 +1,5 @@
 import db from "../db/connection";
-import { Team, TeamMember, User } from "../types";
+import { Team, TeamMember, User, ExtendedTeamMember } from "../types";
 
 export const selectTeams = async (): Promise<{
   teams: Team[];
@@ -185,7 +185,7 @@ export const insertTeamMember = async (
   userId: number,
   teamId: number,
   role: string
-): Promise<TeamMember> => {
+): Promise<ExtendedTeamMember> => {
   const { rows } = await db.query(
     "INSERT INTO team_members (user_id, team_id, role) VALUES ($1, $2, $3) RETURNING *",
     [userId, teamId, role]
@@ -199,7 +199,7 @@ export const insertTeamMember = async (
     team_id: Number(rows[0].team_id),
   };
 
-  return teamMember as TeamMember;
+  return teamMember as ExtendedTeamMember;
 };
 
 export const checkUserRole = async (
