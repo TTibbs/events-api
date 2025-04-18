@@ -10,7 +10,6 @@ import {
   deleteUserById,
   getUserEventRegistrations,
   getIsUserSiteAdmin,
-  getAdminDashboard,
 } from "../controllers/users-controller";
 import { authenticate } from "../middlewares/auth-middleware";
 
@@ -25,7 +24,6 @@ const deleteUserByIdHandler = deleteUserById as RequestHandler;
 const authenticateHandler = authenticate as RequestHandler;
 const getUserEventRegistrationsHandler =
   getUserEventRegistrations as RequestHandler;
-const getAdminDashboardHandler = getAdminDashboard as RequestHandler;
 
 // Public endpoints - no authentication required
 usersRouter.get("/", getUsersHandler);
@@ -46,13 +44,6 @@ usersRouter.get(
   "/:id/registrations",
   authenticateHandler,
   getUserEventRegistrationsHandler
-);
-
-// Admin dashboard endpoint
-usersRouter.get(
-  "/admin/dashboard",
-  authenticateHandler,
-  getAdminDashboardHandler
 );
 
 export default usersRouter;

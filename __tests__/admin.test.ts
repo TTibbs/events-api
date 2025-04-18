@@ -30,7 +30,7 @@ describe("Admin API", () => {
   describe("GET /api/users/admin/dashboard", () => {
     test("401: Should return unauthorized when no token is provided", async () => {
       const response = await request(app)
-        .get("/api/users/admin/dashboard")
+        .get("/api/admin/dashboard")
         .expect(401);
 
       expect(response.body).toEqual({
@@ -49,7 +49,7 @@ describe("Admin API", () => {
       );
 
       const response = await request(app)
-        .get("/api/users/admin/dashboard")
+        .get("/api/admin/dashboard")
         .set("Authorization", `Bearer ${token}`)
         .expect(403);
 
@@ -69,7 +69,7 @@ describe("Admin API", () => {
       );
 
       const response = await request(app)
-        .get("/api/users/admin/dashboard")
+        .get("/api/admin/dashboard")
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
 
