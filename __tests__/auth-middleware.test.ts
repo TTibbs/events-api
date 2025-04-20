@@ -596,7 +596,7 @@ describe("Role-Based Authorization Tests", () => {
     expect(response.body.data).toHaveProperty("refreshToken");
     expect(response.body.data).toHaveProperty("team");
     expect(response.body.data).toHaveProperty("teamMember");
-    expect(response.body.data.teamMember.role).toBe("event_manager");
+    expect(response.body.data.teamMember.role).toBe("team_admin");
   });
 
   test("Should allow registration as a regular user without team", async () => {

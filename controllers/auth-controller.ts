@@ -180,7 +180,7 @@ export const register = async (
         teamMember = (await insertTeamMember(
           dbUser.id as number,
           team.id,
-          "event_manager"
+          "team_admin"
         )) as unknown as ExtendedTeamMember;
       }
 
@@ -229,7 +229,7 @@ export const login = async (
       if (!user) {
         return res.status(401).send({
           status: "error",
-          msg: "Invalid credentials",
+          msg: "Username is incorrect",
         });
       }
 
@@ -241,7 +241,7 @@ export const login = async (
       if (!isPasswordValid) {
         return res.status(401).send({
           status: "error",
-          msg: "Invalid credentials",
+          msg: "Password is incorrect",
         });
       }
 
@@ -271,7 +271,7 @@ export const login = async (
       if (error.status === 404) {
         return res.status(401).send({
           status: "error",
-          msg: "Invalid credentials",
+          msg: "Username is incorrect",
         });
       }
       next(error);

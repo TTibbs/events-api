@@ -29,7 +29,6 @@ beforeEach(() =>
   })
 );
 
-// Keep the database connection open until all tests are complete
 afterAll(async () => {
   await db.end();
 });
@@ -54,7 +53,6 @@ describe("Authentication - User Registration Functionality", () => {
     expect(body.data.user.email).toBe(newUser.email);
     expect(body.data).toHaveProperty("accessToken");
     expect(body.data).toHaveProperty("refreshToken");
-    // Regular users should not have team information
     expect(body.data).not.toHaveProperty("team");
     expect(body.data).not.toHaveProperty("teamMember");
   });
@@ -86,67 +84,69 @@ describe("Authentication - User Registration Functionality", () => {
       .expect(400);
     expect(msg).toBe("Email already exists");
   });
-  test("Should reject registration when input validation requirements are not satisfied", async () => {
-    // Missing username
-    const missingUsername = {
-      email: "valid@example.com",
+  test("Should reject registration when username is not between 3 and 30 characters", async () => {
+    const shortUsername = {
+      username: "ab",
+      email: "short@example.com",
       password: "password123",
     };
-
-    const response1 = await request(app)
+    const { body } = await request(app)
       .post("/api/auth/register")
-      .send(missingUsername)
+      .send(shortUsername)
       .expect(400);
-    expect(response1.body.status).toBe("error");
-    expect(response1.body.errors[0].message).toBe("Username is required");
-    expect(response1.body.errors[1].message).toBe(
+    expect(body.status).toBe("error");
+    expect(body.errors[0].message).toBe(
       "Username must be between 3 and 30 characters"
     );
-
-    // Invalid email
-    const invalidEmail = {
+  });
+  test("Should reject registration when password is missing", async () => {
+    const missingPassword = {
       username: "validuser",
-      email: "not-an-email",
-      password: "password123",
+      email: "valid@example.com",
     };
-
-    const response2 = await request(app)
+    const { body } = await request(app)
       .post("/api/auth/register")
-      .send(invalidEmail)
+      .send(missingPassword)
       .expect(400);
-    expect(response2.body.status).toBe("error");
-    expect(response2.body.errors[0].message).toBe(
-      "Must be a valid email address"
-    );
-
-    // Short password
+    expect(body.status).toBe("error");
+    expect(body.errors[0].message).toBe("Password is required");
+  });
+  test("Should reject registration when password is less than 6 characters", async () => {
     const shortPassword = {
       username: "validuser",
       email: "valid@example.com",
       password: "pass",
     };
-
-    const response3 = await request(app)
+    const { body } = await request(app)
       .post("/api/auth/register")
       .send(shortPassword)
       .expect(400);
-
-    expect(response3.body.status).toBe("error");
-    expect(response3.body.errors[0].message).toBe(
+    expect(body.status).toBe("error");
+    expect(body.errors[0].message).toBe(
       "Password must be at least 6 characters"
     );
+  });
+  test("Should reject registration when email is not a valid email address", async () => {
+    const invalidEmail = {
+      username: "validuser",
+      email: "not-an-email",
+      password: "password123",
+    };
+    const { body } = await request(app)
+      .post("/api/auth/register")
+      .send(invalidEmail)
+      .expect(400);
+    expect(body.status).toBe("error");
+    expect(body.errors[0].message).toBe("Must be a valid email address");
   });
 });
 
 describe("Authentication - User Login Functionality", () => {
   test("Should successfully authenticate a user with valid credentials and return tokens", async () => {
-    // Note: We're assuming the password for alice123 in test data is "password123"
-    // The actual hash in your user.ts needs to match this
     const loginCredentials = {
       username: "alice123",
       password: "password123",
     };
-
     const { body } = await request(app)
       .post("/api/auth/login")
       .send(loginCredentials)
@@ -168,7 +168,7 @@ describe("Authentication - User Login Functionality", () => {
       .post("/api/auth/login")
       .send(nonExistentUser)
       .expect(401);
-    expect(msg).toBe("Invalid credentials");
+    expect(msg).toBe("Username is incorrect");
   });
   test("Should reject login attempt when password is incorrect", async () => {
     const invalidPassword = {
@@ -181,7 +181,7 @@ describe("Authentication - User Login Functionality", () => {
       .post("/api/auth/login")
       .send(invalidPassword)
       .expect(401);
-    expect(msg).toBe("Invalid credentials");
+    expect(msg).toBe("Password is incorrect");
   });
   test("Should validate required input fields for login", async () => {
     const missingUsername = {
@@ -224,13 +224,12 @@ describe("Authentication - Token Refresh Functionality", () => {
     expect(msg).toBe("Invalid refresh token");
   });
   test("Should reject token refresh request when refresh token is missing", async () => {
-    const emptyRequest = {};
-    const response = await request(app)
+    const { body } = await request(app)
       .post("/api/auth/refresh-token")
-      .send(emptyRequest);
-    expect(response.status).toBe(400);
-    expect(response.body.status).toBe("error");
-    expect(response.body.errors[0].message).toBe("Refresh token is required");
+      .send({})
+      .expect(400);
+    expect(body.status).toBe("error");
+    expect(body.errors[0].message).toBe("Refresh token is required");
   });
   test("Should successfully refresh tokens with a valid refresh token", async () => {
     // First, register a new user to get valid tokens
@@ -622,7 +621,7 @@ describe("Authentication - Event Organiser Registration", () => {
     expect(body.data).toHaveProperty("team");
     expect(body.data.team.name).toBe(eventOrganiser.teamName);
     expect(body.data).toHaveProperty("teamMember");
-    expect(body.data.teamMember.role).toBe("event_manager");
+    expect(body.data.teamMember.role).toBe("team_admin");
   });
 
   test("Should reject registration as an event organiser without team name", async () => {
