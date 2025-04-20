@@ -19,7 +19,7 @@ import {
   EventAvailabilityResponse,
   EventRegistrationError,
 } from "../types";
-import { getAuthToken, authorizeRequest } from "../utils/testHelpers";
+import { getAuthToken } from "../utils/testHelpers";
 import { sendRegistrationConfirmation } from "../utils/email";
 import "jest-sorted";
 
@@ -831,29 +831,41 @@ describe("Events API Endpoints", () => {
         ])
       );
     });
-    test("Should enforce permission checks for event creation", async () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-
+    test("Should not allow regular users to create events", async () => {
       const unauthorizedEvent = {
         title: "Unauthorized Event",
-        start_time: tomorrow.toISOString(),
-        end_time: nextWeek.toISOString(),
+        start_time: new Date(Date.now() + 86400000).toISOString(),
+        end_time: new Date(Date.now() + 172800000).toISOString(),
         team_id: 1,
         category: "Conference",
       };
 
-      const unauthorizedResponse = await authorizeRequest(
-        request(app).post("/api/events").send(unauthorizedEvent),
-        "team_member"
-      );
+      const unauthorizedResponse = await request(app)
+        .post("/api/events")
+        .set("Authorization", `Bearer ${regularuserToken}`)
+        .send(unauthorizedEvent)
+        .expect(403);
 
-      expect(unauthorizedResponse.status).toBe(403);
-      expect((unauthorizedResponse.body as any).status).toBe("error");
-      expect((unauthorizedResponse.body as any).msg).toBe(
+      expect(unauthorizedResponse.body.status).toBe("error");
+      expect(unauthorizedResponse.body.msg).toBe(
+        "Forbidden - You are not a member of any team"
+      );
+    });
+    test("Should not allow users to create events for other teams", async () => {
+      const unauthorizedEvent = {
+        title: "Unauthorized Event",
+        start_time: new Date(Date.now() + 86400000).toISOString(),
+        end_time: new Date(Date.now() + 172800000).toISOString(),
+        team_id: 2,
+        category: "Conference",
+      };
+      const unauthorizedResponse = await request(app)
+        .post("/api/events")
+        .set("Authorization", `Bearer ${aliceToken}`)
+        .send(unauthorizedEvent)
+        .expect(403);
+      expect(unauthorizedResponse.body.status).toBe("error");
+      expect(unauthorizedResponse.body.msg).toBe(
         "Forbidden - You don't have permission to create events for this team"
       );
     });
