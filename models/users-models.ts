@@ -141,7 +141,6 @@ export const selectUserById = async (id: number): Promise<User | null> => {
   `,
     [id]
   );
-
   if (rows.length === 0) {
     return Promise.reject({ status: 404, msg: "User not found" });
   }
