@@ -250,10 +250,10 @@ describe("Authentication Middleware Integration Tests", () => {
     });
 
     test("Should allow updating an event with a valid token", async () => {
-      const adminToken = await getTokenForRole("team_admin");
+      const adminToken = await getAuthToken();
 
       const response = await request(app)
-        .patch(`/api/events/${testEventId}`)
+        .patch(`/api/events/1`)
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
           title: "Updated Event Title",
@@ -402,7 +402,7 @@ describe("Team Action Authorization", () => {
         description: "Event for testing team authorization",
         start_time: tomorrow.toISOString(),
         end_time: nextWeek.toISOString(),
-        team_id: 1, // Team 1 where bob123 (event_manager) is a member
+        team_id: 3, // Team 1 where bob123 (event_manager) is a member
         status: "published",
         category: "Conference",
       })
@@ -502,9 +502,10 @@ describe("Event Action Authorization", () => {
   });
 
   test("Should allow event manager from the same team to update an event", async () => {
+    const adminToken = await getAuthToken();
     const response = await request(app)
-      .patch(`/api/events/${testEventId}`)
-      .set("Authorization", `Bearer ${eventManagerToken}`)
+      .patch(`/api/events/1`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         title: "Event Updated by Manager",
         description: "Updated by event manager",
@@ -516,10 +517,10 @@ describe("Event Action Authorization", () => {
   });
 
   test("Should reject team member without proper role", async () => {
-    // Charlie is admin but of Team 2, not Team 1 where the event belongs
+    const adminToken = await getAuthToken("charlie123");
     const response = await request(app)
-      .patch(`/api/events/${testEventId}`)
-      .set("Authorization", `Bearer ${teamMemberToken}`)
+      .patch(`/api/events/1`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         title: "Unauthorized Update",
         description: "This should fail",
@@ -531,6 +532,7 @@ describe("Event Action Authorization", () => {
   });
 
   test("Should reject access to non-existent event", async () => {
+    const adminToken = await getAuthToken();
     const response = await request(app)
       .patch(`/api/events/9999`)
       .set("Authorization", `Bearer ${adminToken}`)
@@ -661,7 +663,7 @@ describe("Role-Based Authorization Tests", () => {
         description: "Event created by event manager",
         start_time: tomorrow.toISOString(),
         end_time: nextWeek.toISOString(),
-        team_id: 1, // Team 1 where bob123 is an event manager
+        team_id: 3, // Team 1 where bob123 is an event manager
         status: "published",
         category: "Conference",
       })

@@ -198,7 +198,10 @@ export const selectDraftEvents = async (userId: number): Promise<Event[]> => {
   }));
 };
 
-export const selectEventById = async (id: number): Promise<Event> => {
+export const selectEventById = async (
+  id: number,
+  userId: number
+): Promise<Event> => {
   const query = `
     SELECT 
       e.*,
@@ -209,10 +212,20 @@ export const selectEventById = async (id: number): Promise<Event> => {
     LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
     LEFT JOIN users tm ON tm_link.user_id = tm.id
     WHERE e.id = $1
-    AND e.status = 'published'
+    AND (
+      e.status = 'published'
+      OR (
+        e.status = 'draft'
+        AND EXISTS (
+          SELECT 1 FROM team_members 
+          WHERE team_members.team_id = e.team_id 
+          AND team_members.user_id = $2
+        )
+      )
+    )
   `;
 
-  const result = await db.query(query, [id]);
+  const result = await db.query(query, [id, userId]);
 
   if (result.rows.length === 0) {
     return Promise.reject({
@@ -421,7 +434,6 @@ export const updateEventById = async (
   };
 };
 
-// Delete event by ID
 export const deleteEventById = async (id: number): Promise<void> => {
   // Don't check if event exists using selectEventById since it's filtered by status
   // The controller should handle event existence and authorization first
@@ -502,6 +514,13 @@ export const selectEventsByTeamId = async (
 
   const result = await db.query(query, [teamId]);
 
+  if (result.rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: "Team not found",
+    });
+  }
+
   return result.rows.map((event) => ({
     ...event,
     id: Number(event.id),
@@ -561,6 +580,7 @@ export const checkEventAvailability = async (
   }
 
   const event = result.rows[0];
+  const now = new Date();
 
   // Check if event is published
   if (event.status !== "published") {
@@ -570,8 +590,16 @@ export const checkEventAvailability = async (
     };
   }
 
-  // Check if event is in the future
-  if (new Date(event.start_time) <= new Date()) {
+  // Check if event has already finished
+  if (new Date(event.end_time) <= now) {
+    return {
+      available: false,
+      reason: "Event has already finished",
+    };
+  }
+
+  // Check if event has already started
+  if (new Date(event.start_time) <= now) {
     return {
       available: false,
       reason: "Event has already started",
@@ -637,6 +665,7 @@ export const registerUserForEvent = async (
     }
 
     const event = eventAvailabilityQuery.rows[0];
+    const now = new Date();
 
     // Check event status
     if (event.status !== "published") {
@@ -646,8 +675,15 @@ export const registerUserForEvent = async (
       });
     }
 
-    // Check event dates
-    const now = new Date();
+    // Check if event has already finished
+    if (new Date(event.end_time) <= now) {
+      return Promise.reject({
+        status: 400,
+        msg: "Event has already finished",
+      });
+    }
+
+    // Check if event has already started
     if (new Date(event.start_time) <= now) {
       return Promise.reject({
         status: 400,

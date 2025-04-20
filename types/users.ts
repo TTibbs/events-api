@@ -14,17 +14,13 @@ export type User = {
 };
 
 // Test User Types
-export type TestUserRole =
-  | "team_admin"
-  | "event_manager"
-  | "team_member"
-  | "user";
+export type TestUserRole = "team_admin" | "event_manager" | "team_member";
 export interface TestUser {
   id: number;
   username: string;
   email: string;
-  teamId: number;
-  role: TestUserRole;
+  teamId?: number;
+  role?: TestUserRole;
 }
 
 export type UserSession = {

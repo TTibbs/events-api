@@ -74,8 +74,14 @@ export const eventRegistrations: EventRegistration[] = [
     status: "registered",
   },
   {
-    event_id: 15,
+    event_id: 14,
     user_id: 4,
+    registration_time: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+    status: "registered",
+  },
+  {
+    event_id: 15,
+    user_id: 5,
     registration_time: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
     status: "registered",
   },

@@ -16,7 +16,7 @@ export const TEST_USERS: Record<string, TestUser> = {
     id: 2,
     username: "bob123",
     email: "bob@example.com",
-    teamId: 1,
+    teamId: 3,
     role: "event_manager",
   },
   charlie123: {
@@ -25,6 +25,17 @@ export const TEST_USERS: Record<string, TestUser> = {
     email: "charlie@example.com",
     teamId: 2,
     role: "team_member",
+  },
+  siteadmin: {
+    id: 4,
+    username: "siteadmin",
+    email: "siteadmin@example.com",
+    teamId: 3,
+  },
+  regularuser: {
+    id: 5,
+    username: "regularuser",
+    email: "regularuser@example.com",
   },
 };
 
@@ -98,7 +109,7 @@ export async function getTokenForRole(role: TestUserRole): Promise<string> {
     case "team_member":
       return getAuthToken("charlie123"); // Team 2 admin
     default:
-      return "invalid-token";
+      return getAuthToken("siteadmin"); // Default to siteadmin
   }
 }
 

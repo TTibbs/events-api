@@ -61,7 +61,7 @@ export const createCheckoutSession = async (
 
   try {
     // Get event details from database
-    const event = await selectEventById(Number(eventId));
+    const event = await selectEventById(Number(eventId), Number(userId));
 
     if (!event) {
       res.status(404).send({ message: "Event not found" });

@@ -28,6 +28,8 @@ export type EventRegistration = {
 // Add Event API response interfaces
 export interface EventResponse extends Event {
   id: number;
+  price: number;
+  team_name?: string;
 }
 
 export interface EventRegistrationResponse extends EventRegistration {
@@ -36,6 +38,20 @@ export interface EventRegistrationResponse extends EventRegistration {
   email?: string;
   event_title?: string;
   reactivated?: boolean;
+  registration?: RegistrationObject;
+}
+
+export interface EventRegistrationError extends EventRegistration {
+  msg: string;
+}
+
+export interface RegistrationObject {
+  id: number;
+  event_id: number;
+  user_id: number;
+  registration_time: Date;
+  status: string;
+  ticket_info?: TicketInfo;
 }
 
 // Event Updates

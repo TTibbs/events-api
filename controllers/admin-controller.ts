@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { selectUserById, selectUsers } from "../models/users-models";
-import {
-  selectEventRegistrationsByEventId,
-  selectEvents,
-} from "../models/events-models";
+import { selectEventRegistrationsByEventId } from "../models/events-models";
 import { selectTeams } from "../models/teams-models";
 import { fetchAllTickets } from "../models/tickets-models";
 import { checkIsUserSiteAdmin } from "./users-controller";
@@ -11,6 +8,7 @@ import {
   updateUserToAdmin,
   getDraftEvents,
   getTotalTeamMembers,
+  getAllEventsForAdmin,
 } from "../models/admin-models";
 import { sanitizeUser, sanitizeUsers } from "../utils/databaseHelpers";
 import {
@@ -47,7 +45,7 @@ export const getAdminDashboard = async (
     const { users, total_users } = await selectUsers();
 
     // Get all events including draft events (site admin can see all)
-    const { events, total_events } = await selectEvents();
+    const { events, total_events } = await getAllEventsForAdmin();
 
     // Get all teams
     const { teams, total_teams } = await selectTeams();

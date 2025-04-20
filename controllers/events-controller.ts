@@ -70,7 +70,21 @@ export const getEvents = async (
       max_price as string,
       start_date as string
     );
-    res.status(200).send({ events, total_events });
+
+    // Parse limit and page to integers with defaults
+    const limitValue = parseInt(limit as string) || 10;
+    const pageValue = parseInt(page as string) || 1;
+
+    // Include pagination metadata in the response
+    res.status(200).send({
+      events,
+      total_events,
+      pagination: {
+        limit: limitValue,
+        page: pageValue,
+        total_pages: Math.ceil(total_events / limitValue),
+      },
+    });
   } catch (err) {
     next(err);
   }
@@ -103,6 +117,15 @@ export const getDraftEvents = async (
       });
     }
 
+    const isMemberOfTeam = await selectTeamMemberByUserId(req.user.id);
+
+    if (req.user.id !== isMemberOfTeam?.id) {
+      return res.status(403).send({
+        status: "error",
+        msg: "Forbidden - You are not a member of this team",
+      });
+    }
+
     const events = await selectDraftEvents(req.user.id);
     res.status(200).send({ events });
   } catch (err) {
@@ -117,8 +140,63 @@ export const getEventById = async (
 ) => {
   const { id } = req.params;
   try {
-    const event = await selectEventById(Number(id));
-    res.status(200).send({ event });
+    // If user is authenticated, use the authenticated flow with draft visibility
+    if (req.user?.id) {
+      const userId = req.user.id;
+      try {
+        // Check if user is a team member
+        const isMemberOfTeam = await selectTeamMemberByUserId(userId);
+
+        // If user is a team member, show them the event (published or draft if they have access)
+        if (isMemberOfTeam) {
+          const event = await selectEventById(Number(id), userId);
+          return res.status(200).send({ event });
+        } else {
+          // Regular user, try to get the event if it's published
+          try {
+            const event = await selectEventById(Number(id), userId);
+            return res.status(200).send({ event });
+          } catch (err: any) {
+            if (err.status === 404) {
+              return res.status(404).send({
+                status: "error",
+                msg: "Event not found",
+              });
+            }
+            throw err;
+          }
+        }
+      } catch (err: any) {
+        if (err.status === 404) {
+          return res.status(404).send({
+            status: "error",
+            msg: "Event not found",
+          });
+        }
+        throw err;
+      }
+    } else {
+      // For non-authenticated users, only allow access to published events
+      try {
+        // Use getEventByIdForAdmin and check if it's published
+        const event = await getEventByIdForAdmin(Number(id));
+        if (event.status !== "published") {
+          return res.status(404).send({
+            status: "error",
+            msg: "Event not found",
+          });
+        }
+        return res.status(200).send({ event });
+      } catch (err: any) {
+        if (err.status === 404) {
+          return res.status(404).send({
+            status: "error",
+            msg: "Event not found",
+          });
+        }
+        throw err;
+      }
+    }
   } catch (err) {
     next(err);
   }
@@ -369,65 +447,42 @@ export const getEventRegistrations = async (
   try {
     let eventCheck;
 
+    // First check if the event exists
     try {
-      // First try to get the event regardless of status for team members
-      if (req.user) {
-        const teamMember = await selectTeamMemberByUserId(req.user.id);
-
-        if (teamMember) {
-          try {
-            // Try to get the event regardless of status
-            eventCheck = await getEventByIdForAdmin(Number(id));
-
-            // Check if the user is part of the team that owns this event
-            if (teamMember.team_id !== eventCheck.team_id) {
-              // If the event is not published and user is not on the team, act like it doesn't exist
-              if (eventCheck.status !== "published") {
-                return res.status(404).send({
-                  status: "error",
-                  msg: "Event not found",
-                });
-              }
-            }
-          } catch (error) {
-            // If no event found, return 404
-            return res.status(404).send({
-              status: "error",
-              msg: "Event not found",
-            });
-          }
-        } else {
-          // User has no team membership, only allow access to published events
-          try {
-            eventCheck = await selectEventById(Number(id));
-          } catch (error) {
-            return res.status(404).send({
-              status: "error",
-              msg: "Event not found",
-            });
-          }
-        }
-      } else {
-        // Non-authenticated users can only access published events
-        try {
-          eventCheck = await selectEventById(Number(id));
-        } catch (error) {
-          return res.status(404).send({
-            status: "error",
-            msg: "Event not found",
-          });
-        }
-      }
+      eventCheck = await getEventByIdForAdmin(Number(id));
     } catch (error) {
-      // Any other errors
       return res.status(404).send({
         status: "error",
         msg: "Event not found",
       });
     }
 
-    // If we got here, we have an event (either published or draft)
-    // Get the registrations for this event
+    // If user is authenticated, check their permissions
+    if (req.user?.id) {
+      const userId = req.user.id;
+      const teamMember = await selectTeamMemberByUserId(userId);
+
+      // If the event is not published and user is not on the team that owns it, restrict access
+      if (
+        eventCheck.status !== "published" &&
+        (!teamMember || teamMember.team_id !== eventCheck.team_id)
+      ) {
+        return res.status(404).send({
+          status: "error",
+          msg: "Event not found",
+        });
+      }
+    } else {
+      // Non-authenticated users can only access registrations for published events
+      if (eventCheck.status !== "published") {
+        return res.status(404).send({
+          status: "error",
+          msg: "Event not found",
+        });
+      }
+    }
+
+    // If we got here, the user has access to the registrations
     const registrations = await selectEventRegistrationsByEventId(Number(id));
     res.status(200).send({ registrations });
   } catch (err) {
@@ -493,6 +548,15 @@ export const registerForEvent = async (
   try {
     const { eventId } = req.params;
 
+    // Validate eventId is a number
+    const eventIdNum = Number(eventId);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({
+        status: "error",
+        msg: "Invalid event ID format",
+      });
+    }
+
     // Authentication is required
     if (!req.user || !req.user.id) {
       return res.status(401).send({ msg: "Authentication required" });
@@ -516,7 +580,7 @@ export const registerForEvent = async (
 
     // console.log(`Registering user ${userId} for event ${eventId}`);
     const registration = (await registerUserForEvent(
-      Number(eventId),
+      eventIdNum,
       userId
     )) as ExtendedEventRegistration;
 
@@ -538,7 +602,6 @@ export const registerForEvent = async (
         //       : "not set"
         //   }`
         // );
-
         const emailInfo: EmailInfo = {
           to: registration.ticket_info.user_email,
           name: registration.ticket_info.user_name,
@@ -547,9 +610,7 @@ export const registerForEvent = async (
           eventLocation: registration.ticket_info.event_location,
           ticketCode: registration.ticket_info.ticket_code,
         };
-
         const emailResult = await sendRegistrationConfirmation(emailInfo);
-
         // console.log(
         //   `Email sending result: ${emailResult.success ? "success" : "failed"}`
         // );
@@ -648,7 +709,16 @@ export const checkEventRegistrationAvailability = async (
   try {
     const { eventId } = req.params;
 
-    const availability = await checkEventAvailability(Number(eventId));
+    // Validate eventId is a number
+    const eventIdNum = Number(eventId);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({
+        status: "error",
+        msg: "Invalid event ID format",
+      });
+    }
+
+    const availability = await checkEventAvailability(eventIdNum);
 
     res.status(200).send({
       available: availability.available,

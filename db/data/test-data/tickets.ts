@@ -147,9 +147,19 @@ export const tickets: Ticket[] = [
     status: "valid",
   },
   {
-    event_id: 15, // Educational Conference for Teachers
+    event_id: 14,
     user_id: 4,
     registration_id: 13,
+    paid: true,
+    ticket_code: generateTicketCode(),
+    issued_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+    used_at: null,
+    status: "valid",
+  },
+  {
+    event_id: 15,
+    user_id: 5,
+    registration_id: 14,
     paid: true,
     ticket_code: generateTicketCode(),
     issued_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago

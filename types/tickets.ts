@@ -31,10 +31,10 @@ export interface TicketWithUserInfo extends TicketResponse {
 }
 
 export interface TicketInfo {
-  user_email: string;
-  user_name: string;
+  ticket_code: string;
   event_title: string;
   event_date: string;
   event_location: string;
-  ticket_code: string;
+  user_name: string;
+  user_email: string;
 }
