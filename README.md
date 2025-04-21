@@ -145,18 +145,14 @@ npm install
 ### Set up environment variables (create a .env file)
 
 ```bash
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=events_db
 JWT_SECRET=your_jwt_secret
-REFRESH_TOKEN_SECRET=your_refresh_token_secret
+DATABASE_URL=your_supabase_db_url
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your_send_from_email_in_sendgrid
+STRIPE_PUBLISHABLE_KEY=your_strike_sk_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-EMAIL_SERVICE=your_email_service
-EMAIL_USER=your_email
-EMAIL_PASSWORD=your_email_password
+FRONTEND_URL=the_redirect_url_for_stripe_rejected_payments
 ```
 
 ### Set up the database
