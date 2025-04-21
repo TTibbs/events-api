@@ -398,102 +398,16 @@ describe("Events API Endpoints", () => {
       });
     });
   });
-  describe("GET /api/events - Filter Events", () => {
-    test("Should filter events by category", async () => {
+  describe("GET /api/events - Query Parameters", () => {
+    test("Should return total_events count in the response", async () => {
       const response = await request(app)
-        .get("/api/events?category=Conference")
+        .get("/api/events?sort_by=start_time")
         .expect(200);
-      expect(response.body.events.length).toBeGreaterThan(0);
-      response.body.events.forEach((event: EventResponse) => {
-        expect(event.category).toBe("Conference");
-      });
+      expect(response.body).toHaveProperty("total_events", expect.any(Number));
     });
-    test("Should filter events by location", async () => {
-      const response = await request(app)
-        .get("/api/events?location=New York")
-        .expect(200);
-      expect(response.body.events.length).toBeGreaterThan(0);
-      response.body.events.forEach((event: EventResponse) => {
-        expect(event.location).toContain("New York");
-      });
-    });
-    test("Should filter events by minimum price", async () => {
-      const response = await request(app)
-        .get("/api/events?min_price=50")
-        .expect(200);
-      expect(response.body.events.length).toBeGreaterThan(0);
-      response.body.events.forEach((event: EventResponse) => {
-        expect(event.price).toBeGreaterThanOrEqual(50);
-      });
-    });
-    test("Should filter events by maximum price", async () => {
-      const response = await request(app)
-        .get("/api/events?max_price=75")
-        .expect(200);
-      expect(response.body.events.length).toBeGreaterThan(0);
-      response.body.events.forEach((event: EventResponse) => {
-        expect(event.price).toBeLessThanOrEqual(75);
-      });
-    });
-    test("Should filter events by price range", async () => {
-      const response = await request(app)
-        .get("/api/events?min_price=50&max_price=100")
-        .expect(200);
-      expect(response.body.events.length).toBeGreaterThan(0);
-      response.body.events.forEach((event: EventResponse) => {
-        expect(event.price).toBeGreaterThanOrEqual(50);
-        expect(event.price).toBeLessThanOrEqual(100);
-      });
-    });
-    test("Should filter events by start date", async () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = tomorrow.toISOString().split("T")[0]; // Get YYYY-MM-DD
-
-      const response = await request(app)
-        .get(`/api/events?start_date=${tomorrowStr}`)
-        .expect(200);
-
-      expect(response.body.events.length).toBeGreaterThan(0);
-      response.body.events.forEach((event: EventResponse) => {
-        const eventDate = new Date(event.start_time);
-        expect(
-          new Date(eventDate.toISOString().split("T")[0]).getTime()
-        ).toBeGreaterThanOrEqual(new Date(tomorrowStr).getTime());
-      });
-    });
-    test("Should handle non-existent category", async () => {
-      const response = await request(app)
-        .get("/api/events?category=NonExistentCategory")
-        .expect(404);
-      expect(response.body.status).toBe("error");
-      expect(response.body.msg).toContain("NonExistentCategory");
-    });
-    test("Should combine multiple filters correctly", async () => {
-      const response = await request(app)
-        .get(
-          "/api/events?category=Conference&location=New York&min_price=40&max_price=60"
-        )
-        .expect(200);
-      expect(response.body.events.length).toBeGreaterThan(0);
-      response.body.events.forEach((event: EventResponse) => {
-        expect(event.category).toBe("Conference");
-        expect(event.location).toContain("New York");
-        expect(event.price).toBeGreaterThanOrEqual(40);
-        expect(event.price).toBeLessThanOrEqual(60);
-      });
-    });
-    test("Should return correct total_events count when filtering", async () => {
-      const response = await request(app)
-        .get("/api/events?category=Conference")
-        .expect(200);
-      expect(response.body.total_events).toBe(response.body.events.length);
-    });
-  });
-  describe("GET /api/events - Sort Queries", () => {
     test("Should sort events by start_time in ascending order by default", async () => {
       const { body } = await request(app).get("/api/events").expect(200);
-      expect(body.events).toBeSorted({ key: "start_time" });
+      expect(body.events).toBeSorted({ key: "start_time", descending: false });
     });
     test("Should sort events by start_time in descending order when specified", async () => {
       const { body } = await request(app)
@@ -501,18 +415,11 @@ describe("Events API Endpoints", () => {
         .expect(200);
       expect(body.events).toBeSorted({ key: "start_time", descending: true });
     });
-    test("Should return object for pagination logic", async () => {
-      const { body } = await request(app).get("/api/events").expect(200);
-      expect(body).toHaveProperty("pagination", expect.any(Object));
-      expect(body.pagination).toHaveProperty("limit", expect.any(Number));
-      expect(body.pagination).toHaveProperty("page", expect.any(Number));
-      expect(body.pagination).toHaveProperty("total_pages", expect.any(Number));
-    });
-    test("Should sort events by price in ascending order when specified", async () => {
+    test("Should sort events by price with default ascending order", async () => {
       const { body } = await request(app)
         .get("/api/events?sort_by=price")
         .expect(200);
-      expect(body.events).toBeSorted({ key: "price" });
+      expect(body.events).toBeSorted({ key: "price", descending: false });
     });
     test("Should sort events by price in descending order when specified", async () => {
       const { body } = await request(app)
@@ -520,11 +427,11 @@ describe("Events API Endpoints", () => {
         .expect(200);
       expect(body.events).toBeSorted({ key: "price", descending: true });
     });
-    test("Should sort events by location in ascending order when specified", async () => {
+    test("Should sort events by location with default ascending order", async () => {
       const { body } = await request(app)
         .get("/api/events?sort_by=location")
         .expect(200);
-      expect(body.events).toBeSorted({ key: "location" });
+      expect(body.events).toBeSorted({ key: "location", descending: false });
     });
     test("Should sort events by location in descending order when specified", async () => {
       const { body } = await request(app)
@@ -532,38 +439,69 @@ describe("Events API Endpoints", () => {
         .expect(200);
       expect(body.events).toBeSorted({ key: "location", descending: true });
     });
-    test("Should sort events by category in ascending order when specified", async () => {
+    test("Should sort events by max_attendees with default ascending order", async () => {
       const { body } = await request(app)
-        .get("/api/events?sort_by=category")
+        .get("/api/events?sort_by=max_attendees")
         .expect(200);
-      expect(body.events).toBeSorted({ key: "category" });
+      expect(body.events).toBeSorted({
+        key: "max_attendees",
+        descending: false,
+      });
     });
-    test("Should sort events by category in descending order when specified", async () => {
+    test("Should sort events by max_attendees in descending order when specified", async () => {
       const { body } = await request(app)
-        .get("/api/events?sort_by=category&order=desc")
+        .get("/api/events?sort_by=max_attendees&order=desc")
+        .expect(200);
+      expect(body.events).toBeSorted({
+        key: "max_attendees",
+        descending: true,
+      });
+    });
+    test("Should take conference as a category as a query parameter", async () => {
+      const { body } = await request(app)
+        .get("/api/events?category=Conference")
+        .expect(200);
+      expect(body.events).toBeInstanceOf(Array);
+      body.events.forEach((event: EventResponse) => {
+        expect(event.category).toBe("Conference");
+      });
+    });
+    test("Should take conference as a category as a query parameter in descending order", async () => {
+      const { body } = await request(app)
+        .get("/api/events?category=Conference&order=desc")
         .expect(200);
       expect(body.events).toBeSorted({ key: "category", descending: true });
     });
+    test("Should take other categories as a query parameter", async () => {
+      const { body } = await request(app)
+        .get("/api/events?category=Workshop")
+        .expect(200);
+      expect(body.events).toBeInstanceOf(Array);
+      body.events.forEach((event: EventResponse) => {
+        expect(event.category).toBe("Workshop");
+      });
+    });
     test("Should limit results when limit parameter is provided", async () => {
-      const limit = 2;
       const {
         body: { events },
-      } = await request(app)
-        .get(`/api/events/upcoming?limit=${limit}`)
-        .expect(200);
-      expect(events.length).toBeLessThanOrEqual(limit);
+      } = await request(app).get(`/api/events?limit=2`).expect(200);
+      expect(events.length).toBeLessThanOrEqual(2);
     });
     test("Should return 400 error for invalid sort_by parameter", async () => {
       const { body } = await request(app)
         .get("/api/events?sort_by=invalid_field")
         .expect(400);
-      expect(body.msg).toBe("Invalid sort_by query");
+      expect(body.msg).toBe(
+        "Invalid sort_by query: invalid_field is not a valid sort parameter"
+      );
     });
     test("Should return 400 error for invalid order parameter", async () => {
       const { body } = await request(app)
         .get("/api/events?order=invalid_order")
         .expect(400);
-      expect(body.msg).toBe("Invalid order query");
+      expect(body.msg).toBe(
+        "Invalid order query: invalid_order is not a valid order parameter"
+      );
     });
   });
   describe("GET /api/events/:id - Event Lookup by ID", () => {

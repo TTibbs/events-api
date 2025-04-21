@@ -10,142 +10,101 @@ export const selectEvents = async (
   sort_by: string = "start_time",
   order: string = "asc",
   category: string = "",
-  limit: string = "10",
-  page: string = "1",
-  location: string = "",
-  min_price: string = "",
-  max_price: string = "",
-  start_date: string = ""
+  limit: number = 10,
+  page: number = 1
 ): Promise<{
   events: Event[];
   total_events: number;
+  total_pages: number;
 }> => {
-  sort_by = sort_by.toLowerCase();
-  order = order.toLowerCase();
+  // Validate sorting and ordering parameters
+  const validSortBy = ["start_time", "price", "location", "max_attendees"];
+  const validOrder = ["asc", "desc"];
 
-  const validSortBy = ["category", "start_time", "location", "price"];
-  const validOrderQueries = ["asc", "desc"];
-
-  if (!validSortBy.includes(sort_by)) {
-    return Promise.reject({ status: 400, msg: "Invalid sort_by query" });
+  if (sort_by && !validSortBy.includes(sort_by)) {
+    return Promise.reject({
+      status: 400,
+      msg: `Invalid sort_by query: ${sort_by} is not a valid sort parameter`,
+    });
   }
 
-  if (!validOrderQueries.includes(order)) {
-    return Promise.reject({ status: 400, msg: "Invalid order query" });
+  if (order && !validOrder.includes(order)) {
+    return Promise.reject({
+      status: 400,
+      msg: `Invalid order query: ${order} is not a valid order parameter`,
+    });
   }
 
+  // Build WHERE clauses for both queries
+  const whereConditions = ["e.status = 'published'"];
+  const queryParams = [];
+  let paramCounter = 1;
+
+  if (category) {
+    whereConditions.push(`e.category = $${paramCounter}`);
+    queryParams.push(category);
+    paramCounter++;
+  }
+
+  const whereClause =
+    whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+
+  // Base query for fetching events
   let queryString = `
     SELECT 
       e.*,
-      t.name as team_name,
-      tm.username as creator_username
+      t.name AS team_name,
+      u.username AS creator_username
     FROM events e
     LEFT JOIN teams t ON e.team_id = t.id
-    LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
-    LEFT JOIN users tm ON tm_link.user_id = tm.id
-    WHERE e.status = 'published'
+    LEFT JOIN team_members tm ON e.created_by = tm.id
+    LEFT JOIN users u ON tm.user_id = u.id
+    ${whereClause}
   `;
 
-  const queryValues: any[] = [];
-  let paramIndex = 1;
-
-  // Add category filter
-  if (category) {
-    queryString += ` AND e.category = $${paramIndex}`;
-    queryValues.push(category);
-    paramIndex++;
-  }
-
-  // Add location filter
-  if (location) {
-    queryString += ` AND e.location ILIKE $${paramIndex}`;
-    queryValues.push(`%${location}%`);
-    paramIndex++;
-  }
-
-  // Add price range filter
-  if (min_price) {
-    queryString += ` AND e.price >= $${paramIndex}`;
-    queryValues.push(parseFloat(min_price));
-    paramIndex++;
-  }
-
-  if (max_price) {
-    queryString += ` AND e.price <= $${paramIndex}`;
-    queryValues.push(parseFloat(max_price));
-    paramIndex++;
-  }
-
-  // Add start date filter
-  if (start_date) {
-    queryString += ` AND e.start_time >= $${paramIndex}`;
-    queryValues.push(new Date(start_date));
-    paramIndex++;
-  }
-
-  // Add sorting
-  queryString += ` ORDER BY e.${sort_by} ${order}`;
-
-  // Add pagination
-  const limitValue = parseInt(limit) || 10;
-  const pageValue = parseInt(page) || 1;
-  const offset = (pageValue - 1) * limitValue;
-
-  queryString += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-  queryValues.push(limitValue, offset);
-
-  // Execute query for events
-  const result = await db.query(queryString, queryValues);
-
-  // Build count query with the same filters but without pagination
+  // The count query needs to account for the same filtering and JOIN conditions
+  // to ensure it matches the main query's results before pagination
   let countQueryString = `
-    SELECT COUNT(*) as total_events 
+    SELECT COUNT(DISTINCT e.id) AS total_events 
     FROM events e
-    WHERE e.status = 'published'
+    LEFT JOIN teams t ON e.team_id = t.id
+    LEFT JOIN team_members tm ON e.created_by = tm.id
+    LEFT JOIN users u ON tm.user_id = u.id
+    ${whereClause}
   `;
 
-  const countValues = [...queryValues.slice(0, -2)]; // Remove LIMIT and OFFSET values
+  // Add GROUP BY, ORDER BY, LIMIT, and OFFSET to the main query
+  queryString += ` GROUP BY e.id, t.name, u.username`;
+  queryString += ` ORDER BY ${sort_by} ${order}`;
 
-  let countParamIndex = 1;
+  // Create separate parameters arrays for main and count queries
+  const mainQueryParams = [...queryParams]; // Copy the base parameters
 
-  if (category) {
-    countQueryString += ` AND e.category = $${countParamIndex}`;
-    countParamIndex++;
-  }
+  // Add pagination parameters to the main query
+  queryString += ` LIMIT $${paramCounter} OFFSET $${paramCounter + 1}`;
+  mainQueryParams.push(limit.toString());
+  mainQueryParams.push(((page - 1) * limit).toString());
 
-  if (location) {
-    countQueryString += ` AND e.location ILIKE $${countParamIndex}`;
-    countParamIndex++;
-  }
-
-  if (min_price) {
-    countQueryString += ` AND e.price >= $${countParamIndex}`;
-    countParamIndex++;
-  }
-
-  if (max_price) {
-    countQueryString += ` AND e.price <= $${countParamIndex}`;
-    countParamIndex++;
-  }
-
-  if (start_date) {
-    countQueryString += ` AND e.start_time >= $${countParamIndex}`;
-    countParamIndex++;
-  }
-
-  const countResult = await db.query(countQueryString, countValues);
-
-  return {
-    events: result.rows.map((event) => ({
-      ...event,
-      id: Number(event.id),
-      team_id: event.team_id ? Number(event.team_id) : null,
-      created_by: event.created_by ? Number(event.created_by) : null,
-      price: event.price ? Number(event.price) : null,
-      max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
-    })),
-    total_events: parseInt(countResult.rows[0].total_events),
-  };
+  return Promise.all([
+    db.query(queryString, mainQueryParams),
+    db.query(countQueryString, queryParams), // Use original params without pagination
+  ]).then(([eventsResult, countResult]) => {
+    // Process and return the results
+    return {
+      events: eventsResult.rows.map((event) => ({
+        ...event,
+        id: Number(event.id),
+        team_id: event.team_id ? Number(event.team_id) : null,
+        created_by: event.created_by ? Number(event.created_by) : null,
+        price: event.price ? Number(event.price) : null,
+        max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+      })),
+      total_events: parseInt(countResult.rows[0].total_events, 10),
+      total_pages: Math.ceil(
+        parseInt(countResult.rows[0].total_events, 10) / limit
+      ),
+    };
+  });
 };
 
 export const selectCategoryByName = async (name: string): Promise<Category> => {

@@ -85,3 +85,17 @@ export interface Category {
   id: number;
   name: string;
 }
+
+export interface EventsQueryOptions {
+  sort_by?: string;
+  order?: string;
+  category?: string;
+  limit?: number;
+  page?: number;
+}
+
+export interface EventsResponse {
+  events: Event[];
+  total_events: number;
+  total_pages: number;
+}

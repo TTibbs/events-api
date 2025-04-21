@@ -35,58 +35,40 @@ export const getEvents = async (
   next: NextFunction
 ) => {
   try {
-    const {
-      sort_by,
-      order,
-      category,
-      limit,
-      page,
-      location,
-      min_price,
-      max_price,
-      start_date,
-    } = req.query;
+    const { sort_by, order, category, limit = 10, page = 1 } = req.query;
 
-    // If category is provided, verify it exists first
-    if (category) {
-      try {
-        await selectCategoryByName(category as string);
-      } catch (err) {
-        return res.status(404).send({
-          status: "error",
-          msg: `Category '${category}' not found`,
-        });
-      }
+    // Validate numeric parameters
+    if (
+      isNaN(Number(limit)) ||
+      isNaN(Number(page)) ||
+      Number(limit) <= 0 ||
+      Number(page) <= 0
+    ) {
+      return res.status(400).send({
+        status: "error",
+        msg: "Limit and page must be positive numbers",
+      });
     }
 
-    const { events, total_events } = await selectEvents(
-      sort_by as string,
-      order as string,
-      category as string,
-      limit as string,
-      page as string,
-      location as string,
-      min_price as string,
-      max_price as string,
-      start_date as string
+    const { events, total_events, total_pages } = await selectEvents(
+      sort_by as string | undefined,
+      order as string | undefined,
+      category as string | undefined,
+      Number(limit),
+      Number(page)
     );
 
-    // Parse limit and page to integers with defaults
-    const limitValue = parseInt(limit as string) || 10;
-    const pageValue = parseInt(page as string) || 1;
-
-    // Include pagination metadata in the response
     res.status(200).send({
       events,
       total_events,
-      pagination: {
-        limit: limitValue,
-        page: pageValue,
-        total_pages: Math.ceil(total_events / limitValue),
-      },
+      total_pages,
     });
-  } catch (err) {
-    next(err);
+  } catch (err: any) {
+    if (err.status) {
+      res.status(err.status).send({ status: "error", msg: err.msg });
+    } else {
+      next(err);
+    }
   }
 };
 
