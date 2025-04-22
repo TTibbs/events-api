@@ -215,7 +215,7 @@ export const events: Event[] = [
     event_img_url: "https://picsum.photos/seed/business/800/600",
     location: "Singapore",
     start_time: new Date("2025-04-19T08:00:00Z"),
-    end_time: new Date("2025-04-21T17:00:00Z"),
+    end_time: new Date("2025-08-23T17:00:00Z"),
     max_attendees: 300,
     price: 199.99,
     category: "Business",

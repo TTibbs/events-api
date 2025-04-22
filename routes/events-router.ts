@@ -21,6 +21,8 @@ import {
   getDraftEvents,
   getDraftEventById,
   getDraftEventsByTeamId,
+  getCategories,
+  getCategoryByName,
 } from "../controllers/events-controller";
 import { authMiddleware } from "../middlewares/auth-middleware";
 
@@ -158,6 +160,8 @@ const registerValidation = [
 
 // Cast controller functions to RequestHandler type
 const getEventsHandler = getEvents as RequestHandler;
+const getEventCategoriesHandler = getCategories as RequestHandler;
+const getEventCategoryByNameHandler = getCategoryByName as RequestHandler;
 const getEventByIdHandler = getEventById as RequestHandler;
 const createEventHandler = createEvent as RequestHandler;
 const updateEventHandler = updateEvent as RequestHandler;
@@ -177,6 +181,12 @@ const authenticateHandler = authMiddleware.isAuthenticated as RequestHandler;
 
 // GET /api/events - Get all published events
 eventsRouter.get("/", getEventsHandler);
+
+// GET /api/events/categories - Get all event categories
+eventsRouter.get("/categories", getEventCategoriesHandler);
+
+// GET /api/events/categories/:name - Get event category by name
+eventsRouter.get("/categories/:name", getEventCategoryByNameHandler);
 
 // GET /api/events/draft - Get all draft events for the authenticated user's teams
 eventsRouter.get("/draft", authenticateHandler, getDraftEventsHandler);

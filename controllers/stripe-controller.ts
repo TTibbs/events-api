@@ -42,6 +42,61 @@ export const getPayments = async (
   res.send(getUserPayments);
 };
 
+// New function to get payment status by session ID
+export const getPaymentStatus = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { sessionId } = req.params;
+
+  // Check if Stripe is properly configured
+  if (!stripeSecretKey) {
+    res.status(503).send({
+      message: "Stripe payment service unavailable - API key not configured",
+      details:
+        "The server administrator needs to set the STRIPE_SECRET_KEY environment variable",
+    });
+    return;
+  }
+
+  try {
+    // First check if we already have this payment recorded in our database
+    const existingPayment = await findPaymentBySessionId(sessionId);
+
+    if (existingPayment) {
+      // If payment exists in our database, return its status
+      res.send({
+        success: true,
+        status: existingPayment.status,
+        paymentId: existingPayment.id,
+        sessionId: existingPayment.stripe_session_id,
+        amount: existingPayment.amount,
+        hasBeenProcessed: true,
+      });
+      return;
+    }
+
+    // If no local record, verify with Stripe directly
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    res.send({
+      success: true,
+      status: session.payment_status,
+      sessionId: session.id,
+      hasBeenProcessed: false,
+      paymentIntent: session.payment_intent,
+      amount: session.amount_total ? session.amount_total / 100 : 0,
+    });
+    return;
+  } catch (error) {
+    console.error("Error checking payment status:", error);
+    res.status(500).send({
+      success: false,
+      message: (error as Error).message,
+    });
+  }
+};
+
 export const createCheckoutSession = async (
   req: Request,
   res: Response

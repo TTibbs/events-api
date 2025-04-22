@@ -17,6 +17,7 @@ import {
   selectDraftEventsByTeamId,
   getEventByIdForAdmin,
   selectCategoryByName,
+  selectCategories,
 } from "../models/events-models";
 import { selectTeamMemberByUserId } from "../models/teams-models";
 import { sendRegistrationConfirmation } from "../utils/email";
@@ -69,6 +70,19 @@ export const getEvents = async (
     } else {
       next(err);
     }
+  }
+};
+
+export const getCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const categories = await selectCategories();
+    res.status(200).send({ categories });
+  } catch (err) {
+    next(err);
   }
 };
 

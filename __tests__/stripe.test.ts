@@ -111,6 +111,50 @@ describe("Stripe Payment Integration", () => {
       expect(userPayment.amount).toBe("49.99");
     });
   });
+
+  describe("GET /api/stripe/payment-status/:sessionId", () => {
+    test("Should return payment status for an existing payment in database", async () => {
+      const token = await getAuthToken();
+      const response = await request(app)
+        .get("/api/stripe/payment-status/cs_test_success_123456")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body).toHaveProperty("status", "succeeded");
+      expect(response.body).toHaveProperty("hasBeenProcessed", true);
+      expect(response.body).toHaveProperty(
+        "sessionId",
+        "cs_test_success_123456"
+      );
+    });
+
+    test("Should check with Stripe for a non-existing payment in database", async () => {
+      const token = await getAuthToken();
+      const response = await request(app)
+        .get("/api/stripe/payment-status/cs_test_123456789")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body).toHaveProperty("status", "paid");
+      expect(response.body).toHaveProperty("hasBeenProcessed", false);
+      expect(response.body).toHaveProperty(
+        "paymentIntent",
+        "pi_test_123456789"
+      );
+      expect(response.body).toHaveProperty("amount", 49.99); // 4999 cents converted to dollars
+    });
+
+    test("Should return 401 if not authenticated", async () => {
+      const response = await request(app)
+        .get("/api/stripe/payment-status/cs_test_123456789")
+        .expect(401);
+
+      expect(response.body.status).toBe("error");
+    });
+  });
+
   describe("POST /api/stripe/create-checkout-session", () => {
     test("Should create a checkout session for a valid event and user", async () => {
       // Get auth token
@@ -275,7 +319,18 @@ describe("Stripe Payment Integration", () => {
 
       const sessionId = checkoutResponse.body.sessionId;
 
-      // 2. Sync payment (simulating customer completing payment)
+      // 2. Check payment status before completing payment
+      const statusBeforeResponse = await request(app)
+        .get(`/api/stripe/payment-status/${sessionId}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(statusBeforeResponse.body).toHaveProperty(
+        "hasBeenProcessed",
+        false
+      );
+
+      // 3. Sync payment (simulating customer completing payment)
       const syncResponse = await request(app)
         .post(`/api/stripe/sync-payment/${sessionId}`)
         .set("Authorization", `Bearer ${token}`)
@@ -283,7 +338,16 @@ describe("Stripe Payment Integration", () => {
 
       const ticketId = syncResponse.body.ticketId;
 
-      // 3. Verify ticket was created and is valid
+      // 4. Check payment status after completing payment
+      const statusAfterResponse = await request(app)
+        .get(`/api/stripe/payment-status/${sessionId}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(statusAfterResponse.body).toHaveProperty("hasBeenProcessed", true);
+      expect(statusAfterResponse.body).toHaveProperty("status", "succeeded");
+
+      // 5. Verify ticket was created and is valid
       const ticketResponse = await request(app)
         .get(`/api/tickets/${ticketId}`)
         .expect(200);
@@ -294,7 +358,7 @@ describe("Stripe Payment Integration", () => {
       expect(ticket).toHaveProperty("event_id", 1);
       expect(ticket).toHaveProperty("user_id", 1);
 
-      // 4. Verify user has the ticket in their tickets list
+      // 6. Verify user has the ticket in their tickets list
       const userTicketsResponse = await request(app)
         .get("/api/tickets/user/1")
         .set("Authorization", `Bearer ${token}`)

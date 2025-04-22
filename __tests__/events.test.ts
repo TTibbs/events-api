@@ -341,6 +341,30 @@ describe("Event Registration API", () => {
 });
 
 describe("Events API Endpoints", () => {
+  describe("GET /api/events/categories", () => {
+    test("Should return all event categories", async () => {
+      const { body } = await request(app)
+        .get("/api/events/categories")
+        .expect(200);
+      expect(body.categories).toBeInstanceOf(Array);
+      expect(body.categories.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+  describe("GET /api/events/categories/:name", () => {
+    test("Should return an event category by name", async () => {
+      const { body } = await request(app)
+        .get("/api/events/categories/Conference")
+        .expect(200);
+      expect(body.category).toHaveProperty("id", expect.any(Number));
+      expect(body.category).toHaveProperty("name", "Conference");
+    });
+    test("Should return 404 if category is not found", async () => {
+      const { body } = await request(app)
+        .get("/api/events/categories/NonExistentCategory")
+        .expect(404);
+      expect(body.msg).toBe("Category 'NonExistentCategory' not found");
+    });
+  });
   describe("GET /api/events - Event Listing", () => {
     test("Should successfully retrieve a list of all events", async () => {
       const {

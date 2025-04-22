@@ -107,6 +107,11 @@ export const selectEvents = async (
   });
 };
 
+export const selectCategories = async (): Promise<Category[]> => {
+  const result = await db.query(`SELECT * FROM categories`);
+  return result.rows;
+};
+
 export const selectCategoryByName = async (name: string): Promise<Category> => {
   const result = await db.query(`SELECT * FROM categories WHERE name = $1`, [
     name,
