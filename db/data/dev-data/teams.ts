@@ -14,4 +14,10 @@ export const teams: Team[] = [
     created_at: new Date(),
     updated_at: new Date(),
   },
+  {
+    name: "Art Events Team",
+    description: "Team focused on art exhibitions and events",
+    created_at: new Date(),
+    updated_at: new Date(),
+  },
 ];

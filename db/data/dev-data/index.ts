@@ -8,7 +8,7 @@ import { tickets } from "./tickets";
 import { stripePayments } from "./stripe-payments";
 import { categories } from "./categories";
 
-export {
+export const devData = {
   users,
   events,
   eventRegistrations,

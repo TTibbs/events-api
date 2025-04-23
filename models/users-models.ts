@@ -28,9 +28,7 @@ export const selectUsers = async (): Promise<{
     GROUP BY u.id
   `);
 
-  const countResult = await db.query(`
-    SELECT COUNT(*) as total_users FROM users
-  `);
+  const countResult = usersResult.rows.length;
 
   if (usersResult.rows.length === 0) {
     return Promise.reject({ status: 404, msg: "No users found" });
@@ -38,7 +36,7 @@ export const selectUsers = async (): Promise<{
 
   return {
     users: usersResult.rows as User[],
-    total_users: parseInt(countResult.rows[0].total_users),
+    total_users: countResult,
   };
 };
 

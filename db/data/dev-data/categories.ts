@@ -2,19 +2,39 @@ import { Category } from "../../../types";
 
 export const categories: Category[] = [
   {
-    id: 1,
     name: "Conference",
   },
   {
-    id: 2,
     name: "Workshop",
   },
   {
-    id: 3,
     name: "Meetup",
   },
   {
-    id: 4,
-    name: "Tech ",
+    name: "Tech",
+  },
+  {
+    name: "Music",
+  },
+  {
+    name: "Gaming",
+  },
+  {
+    name: "Sports",
+  },
+  {
+    name: "Art",
+  },
+  {
+    name: "Food",
+  },
+  {
+    name: "Business",
+  },
+  {
+    name: "Health",
+  },
+  {
+    name: "Education",
   },
 ];
