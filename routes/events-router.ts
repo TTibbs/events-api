@@ -8,6 +8,7 @@ import {
 import { body, validationResult } from "express-validator";
 import {
   getEvents,
+  getPastEvents,
   getEventById,
   createEvent,
   updateEvent,
@@ -160,6 +161,7 @@ const registerValidation = [
 
 // Cast controller functions to RequestHandler type
 const getEventsHandler = getEvents as RequestHandler;
+const getPastEventsHandler = getPastEvents as RequestHandler;
 const getEventCategoriesHandler = getCategories as RequestHandler;
 const getEventCategoryByNameHandler = getCategoryByName as RequestHandler;
 const getEventByIdHandler = getEventById as RequestHandler;
@@ -181,6 +183,9 @@ const authenticateHandler = authMiddleware.isAuthenticated as RequestHandler;
 
 // GET /api/events - Get all published events
 eventsRouter.get("/", getEventsHandler);
+
+// GET /api/events/past - Get all past events
+eventsRouter.get("/past", getPastEventsHandler);
 
 // GET /api/events/categories - Get all event categories
 eventsRouter.get("/categories", getEventCategoriesHandler);

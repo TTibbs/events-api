@@ -442,15 +442,9 @@ describe("Events API Endpoints", () => {
         const { body } = await request(app).get("/api/events").expect(200);
 
         const now = new Date();
-        console.log("Current time:", now.toISOString());
 
         body.events.forEach((event: EventResponse) => {
           const eventEndTime = new Date(event.end_time);
-          console.log("Event:", {
-            title: event.title,
-            end_time: eventEndTime.toISOString(),
-            is_past: event.is_past,
-          });
           expect(eventEndTime.getTime()).toBeGreaterThan(now.getTime());
         });
       });
@@ -459,10 +453,6 @@ describe("Events API Endpoints", () => {
         const { body } = await request(app).get("/api/events").expect(200);
 
         body.events.forEach((event: EventResponse) => {
-          console.log("Event is_past check:", {
-            title: event.title,
-            is_past: event.is_past,
-          });
           expect(event.is_past).toBe(false);
         });
       });
@@ -471,23 +461,14 @@ describe("Events API Endpoints", () => {
         const { body } = await request(app).get("/api/events").expect(200);
 
         const now = new Date();
-        console.log("Current time:", now.toISOString());
 
         body.events.forEach((event: EventResponse) => {
           const eventStartTime = new Date(event.start_time);
-          console.log("Event start time check:", {
-            title: event.title,
-            start_time: eventStartTime.toISOString(),
-            is_past: event.is_past,
-          });
           expect(eventStartTime.getTime()).toBeGreaterThan(now.getTime());
         });
       });
 
       test("Should correctly handle events at the current time boundary", async () => {
-        const now = new Date();
-        console.log("Setting up boundary test at:", now.toISOString());
-
         // First, let's create an event that's just about to end
         const almostEndingEvent = {
           status: "published",
@@ -500,11 +481,6 @@ describe("Events API Endpoints", () => {
           is_public: true,
         };
 
-        console.log("Creating test event:", {
-          start: almostEndingEvent.start_time.toISOString(),
-          end: almostEndingEvent.end_time.toISOString(),
-        });
-
         await request(app)
           .post("/api/events")
           .set("Authorization", `Bearer ${aliceToken}`)
@@ -515,20 +491,9 @@ describe("Events API Endpoints", () => {
 
         // Verify that events very close to ending are handled correctly
         const checkTime = new Date();
-        console.log("Checking events at:", checkTime.toISOString());
 
         body.events.forEach((event: EventResponse) => {
           const eventEndTime = new Date(event.end_time);
-
-          // For debugging if test fails
-          if (eventEndTime.getTime() <= checkTime.getTime()) {
-            console.log("Found past event:", {
-              title: event.title,
-              end_time: eventEndTime.toISOString(),
-              check_time: checkTime.toISOString(),
-              is_past: event.is_past,
-            });
-          }
 
           expect(eventEndTime.getTime()).toBeGreaterThan(checkTime.getTime());
           expect(event.is_past).toBe(false);
@@ -536,9 +501,6 @@ describe("Events API Endpoints", () => {
       });
 
       test("Should handle timezone differences correctly", async () => {
-        const now = new Date();
-        console.log("Setting up timezone test at:", now.toISOString());
-
         // Create an event with explicit UTC times
         const utcEvent = {
           status: "published",
@@ -551,11 +513,6 @@ describe("Events API Endpoints", () => {
           is_public: true,
         };
 
-        console.log("Creating UTC test event:", {
-          start: utcEvent.start_time,
-          end: utcEvent.end_time,
-        });
-
         await request(app)
           .post("/api/events")
           .set("Authorization", `Bearer ${aliceToken}`)
@@ -565,16 +522,9 @@ describe("Events API Endpoints", () => {
 
         // Verify UTC handling
         const checkTimeUTC = new Date();
-        console.log("Checking UTC events at:", checkTimeUTC.toISOString());
 
         body.events.forEach((event: EventResponse) => {
           const eventEndTimeUTC = new Date(event.end_time);
-          console.log("UTC Event check:", {
-            title: event.title,
-            end_time: eventEndTimeUTC.toISOString(),
-            is_past: event.is_past,
-          });
-
           expect(eventEndTimeUTC.getTime()).toBeGreaterThan(
             checkTimeUTC.getTime()
           );
@@ -687,6 +637,24 @@ describe("Events API Endpoints", () => {
       expect(body.msg).toBe(
         "Invalid order query: invalid_order is not a valid order parameter"
       );
+    });
+  });
+  describe("GET /api/events/past - Past Events", () => {
+    test("Should return past events", async () => {
+      const {
+        body: { events },
+      } = await request(app).get("/api/events/past").expect(200);
+      expect(events).toBeInstanceOf(Array);
+      events.forEach((event: EventResponse) => {
+        expect(event).toHaveProperty("is_past", true);
+      });
+    });
+    test("Should return total_pages in the response", async () => {
+      const {
+        body: { total_pages },
+      } = await request(app).get("/api/events/past").expect(200);
+      expect(total_pages).toBeGreaterThanOrEqual(1);
+      expect(total_pages).toEqual(expect.any(Number));
     });
   });
   describe("GET /api/events/:id - Event Lookup by ID", () => {

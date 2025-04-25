@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   selectEvents,
+  selectPastEvents,
   selectEventById,
   insertEvent,
   updateEventById,
@@ -70,6 +71,19 @@ export const getEvents = async (
     } else {
       next(err);
     }
+  }
+};
+
+export const getPastEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { events, total_pages } = await selectPastEvents();
+    res.status(200).send({ events, total_pages });
+  } catch (err) {
+    next(err);
   }
 };
 

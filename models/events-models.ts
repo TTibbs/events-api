@@ -111,6 +111,40 @@ export const selectEvents = async (
   });
 };
 
+export const selectPastEvents = async (): Promise<{
+  events: Event[];
+  total_pages: number;
+}> => {
+  const queryString = `
+    SELECT 
+      e.*,
+      t.name AS team_name,
+      u.username AS creator_username
+    FROM events e
+    LEFT JOIN teams t ON e.team_id = t.id
+    LEFT JOIN team_members tm ON e.created_by = tm.id
+    LEFT JOIN users u ON tm.user_id = u.id
+    WHERE e.status = 'published' AND e.is_past = true
+    GROUP BY e.id, t.name, u.username
+    ORDER BY e.start_time DESC
+  `;
+
+  const result = await db.query(queryString);
+  const events = result.rows.map((event) => ({
+    ...event,
+    id: Number(event.id),
+    team_id: event.team_id ? Number(event.team_id) : null,
+    created_by: event.created_by ? Number(event.created_by) : null,
+    price: event.price ? Number(event.price) : null,
+    max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+  }));
+
+  return {
+    events,
+    total_pages: Math.ceil(events.length / 10), // Using default page size of 10
+  };
+};
+
 export const selectCategories = async (): Promise<Category[]> => {
   const result = await db.query(`SELECT * FROM categories`);
   return result.rows;
