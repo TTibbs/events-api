@@ -36,7 +36,11 @@ export const selectEvents = async (
   }
 
   // Build WHERE clauses for both queries
-  const whereConditions = ["e.status = 'published'"];
+  const whereConditions = [
+    "e.status = 'published'",
+    "e.is_past = false",
+    "e.start_time > NOW()", // Add condition to filter out events that have already started
+  ];
   const queryParams = [];
   let paramCounter = 1;
 
@@ -176,6 +180,7 @@ export const selectEventById = async (
     LEFT JOIN team_members tm_link ON e.created_by = tm_link.id
     LEFT JOIN users tm ON tm_link.user_id = tm.id
     WHERE e.id = $1
+    AND e.is_past = false
     AND (
       e.status = 'published'
       OR (
@@ -445,7 +450,8 @@ export const selectUpcomingEvents = async (
       t.name as team_name
     FROM events e
     LEFT JOIN teams t ON e.team_id = t.id
-    WHERE e.status = 'published' AND e.start_time > NOW()
+    WHERE e.status = 'published' 
+    AND e.is_past = false
     ORDER BY e.start_time ASC
     LIMIT $1
     `,
@@ -473,6 +479,7 @@ export const selectEventsByTeamId = async (
     LEFT JOIN teams t ON e.team_id = t.id
     WHERE e.team_id = $1
     AND e.status = 'published'
+    AND e.is_past = false
     ORDER BY e.start_time DESC
   `;
 

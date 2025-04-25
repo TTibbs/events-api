@@ -421,6 +421,167 @@ describe("Events API Endpoints", () => {
         expect(event.status).not.toBe("draft");
       });
     });
+    test("Should not return past events in the event listings", async () => {
+      const { body } = await request(app).get("/api/events").expect(200);
+
+      // Check that no past events are returned
+      body.events.forEach((event: EventResponse) => {
+        expect(event.is_past).toBe(false);
+      });
+
+      // Also verify that events with end_time in the past are marked as past
+      const pastEvent = await request(app)
+        .get("/api/events/3") // ID of our known past event
+        .expect(404); // Should return 404 as past events are filtered out
+
+      expect(pastEvent.body.msg).toBe("Event not found");
+    });
+
+    describe("Past Events Filtering", () => {
+      test("Should not return any events where end_time is in the past", async () => {
+        const { body } = await request(app).get("/api/events").expect(200);
+
+        const now = new Date();
+        console.log("Current time:", now.toISOString());
+
+        body.events.forEach((event: EventResponse) => {
+          const eventEndTime = new Date(event.end_time);
+          console.log("Event:", {
+            title: event.title,
+            end_time: eventEndTime.toISOString(),
+            is_past: event.is_past,
+          });
+          expect(eventEndTime.getTime()).toBeGreaterThan(now.getTime());
+        });
+      });
+
+      test("Should not return any events marked as is_past=true", async () => {
+        const { body } = await request(app).get("/api/events").expect(200);
+
+        body.events.forEach((event: EventResponse) => {
+          console.log("Event is_past check:", {
+            title: event.title,
+            is_past: event.is_past,
+          });
+          expect(event.is_past).toBe(false);
+        });
+      });
+
+      test("Should not return events that started in the past but haven't ended yet", async () => {
+        const { body } = await request(app).get("/api/events").expect(200);
+
+        const now = new Date();
+        console.log("Current time:", now.toISOString());
+
+        body.events.forEach((event: EventResponse) => {
+          const eventStartTime = new Date(event.start_time);
+          console.log("Event start time check:", {
+            title: event.title,
+            start_time: eventStartTime.toISOString(),
+            is_past: event.is_past,
+          });
+          expect(eventStartTime.getTime()).toBeGreaterThan(now.getTime());
+        });
+      });
+
+      test("Should correctly handle events at the current time boundary", async () => {
+        const now = new Date();
+        console.log("Setting up boundary test at:", now.toISOString());
+
+        // First, let's create an event that's just about to end
+        const almostEndingEvent = {
+          status: "published",
+          title: "Almost Ending Event",
+          description: "This event is about to end",
+          location: "Test Location",
+          start_time: new Date(Date.now() - 3600000), // 1 hour ago
+          end_time: new Date(Date.now() + 60000), // 1 minute in future
+          category: "Conference",
+          is_public: true,
+        };
+
+        console.log("Creating test event:", {
+          start: almostEndingEvent.start_time.toISOString(),
+          end: almostEndingEvent.end_time.toISOString(),
+        });
+
+        await request(app)
+          .post("/api/events")
+          .set("Authorization", `Bearer ${aliceToken}`)
+          .send(almostEndingEvent);
+
+        // Now check the events listing
+        const { body } = await request(app).get("/api/events").expect(200);
+
+        // Verify that events very close to ending are handled correctly
+        const checkTime = new Date();
+        console.log("Checking events at:", checkTime.toISOString());
+
+        body.events.forEach((event: EventResponse) => {
+          const eventEndTime = new Date(event.end_time);
+
+          // For debugging if test fails
+          if (eventEndTime.getTime() <= checkTime.getTime()) {
+            console.log("Found past event:", {
+              title: event.title,
+              end_time: eventEndTime.toISOString(),
+              check_time: checkTime.toISOString(),
+              is_past: event.is_past,
+            });
+          }
+
+          expect(eventEndTime.getTime()).toBeGreaterThan(checkTime.getTime());
+          expect(event.is_past).toBe(false);
+        });
+      });
+
+      test("Should handle timezone differences correctly", async () => {
+        const now = new Date();
+        console.log("Setting up timezone test at:", now.toISOString());
+
+        // Create an event with explicit UTC times
+        const utcEvent = {
+          status: "published",
+          title: "UTC Test Event",
+          description: "Testing UTC handling",
+          location: "Test Location",
+          start_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow UTC
+          end_time: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow UTC
+          category: "Conference",
+          is_public: true,
+        };
+
+        console.log("Creating UTC test event:", {
+          start: utcEvent.start_time,
+          end: utcEvent.end_time,
+        });
+
+        await request(app)
+          .post("/api/events")
+          .set("Authorization", `Bearer ${aliceToken}`)
+          .send(utcEvent);
+
+        const { body } = await request(app).get("/api/events").expect(200);
+
+        // Verify UTC handling
+        const checkTimeUTC = new Date();
+        console.log("Checking UTC events at:", checkTimeUTC.toISOString());
+
+        body.events.forEach((event: EventResponse) => {
+          const eventEndTimeUTC = new Date(event.end_time);
+          console.log("UTC Event check:", {
+            title: event.title,
+            end_time: eventEndTimeUTC.toISOString(),
+            is_past: event.is_past,
+          });
+
+          expect(eventEndTimeUTC.getTime()).toBeGreaterThan(
+            checkTimeUTC.getTime()
+          );
+          expect(event.is_past).toBe(false);
+        });
+      });
+    });
   });
   describe("GET /api/events - Query Parameters", () => {
     test("Should return total_events count in the response", async () => {

@@ -118,6 +118,7 @@ const seed = async ({
         price DECIMAL(10, 2) CHECK (price IS NULL OR price >= 0),
         category VARCHAR NOT NULL REFERENCES categories (name),
         is_public BOOLEAN NOT NULL DEFAULT true,
+        is_past BOOLEAN NOT NULL DEFAULT false,
         team_id BIGINT REFERENCES teams (id) ON DELETE SET NULL,
         created_by BIGINT REFERENCES team_members (id) ON DELETE SET NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -244,6 +245,26 @@ const seed = async ({
         CREATE TRIGGER update_event_timestamp
         BEFORE UPDATE ON events
         FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+    `);
+
+    // Create trigger to update is_past based on end_time
+    await db.query(`
+        CREATE OR REPLACE FUNCTION update_event_past_status()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.is_past := CASE 
+                WHEN NEW.end_time < NOW() THEN true
+                ELSE false
+            END;
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+    `);
+
+    await db.query(`
+        CREATE TRIGGER update_event_past_status
+        BEFORE INSERT OR UPDATE ON events
+        FOR EACH ROW EXECUTE FUNCTION update_event_past_status();
     `);
 
     await db.query(`

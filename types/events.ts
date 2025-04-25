@@ -13,6 +13,7 @@ export type Event = {
   price: number;
   category: string;
   is_public: boolean;
+  is_past: boolean;
   created_by: number;
   created_at: Date;
   updated_at: Date;
