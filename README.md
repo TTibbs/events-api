@@ -20,17 +20,10 @@ username=eventorganiser
 password=password123
 ```
 
-Event Manager:
-
-```bash
-username=eventmanager
-password=password123
-```
-
 Regular User:
 
 ```bash
-username=user
+username=regularuser
 password=password123
 ```
 
