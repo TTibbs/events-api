@@ -161,10 +161,10 @@ export const createCheckoutSession = async (
       ],
       mode: "payment",
       success_url: `${
-        process.env.FRONTEND_URL || "http://localhost:3000"
+        process.env.FRONTEND_URL || "http://localhost:5173"
       }/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${
-        process.env.FRONTEND_URL || "http://localhost:3000"
+        process.env.FRONTEND_URL || "http://localhost:5173"
       }/events/${eventId}`,
       metadata: {
         eventId,
