@@ -15,7 +15,7 @@ export const users: User[] = [
     profile_image_url:
       "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5r72WKKh4ScXJ607ewstvO3u2GfKimQM8hUFz",
     is_site_admin: false,
-    stripe_customer_id: "1234567890",
+    stripe_customer_id: null,
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -26,7 +26,7 @@ export const users: User[] = [
     profile_image_url:
       "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5x2hfzLgRsYuVzfXgmwPDirIBZ8c5ytCG0pkb",
     is_site_admin: false,
-    stripe_customer_id: "1234567890",
+    stripe_customer_id: null,
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -37,7 +37,7 @@ export const users: User[] = [
     profile_image_url:
       "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5r72WKKh4ScXJ607ewstvO3u2GfKimQM8hUFz",
     is_site_admin: false,
-    stripe_customer_id: "1234567890",
+    stripe_customer_id: null,
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -48,7 +48,18 @@ export const users: User[] = [
     profile_image_url:
       "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5UWpfohDWbPInw4yTAxkOL1dzBv3hRuFaQcem",
     is_site_admin: true,
-    stripe_customer_id: "1234567890",
+    stripe_customer_id: null,
+    created_at: new Date(),
+    updated_at: new Date(),
+  },
+  {
+    username: "teamadmin",
+    email: "teamadmin@example.com",
+    password_hash: passwordHash,
+    profile_image_url:
+      "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5r72WKKh4ScXJ607ewstvO3u2GfKimQM8hUFz",
+    is_site_admin: false,
+    stripe_customer_id: null,
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -59,7 +70,7 @@ export const users: User[] = [
     profile_image_url:
       "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5o4yVEePKrmSJEYfehPcDRGbTFjWVX7I041Up",
     is_site_admin: false,
-    stripe_customer_id: "1234567890",
+    stripe_customer_id: null,
     created_at: new Date(),
     updated_at: new Date(),
   },

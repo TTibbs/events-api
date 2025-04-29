@@ -16,7 +16,7 @@ password=password123
 Team Admin:
 
 ```bash
-username=teamadmin
+username=eventorganiser
 password=password123
 ```
 

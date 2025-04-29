@@ -6,7 +6,7 @@ export type User = {
   email: string;
   password_hash: string;
   profile_image_url: string;
-  stripe_customer_id: string;
+  stripe_customer_id: string | null;
   is_site_admin: boolean;
   created_at: Date;
   updated_at: Date;
