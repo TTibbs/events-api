@@ -20,7 +20,7 @@ app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {
-  res.status(200).json({ msg: "Welcome to the Promptius API!" });
+  res.status(200).json({ msg: "Welcome to the Events Platform API!" });
 });
 
 app.use("/api", apiRouter);
