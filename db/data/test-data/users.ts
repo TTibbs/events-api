@@ -52,6 +52,18 @@ export const users: User[] = [
     created_at: new Date(),
     updated_at: new Date(),
   },
+
+  {
+    username: "eventmanager",
+    email: "eventmanager@example.com",
+    password_hash: passwordHash,
+    profile_image_url:
+      "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5r72WKKh4ScXJ607ewstvO3u2GfKimQM8hUFz",
+    is_site_admin: false,
+    stripe_customer_id: null,
+    created_at: new Date(),
+    updated_at: new Date(),
+  },
   {
     username: "regularuser",
     email: "regularuser@example.com",

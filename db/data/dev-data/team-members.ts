@@ -25,4 +25,10 @@ export const teamMembers: TeamMember[] = [
     role: "team_admin",
     created_at: new Date(),
   },
+  {
+    user_id: 5,
+    team_id: 1,
+    role: "event_manager",
+    created_at: new Date(),
+  },
 ];
