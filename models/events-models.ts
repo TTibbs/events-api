@@ -102,6 +102,10 @@ export const selectEvents = async (
         created_by: event.created_by ? Number(event.created_by) : null,
         price: event.price ? Number(event.price) : null,
         max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+        tickets_remaining:
+          event.tickets_remaining !== null
+            ? Number(event.tickets_remaining)
+            : null,
       })),
       total_events: parseInt(countResult.rows[0].total_events, 10),
       total_pages: Math.ceil(
@@ -137,6 +141,8 @@ export const selectPastEvents = async (): Promise<{
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   }));
 
   return {
@@ -197,6 +203,8 @@ export const selectDraftEvents = async (userId: number): Promise<Event[]> => {
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   }));
 };
 
@@ -245,6 +253,8 @@ export const selectEventById = async (
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   };
 };
 
@@ -278,6 +288,8 @@ export const getEventByIdForAdmin = async (id: number): Promise<Event> => {
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   };
 };
 
@@ -320,6 +332,8 @@ export const selectDraftEventById = async (
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   };
 };
 
@@ -371,6 +385,8 @@ export const insertEvent = async (
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   };
 };
 
@@ -395,6 +411,7 @@ export const updateEventById = async (
     "start_time",
     "end_time",
     "max_attendees",
+    "tickets_remaining",
     "price",
     "category",
     "is_public",
@@ -434,6 +451,8 @@ export const updateEventById = async (
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   };
 };
 
@@ -499,6 +518,8 @@ export const selectUpcomingEvents = async (
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   }));
 };
 
@@ -565,6 +586,8 @@ export const selectDraftEventsByTeamId = async (
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   }));
 };
 
@@ -608,6 +631,14 @@ export const checkEventAvailability = async (
     return {
       available: false,
       reason: "Event has already started",
+    };
+  }
+
+  // Check if there are tickets remaining
+  if (event.tickets_remaining !== null && event.tickets_remaining <= 0) {
+    return {
+      available: false,
+      reason: "No tickets remaining for this event",
     };
   }
 
@@ -696,6 +727,14 @@ export const registerUserForEvent = async (
       });
     }
 
+    // Check tickets_remaining if set
+    if (event.tickets_remaining !== null && event.tickets_remaining <= 0) {
+      return Promise.reject({
+        status: 400,
+        msg: "No tickets remaining for this event",
+      });
+    }
+
     // Check capacity if max_attendees is set
     if (event.max_attendees) {
       const registrationsResult = await client.query(
@@ -747,6 +786,14 @@ export const registerUserForEvent = async (
 
       // If registration exists but was cancelled, we can reactivate it
       if (registration.status === "cancelled") {
+        // Decrement tickets_remaining if it's set
+        if (event.tickets_remaining !== null) {
+          await client.query(
+            `UPDATE events SET tickets_remaining = tickets_remaining - 1 WHERE id = $1`,
+            [eventId]
+          );
+        }
+
         const reactivatedResult = await client.query(
           `
             UPDATE event_registrations
@@ -816,6 +863,15 @@ export const registerUserForEvent = async (
       });
     }
 
+    // Decrement tickets_remaining if it's set
+    // This ensures we track available tickets separately from max_attendees
+    if (event.tickets_remaining !== null) {
+      await client.query(
+        `UPDATE events SET tickets_remaining = tickets_remaining - 1 WHERE id = $1`,
+        [eventId]
+      );
+    }
+
     // Create new registration within transaction
     const result = await client.query(
       `
@@ -869,8 +925,10 @@ export const cancelRegistration = async (
     // Check if registration exists
     const registrationResult = await client.query(
       `
-      SELECT * FROM event_registrations
-      WHERE id = $1
+      SELECT er.*, e.tickets_remaining 
+      FROM event_registrations er
+      JOIN events e ON er.event_id = e.id
+      WHERE er.id = $1
       `,
       [registrationId]
     );
@@ -890,6 +948,15 @@ export const cancelRegistration = async (
         status: 400,
         msg: "Registration is already cancelled",
       });
+    }
+
+    // Increment tickets_remaining if it's set
+    // This adds the ticket back to the available pool when a registration is cancelled
+    if (registration.tickets_remaining !== null) {
+      await client.query(
+        `UPDATE events SET tickets_remaining = tickets_remaining + 1 WHERE id = $1`,
+        [registration.event_id]
+      );
     }
 
     // Update registration status

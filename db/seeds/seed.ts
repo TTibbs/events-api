@@ -115,6 +115,7 @@ const seed = async ({
         start_time TIMESTAMP WITH TIME ZONE NOT NULL,
         end_time TIMESTAMP WITH TIME ZONE NOT NULL,
         max_attendees INTEGER,
+        tickets_remaining INTEGER,
         price DECIMAL(10, 2) CHECK (price IS NULL OR price >= 0),
         category VARCHAR NOT NULL REFERENCES categories (name),
         is_public BOOLEAN NOT NULL DEFAULT true,
@@ -320,7 +321,7 @@ const seed = async ({
 
     // 4. Insert events fourth as they depend on teams and team_members
     const insertEventsQueryString = format(
-      `INSERT INTO events (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, category, is_public, team_id, created_by, created_at, updated_at) VALUES %L RETURNING id`,
+      `INSERT INTO events (status, title, description, event_img_url, location, start_time, end_time, max_attendees, tickets_remaining, price, category, is_public, team_id, created_by, created_at, updated_at) VALUES %L RETURNING id`,
       events.map((event) => [
         event.status,
         event.title,
@@ -330,6 +331,7 @@ const seed = async ({
         event.start_time,
         event.end_time,
         event.max_attendees,
+        event.tickets_remaining,
         event.price,
         event.category,
         event.is_public,

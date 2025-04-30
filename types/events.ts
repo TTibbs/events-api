@@ -10,6 +10,7 @@ export type Event = {
   start_time: Date;
   end_time: Date;
   max_attendees: number;
+  tickets_remaining: number;
   price: number;
   category: string;
   is_public: boolean;

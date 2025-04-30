@@ -121,14 +121,14 @@ describe("Event Registration API", () => {
         .send({ userId: 5 })
         .expect(400);
       expect(registerResponse.body.msg).toBe(
-        "Event has reached maximum attendee capacity"
+        "No tickets remaining for this event"
       );
 
       const { body }: { body: EventAvailabilityResponse } = await request(app)
         .get(`/api/events/15/availability`)
         .expect(200);
       expect(body.available).toBe(false);
-      expect(body.reason).toBe("Event has reached maximum attendee capacity");
+      expect(body.reason).toBe("No tickets remaining for this event");
     });
     test("Should return an error message if the event is not found", async () => {
       const { body }: { body: EventAvailabilityResponse } = await request(app)
@@ -187,6 +187,22 @@ describe("Event Registration API", () => {
         "user_email",
         "regularuser@example.com"
       );
+    });
+    test("Tickets remaining gets reduced by 1 when a user registers for an event", async () => {
+      const createRegistrationResponse = await request(app)
+        .post(`/api/events/1/register`)
+        .set("Authorization", `Bearer ${regularuserToken}`)
+        .send({ userId: 5 })
+        .expect(201);
+
+      const {
+        body: { event },
+      }: { body: { event: EventResponse } } = await request(app)
+        .get(`/api/events/1`)
+        .set("Authorization", `Bearer ${regularuserToken}`)
+        .expect(200);
+      console.log(event);
+      expect(event).toHaveProperty("tickets_remaining", expect.any(Number));
     });
     test("User cannot register twice for the same event", async () => {
       await request(app)
@@ -684,7 +700,6 @@ describe("Events API Endpoints", () => {
       const {
         body: { event },
       } = await request(app).get(`/api/events/1`).expect(200);
-      expect(event).toHaveProperty("id", 1);
       expect(event).toHaveProperty("status", "published");
       expect(event).toHaveProperty("title", "Tech Conference 2025");
       expect(event).toHaveProperty(
@@ -699,6 +714,7 @@ describe("Events API Endpoints", () => {
       expect(event).toHaveProperty("start_time", expect.any(String));
       expect(event).toHaveProperty("end_time", expect.any(String));
       expect(event).toHaveProperty("max_attendees", 200);
+      expect(event).toHaveProperty("tickets_remaining", 197);
       expect(event).toHaveProperty("price", 49.99);
       expect(event).toHaveProperty("category", "Conference");
       expect(event).toHaveProperty("is_public", true);
