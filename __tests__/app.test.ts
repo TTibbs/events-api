@@ -7,7 +7,7 @@ describe("Basic Express Server Endpoint Tests", () => {
     const {
       body: { msg },
     } = await request(app).get("/").expect(200);
-    expect(msg).toBe("Welcome to the Promptius API!");
+    expect(msg).toBe("Welcome to the Events Platform API!");
   });
   test("GET /api should return a comprehensive list of available endpoints", async () => {
     const {

@@ -71,8 +71,30 @@ describe("Event Registration API", () => {
       expect(body.available).toBe(true);
     });
     test("Should return an error for an event that has already started", async () => {
+      // Create a new event that has already started
+      const newEvent = {
+        status: "published",
+        title: "Test Event",
+        description: "This is a test event",
+        event_img_url:
+          "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5Q6eqKswUm9ctU0Xq42npAbSlV5j38hY6TkdR",
+        location: "Test Location",
+        start_time: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+        end_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+        is_public: true,
+        category: "Conference",
+      };
+
+      const createEventResponse = await request(app)
+        .post("/api/events")
+        .set("Authorization", `Bearer ${siteadminToken}`)
+        .send(newEvent)
+        .expect(201);
+      expect(createEventResponse.body.msg).toBe("Event created successfully");
+
+      // Check availability of the new event
       const { body }: { body: EventAvailabilityResponse } = await request(app)
-        .get(`/api/events/13/availability`)
+        .get(`/api/events/${createEventResponse.body.event.id}/availability`)
         .expect(200);
       expect(body.available).toBe(false);
       expect(body.reason).toBe("Event has already started");

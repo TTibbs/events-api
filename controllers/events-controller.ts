@@ -317,7 +317,9 @@ export const createEvent = async (
       createdBy
     );
 
-    res.status(201).send({ event: newEvent });
+    res
+      .status(201)
+      .send({ event: newEvent, msg: "Event created successfully" });
   } catch (err) {
     next(err);
   }
