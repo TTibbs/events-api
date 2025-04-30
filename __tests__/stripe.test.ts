@@ -14,7 +14,6 @@ import {
   categories,
 } from "../db/data/test-data/index";
 import { getAuthToken } from "../utils/testHelpers";
-import Stripe from "stripe";
 
 // Mock Stripe
 jest.mock("stripe", () => {
@@ -367,6 +366,14 @@ describe("Stripe Payment Integration", () => {
       const userTickets = userTicketsResponse.body.tickets;
       const paymentTicket = userTickets.find((t: any) => t.id === ticketId);
       expect(paymentTicket).toBeTruthy();
+
+      // 7. Verify tickets_remaining for the event was decremented
+      const eventResponse = await request(app)
+        .get("/api/events/1")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(eventResponse.body.event.tickets_remaining).toBe(196);
     });
   });
 });

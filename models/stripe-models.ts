@@ -101,3 +101,18 @@ export const findPaymentBySessionId = async (sessionId: string) => {
   );
   return rows.length > 0 ? rows[0] : null;
 };
+
+export const decrementTicketsRemaining = async (
+  eventId: string | number
+): Promise<void> => {
+  await db.query(
+    `UPDATE events 
+     SET tickets_remaining = CASE 
+       WHEN tickets_remaining IS NULL THEN NULL
+       WHEN tickets_remaining > 0 THEN tickets_remaining - 1
+       ELSE 0
+     END
+     WHERE id = $1 AND tickets_remaining IS NOT NULL`,
+    [eventId]
+  );
+};

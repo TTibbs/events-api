@@ -189,6 +189,12 @@ describe("Event Registration API", () => {
       );
     });
     test("Tickets remaining gets reduced by 1 when a user registers for an event", async () => {
+      const ticketsRemainingCheck = await request(app)
+        .get(`/api/events/1`)
+        .set("Authorization", `Bearer ${regularuserToken}`)
+        .expect(200);
+      expect(ticketsRemainingCheck.body.event.tickets_remaining).toBe(197);
+
       const createRegistrationResponse = await request(app)
         .post(`/api/events/1/register`)
         .set("Authorization", `Bearer ${regularuserToken}`)
@@ -201,8 +207,7 @@ describe("Event Registration API", () => {
         .get(`/api/events/1`)
         .set("Authorization", `Bearer ${regularuserToken}`)
         .expect(200);
-      console.log(event);
-      expect(event).toHaveProperty("tickets_remaining", expect.any(Number));
+      expect(event.tickets_remaining).toBe(196);
     });
     test("User cannot register twice for the same event", async () => {
       await request(app)

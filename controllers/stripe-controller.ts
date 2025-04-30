@@ -11,9 +11,10 @@ import {
   updateTicket,
   updatePaymentStatus,
   findPaymentBySessionId,
+  decrementTicketsRemaining,
 } from "../models/stripe-models";
 import { CheckoutSessionData, StripeSessionInfo, WebhookEvent } from "../types";
-import { selectEventById } from "../models/events-models";
+import { selectEventById, getRegistrationById } from "../models/events-models";
 import { selectUserById } from "../models/users-models";
 
 // Check if Stripe API key is available
@@ -265,6 +266,9 @@ export const syncPaymentStatus = async (
       // Update ticket with payment ID
       await updateTicket(ticketId, paymentId);
 
+      // Decrement tickets_remaining for this event
+      await decrementTicketsRemaining(eventId);
+
       res.send({
         success: true,
         ticketId,
@@ -380,6 +384,9 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     );
 
     await updateTicket(ticketId, payment.id);
+
+    // Decrement tickets_remaining for this event
+    await decrementTicketsRemaining(eventId);
   } catch (error) {
     console.error("Error processing successful payment:", error);
   }

@@ -29,6 +29,8 @@ export const getDraftEvents = async (): Promise<EventResponse[]> => {
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   })) as EventResponse[];
 };
 
@@ -56,6 +58,8 @@ export const getAllEventsForAdmin = async (): Promise<{
     created_by: event.created_by ? Number(event.created_by) : null,
     price: event.price ? Number(event.price) : null,
     max_attendees: event.max_attendees ? Number(event.max_attendees) : null,
+    tickets_remaining:
+      event.tickets_remaining !== null ? Number(event.tickets_remaining) : null,
   })) as EventResponse[];
 
   return {
