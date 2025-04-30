@@ -63,7 +63,9 @@ export function generateTestToken(
 /**
  * Get auth token for test users - with fallback to direct JWT generation if login fails
  */
-export async function getAuthToken(username = "alice123"): Promise<string> {
+export async function getAuthToken(
+  username: string = "alice123"
+): Promise<string> {
   const user = TEST_USERS[username as keyof typeof TEST_USERS];
 
   if (!user) {

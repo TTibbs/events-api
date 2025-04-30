@@ -352,12 +352,15 @@ export const insertEvent = async (
   team_id: number | null,
   created_by: number | null
 ): Promise<Event> => {
+  // Set tickets_remaining equal to max_attendees when max_attendees is provided
+  const tickets_remaining = max_attendees;
+
   const result = await db.query(
     `
     INSERT INTO events
-      (status, title, description, event_img_url, location, start_time, end_time, max_attendees, price, category, is_public, team_id, created_by)
+      (status, title, description, event_img_url, location, start_time, end_time, max_attendees, tickets_remaining, price, category, is_public, team_id, created_by)
     VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     RETURNING *
     `,
     [
@@ -369,6 +372,7 @@ export const insertEvent = async (
       start_time,
       end_time,
       max_attendees,
+      tickets_remaining,
       price,
       category,
       is_public,

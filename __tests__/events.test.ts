@@ -856,6 +856,8 @@ describe("Events API Endpoints", () => {
         status: "published",
         title: "Test Event",
         description: "This is a test event",
+        price: 5.99,
+        max_attendees: 100,
         event_img_url:
           "https://c5znixeqj7.ufs.sh/f/Jf9D0EOZjwR5Q6eqKswUm9ctU0Xq42npAbSlV5j38hY6TkdR",
         location: "Test Location",
@@ -880,8 +882,9 @@ describe("Events API Endpoints", () => {
       expect(event).toHaveProperty("location", newEvent.location);
       expect(event).toHaveProperty("start_time", newEvent.start_time);
       expect(event).toHaveProperty("end_time", newEvent.end_time);
-      expect(event).toHaveProperty("max_attendees", null);
-      expect(event).toHaveProperty("price", null);
+      expect(event).toHaveProperty("max_attendees", 100);
+      expect(event).toHaveProperty("tickets_remaining", 100);
+      expect(event).toHaveProperty("price", 5.99);
       expect(event).toHaveProperty("category", newEvent.category);
       expect(event).toHaveProperty("is_public", newEvent.is_public);
       expect(event).toHaveProperty("team_id", expect.any(Number));
