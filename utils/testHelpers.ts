@@ -32,8 +32,15 @@ export const TEST_USERS: Record<string, TestUser> = {
     email: "siteadmin@example.com",
     teamId: 3,
   },
-  regularuser: {
+  eventmanager: {
     id: 5,
+    username: "eventmanager",
+    email: "eventmanager@example.com",
+    teamId: 1,
+    role: "event_manager",
+  },
+  regularuser: {
+    id: 6,
     username: "regularuser",
     email: "regularuser@example.com",
   },

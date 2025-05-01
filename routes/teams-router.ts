@@ -20,6 +20,7 @@ import {
   getTeamMembersByTeamId,
   getTeamByName,
   getTeamMemberRoleByUserId,
+  deleteTeamMember,
 } from "../controllers/teams-controller";
 import { authenticate } from "../middlewares/auth-middleware";
 
@@ -87,6 +88,7 @@ const getTeamMemberByIdHandler = getTeamMemberById as RequestHandler;
 const getTeamMemberByUserIdHandler = getTeamMemberByUserId as RequestHandler;
 const createTeamMemberHandler = createTeamMember as RequestHandler;
 const getTeamMembersByTeamIdHandler = getTeamMembersByTeamId as RequestHandler;
+const deleteTeamMemberHandler = deleteTeamMember as RequestHandler;
 
 const authenticateHandler = authenticate as RequestHandler;
 
@@ -137,5 +139,10 @@ teamsRouter.patch(
   updateTeamHandler
 );
 teamsRouter.delete("/:id", authenticateHandler, deleteTeamHandler);
+teamsRouter.delete(
+  "/:id/members/:userId",
+  authenticateHandler,
+  deleteTeamMemberHandler
+);
 
 export default teamsRouter;

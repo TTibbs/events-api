@@ -11,6 +11,7 @@ import {
   insertTeamMember,
   selectTeamMembersByTeamId,
   selectTeamByName,
+  deleteTeamMemberById,
 } from "../models/teams-models";
 import { selectUserById, insertUser } from "../models/users-models";
 import bcryptjs from "bcryptjs";
@@ -215,6 +216,48 @@ export const deleteTeam = async (
         msg: "Team not found",
       });
     }
+    next(err);
+  }
+};
+
+export const deleteTeamMember = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id, userId } = req.params;
+
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).send({
+      status: "error",
+      msg: "Unauthorized - Authentication required",
+    });
+  }
+
+  try {
+    // Check if the current user is a team admin
+    const currentUserTeamMember = await selectTeamMemberByUserId(req.user.id);
+    if (!currentUserTeamMember || currentUserTeamMember.role !== "team_admin") {
+      return res.status(403).send({
+        status: "error",
+        msg: "Forbidden - Team admin privileges required to delete team members",
+      });
+    }
+
+    // Check if the target team member exists
+    const teamMember = await selectTeamMemberByUserId(Number(userId));
+    if (!teamMember) {
+      return res.status(404).send({
+        status: "error",
+        msg: "Team member not found",
+      });
+    }
+
+    // Delete the team member
+    await deleteTeamMemberById(Number(id), Number(userId));
+    res.status(204).send();
+  } catch (err) {
     next(err);
   }
 };

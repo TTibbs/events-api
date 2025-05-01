@@ -569,4 +569,35 @@ describe("Teams API Endpoints", () => {
       expect(msg).toBe("Team not found");
     });
   });
+  describe("DELETE /api/teams/:id/members/:userId", () => {
+    test("Should successfully delete a team member with valid ID", async () => {
+      const token = await getAuthToken();
+      await request(app)
+        .delete("/api/teams/1/members/5")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(204);
+    });
+    test("Should return appropriate error when attempting to delete team member without team admin privileges", async () => {
+      const token = await getAuthToken("eventmanager");
+      const {
+        body: { msg },
+      } = await request(app)
+        .delete("/api/teams/1/members/5")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(403);
+      expect(msg).toBe(
+        "Forbidden - Team admin privileges required to delete team members"
+      );
+    });
+    test("Should return appropriate error when attempting to delete non-existent team member", async () => {
+      const token = await getAuthToken();
+      const {
+        body: { msg },
+      } = await request(app)
+        .delete("/api/teams/1/members/9999")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(404);
+      expect(msg).toBe("Team member not found");
+    });
+  });
 });

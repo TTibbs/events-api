@@ -94,6 +94,20 @@ export const deleteTeamById = async (id: number): Promise<void> => {
   }
 };
 
+export const deleteTeamMemberById = async (
+  teamId: number,
+  userId: number
+): Promise<void> => {
+  const { rowCount } = await db.query(
+    "DELETE FROM team_members WHERE team_id = $1 AND user_id = $2 RETURNING *",
+    [teamId, userId]
+  );
+
+  if (rowCount === 0) {
+    return Promise.reject({ status: 404, msg: "Team member not found" });
+  }
+};
+
 // Team Member Functions
 
 export const selectTeamMembers = async (): Promise<{
