@@ -36,7 +36,7 @@ As a team admin or event_manager (User is in a team and has the role team_admin 
 - Create a new event managed only by me and someone with event_manager role [✅]
 - See the events that have been drafted [✅]
 - See a dedicated team dashboard page [✅]
-- Delete a team member [ ]
+- Delete a team member [✅]
 - See my team members [✅]
 - Create draft and published events for my team [✅]
 - Update events that belong to my team [✅]
