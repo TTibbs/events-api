@@ -150,13 +150,13 @@ describe("Event Registration API", () => {
       const { body }: { body: EventRegistrationResponse } = await request(app)
         .post(`/api/events/1/register`)
         .set("Authorization", `Bearer ${regularuserToken}`)
-        .send({ userId: 5 })
+        .send({ userId: 6 })
         .expect(201);
 
       expect(body).toHaveProperty("msg", "Registration successful");
       expect(body).toHaveProperty("registration");
       expect(body.registration).toHaveProperty("event_id", 1);
-      expect(body.registration).toHaveProperty("user_id", 5);
+      expect(body.registration).toHaveProperty("user_id", 6);
       expect(body.registration).toHaveProperty(
         "registration_time",
         expect.any(String)
@@ -247,7 +247,7 @@ describe("Event Registration API", () => {
       const registerResponse = await request(app)
         .post(`/api/events/1/register`)
         .set("Authorization", `Bearer ${regularuserToken}`)
-        .send({ userId: 5 });
+        .send({ userId: 6 });
 
       const registrationId = registerResponse.body.registration.id;
       const response = await request(app)
@@ -265,7 +265,7 @@ describe("Event Registration API", () => {
       const registerResponse = await request(app)
         .post(`/api/events/1/register`)
         .set("Authorization", `Bearer ${regularuserToken}`)
-        .send({ userId: 5 });
+        .send({ userId: 6 });
 
       const registrationId = registerResponse.body.registration.id;
 
@@ -281,7 +281,7 @@ describe("Event Registration API", () => {
       const response = await request(app)
         .post(`/api/events/1/register`)
         .set("Authorization", `Bearer ${regularuserToken}`)
-        .send({ userId: 5 });
+        .send({ userId: 6 });
 
       expect(response.body.msg).toBe("Registration reactivated successfully");
       expect(response.body.registration.status).toBe("registered");

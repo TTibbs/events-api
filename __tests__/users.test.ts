@@ -72,7 +72,7 @@ describe("Users API Endpoints", () => {
       const {
         body: { total_users },
       } = await request(app).get("/api/users").expect(200);
-      expect(total_users).toBe(5);
+      expect(total_users).toBe(6);
     });
   });
   describe("GET /api/users/:id - User Lookup by ID", () => {
