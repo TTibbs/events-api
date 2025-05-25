@@ -8,11 +8,13 @@ import eventsRouter from "./events-router";
 import endpoints from "../endpoints.json";
 import adminRouter from "./admin-router";
 import stripeRouter from "./stripe-router";
+import healthRouter from "./health-router";
 
 apiRouter.get("/", (req, res) => {
   res.status(200).send({ endpoints });
 });
 
+apiRouter.use("/health", healthRouter);
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/teams", teamsRouter);
