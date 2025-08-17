@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import path from "path";
 import apiRouter from "./routes/api-router";
 import {
   customErrorHandler,
@@ -11,6 +12,9 @@ import {
 const app = express();
 
 app.use(cors());
+
+// Serve static files from uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Special handling for Stripe webhook route - must come BEFORE express.json()
 // This ensures the raw body is available for signature verification

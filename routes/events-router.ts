@@ -26,6 +26,7 @@ import {
   getCategoryByName,
 } from "../controllers/events-controller";
 import { authMiddleware } from "../middlewares/auth-middleware";
+import { handleOptionalEventImageUpload } from "../middlewares/fileUploadMiddleware";
 
 const eventsRouter = Router();
 
@@ -233,6 +234,7 @@ eventsRouter.get(
 eventsRouter.post(
   "/",
   authenticateHandler,
+  handleOptionalEventImageUpload,
   eventValidation,
   validateRequest,
   createEventHandler
@@ -243,6 +245,7 @@ eventsRouter.post(
 eventsRouter.patch(
   "/:id",
   authenticateHandler,
+  handleOptionalEventImageUpload,
   eventUpdateValidation,
   validateRequest,
   updateEventHandler

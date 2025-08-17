@@ -30,6 +30,7 @@ import {
   ExtendedEventRegistration,
   ExtendedTeamMember,
 } from "../types";
+import { deleteImageFile, extractFilenameFromPath } from "../utils/fileUpload";
 
 export const getEvents = async (
   req: Request,
@@ -374,6 +375,19 @@ export const updateEvent = async (
 
     // Validation is now handled by express-validator middleware
 
+    // Handle image file cleanup if updating event_img_url
+    if (updateData.event_img_url !== undefined) {
+      // If there's an existing image file, delete it
+      if (eventCheck.event_img_url) {
+        const existingFilename = extractFilenameFromPath(
+          eventCheck.event_img_url
+        );
+        if (existingFilename) {
+          deleteImageFile(existingFilename);
+        }
+      }
+    }
+
     // Convert numeric values
     if (updateData.team_id) updateData.team_id = Number(updateData.team_id);
     if (updateData.created_by)
@@ -441,6 +455,16 @@ export const deleteEvent = async (
         status: "error",
         msg: "Forbidden - You don't have permission to delete this event",
       });
+    }
+
+    // Delete the event image file if it exists
+    if (eventCheck.event_img_url) {
+      const existingFilename = extractFilenameFromPath(
+        eventCheck.event_img_url
+      );
+      if (existingFilename) {
+        deleteImageFile(existingFilename);
+      }
     }
 
     await deleteEventById(Number(id));

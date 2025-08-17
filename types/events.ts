@@ -4,7 +4,7 @@ export type Event = {
   status: string;
   title: string;
   team_id: number;
-  event_img_url: string;
+  event_img_url: string | null; // Can be URL or file path
   description: string;
   location: string;
   start_time: Date;
@@ -61,6 +61,7 @@ export interface EventUpdateData {
   status?: string;
   title?: string;
   description?: string | null;
+  event_img_url?: string | null; // Can be URL or file path
   location?: string | null;
   start_time?: Date;
   end_time?: Date;

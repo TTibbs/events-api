@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 const apiRouter = Router();
 import usersRouter from "./users-router";
 import authRouter from "./auth-router";
@@ -10,7 +10,7 @@ import adminRouter from "./admin-router";
 import stripeRouter from "./stripe-router";
 import healthRouter from "./health-router";
 
-apiRouter.get("/", (req, res) => {
+apiRouter.get("/", (_req: Request, res: Response) => {
   res.status(200).send({ endpoints });
 });
 
